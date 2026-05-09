@@ -1,5 +1,5 @@
 /**
- * Bawh - Anonymous Messaging App
+ * Whispr - Anonymous Messaging App
  * Pure HTML/CSS/JS Implementation
  */
 
@@ -8,9 +8,11 @@ const TRANSLATIONS = {
     ar: {
         logo: "Whispr",
         lang_toggle: "EN",
+        nav_home: "الرئيسية",
         nav_login: "دخول",
-        nav_register: "تسجيل جديد",
-        nav_inbox: "صندوق الوارد",
+        nav_register: "تسجيل",
+        nav_inbox: "الوارد",
+        nav_profile: "ملفي",
         nav_logout: "خروج",
         
         hero_title: "استقبل رسائل مجهولة",
@@ -20,8 +22,8 @@ const TRANSLATIONS = {
         
         login_title: "تسجيل الدخول",
         login_subtitle: "مرحباً بعودتك إلى Whispr",
-        username_label: "اسم المستخدم",
-        username_ph: "أدخل اسم المستخدم",
+        email_label: "البريد الإلكتروني",
+        email_ph: "أدخل بريدك الإلكتروني",
         password_label: "كلمة المرور",
         password_ph: "أدخل كلمة المرور",
         btn_login_submit: "دخول",
@@ -29,9 +31,9 @@ const TRANSLATIONS = {
         create_account: "أنشئ حساباً",
         
         register_title: "حساب جديد",
-        register_subtitle: "انضم إلينا وابدأ باستقبال الرسائل من أصدقائك",
-        email_label: "البريد الإلكتروني",
-        email_ph: "أدخل بريدك الإلكتروني",
+        register_subtitle: "انضم إلينا وابدأ باستقبال الرسائل",
+        username_label: "اسم المستخدم",
+        username_ph: "أدخل اسم المستخدم",
         btn_register_submit: "تسجيل",
         have_account: "لديك حساب بالفعل؟",
         login_now: "سجل دخولك",
@@ -48,23 +50,29 @@ const TRANSLATIONS = {
         btn_reply: "رد",
         reply_label: "ردك:",
         no_messages: "صندوق الوارد فارغ. شارك رابطك للحصول على رسائل!",
-        share_link: "انسخ رابطك وشاركه:",
+        share_link: "انسخ رابطك وشاركه",
         btn_copy: "نسخ الرابط",
         
-        err_user_exists: "اسم المستخدم موجود مسبقاً",
-        err_invalid_creds: "بيانات الدخول غير صحيحة",
         err_user_not_found: "المستخدم غير موجود",
         msg_sent: "تم إرسال الرسالة بنجاح!",
-        link_copied: "تم نسخ الرابط!",
+        link_copied: "تم نسخ الرابط بنجاح!",
         reply_added: "تمت إضافة الرد بنجاح",
-        reg_success: "تم التسجيل بنجاح!"
+        reg_success: "تم التسجيل بنجاح!",
+        block_success: "تم حظر المرسل بنجاح",
+        avatar_updated: "تم تحديث الصورة الشخصية",
+        
+        analytics_title: "إحصائيات حسابك",
+        stat_msgs: "الرسائل",
+        stat_views: "الزيارات"
     },
     en: {
         logo: "Whispr",
         lang_toggle: "AR",
+        nav_home: "Home",
         nav_login: "Login",
         nav_register: "Register",
         nav_inbox: "Inbox",
+        nav_profile: "Profile",
         nav_logout: "Logout",
         
         hero_title: "Receive Anonymous Messages",
@@ -74,8 +82,8 @@ const TRANSLATIONS = {
         
         login_title: "Welcome Back",
         login_subtitle: "Login to your Whispr account",
-        username_label: "Username",
-        username_ph: "Enter username",
+        email_label: "Email",
+        email_ph: "Enter your email",
         password_label: "Password",
         password_ph: "Enter password",
         btn_login_submit: "Login",
@@ -83,9 +91,9 @@ const TRANSLATIONS = {
         create_account: "Create one",
         
         register_title: "Create Account",
-        register_subtitle: "Join us and start receiving messages from your friends",
-        email_label: "Email",
-        email_ph: "Enter your email",
+        register_subtitle: "Join us and start receiving messages",
+        username_label: "Username",
+        username_ph: "Enter username",
         btn_register_submit: "Register",
         have_account: "Already have an account?",
         login_now: "Login now",
@@ -102,16 +110,20 @@ const TRANSLATIONS = {
         btn_reply: "Reply",
         reply_label: "Your reply:",
         no_messages: "Inbox is empty. Share your link to get messages!",
-        share_link: "Copy & share your link:",
+        share_link: "Copy & share your link",
         btn_copy: "Copy Link",
         
-        err_user_exists: "Username already exists",
-        err_invalid_creds: "Invalid credentials",
         err_user_not_found: "User not found",
         msg_sent: "Message sent successfully!",
         link_copied: "Link copied to clipboard!",
         reply_added: "Reply added successfully",
-        reg_success: "Registered successfully!"
+        reg_success: "Registered successfully!",
+        block_success: "Sender blocked successfully",
+        avatar_updated: "Avatar updated successfully",
+        
+        analytics_title: "Your Analytics",
+        stat_msgs: "Messages",
+        stat_views: "Views"
     }
 };
 
@@ -122,13 +134,17 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- App State ---
 const state = {
-    lang: localStorage.getItem('bawh_lang') || 'ar',
-    currentUser: null
+    lang: localStorage.getItem('whispr_lang') || 'ar',
+    theme: localStorage.getItem('whispr_theme') || 'dark',
+    currentUser: null,
+    unreadCount: 0,
+    clientIp: null
 };
 
 // --- Utility Functions ---
 const saveState = () => {
-    localStorage.setItem('bawh_lang', state.lang);
+    localStorage.setItem('whispr_lang', state.lang);
+    localStorage.setItem('whispr_theme', state.theme);
 };
 
 const t = (key) => TRANSLATIONS[state.lang][key] || key;
@@ -159,32 +175,70 @@ const showToast = (message, type = 'info') => {
     }, 3000);
 };
 
+// Fetch client IP for blocking
+fetch('https://api.ipify.org?format=json')
+    .then(res => res.json())
+    .then(data => state.clientIp = data.ip)
+    .catch(() => console.log('IP fetch failed'));
+
 // --- Core Application Logic ---
 const app = {
     async init() {
         this.root = document.getElementById('app-root');
-        this.setupEventListeners();
+        this.applyTheme();
         this.applyLanguage();
-        this.initParticles();
-        this.initCursor();
+        this.setupEventListeners();
         
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
             if (profile) {
-                state.currentUser = { id: profile.id, username: profile.username };
+                state.currentUser = profile;
+                this.setupRealtime();
+                await this.fetchUnreadCount();
             }
         }
         
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') {
                 state.currentUser = null;
+                state.unreadCount = 0;
+                supabase.removeAllChannels();
                 this.navigate('home');
             }
         });
 
         this.handleRoute();
         window.addEventListener('hashchange', () => this.handleRoute());
+        
+        // Show bottom nav
+        document.getElementById('bottom-nav').style.display = 'block';
+    },
+
+    setupRealtime() {
+        if (!state.currentUser) return;
+        supabase.channel('public:messages')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${state.currentUser.id}` }, payload => {
+                showToast(state.lang === 'ar' ? 'لديك رسالة جديدة!' : 'New message arrived!', 'success');
+                this.fetchUnreadCount();
+                if (this.currentRoute === 'inbox') {
+                    this.renderCurrentView();
+                }
+            })
+            .subscribe();
+    },
+
+    async fetchUnreadCount() {
+        if (!state.currentUser) return;
+        const now = new Date().toISOString();
+        const { count } = await supabase.from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('recipient_id', state.currentUser.id)
+            .eq('is_read', false)
+            .gt('expires_at', now);
+            
+        state.unreadCount = count || 0;
+        this.updateNav();
     },
 
     setupEventListeners() {
@@ -195,32 +249,28 @@ const app = {
             this.renderCurrentView();
         });
 
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('.navbar');
-            if (window.scrollY > 20) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            saveState();
+            this.applyTheme();
         });
+    },
+
+    applyTheme() {
+        document.body.setAttribute('data-theme', state.theme);
+        const icon = document.getElementById('theme-icon');
+        if (state.theme === 'dark') {
+            icon.className = 'fa-solid fa-sun';
+        } else {
+            icon.className = 'fa-solid fa-moon';
+        }
     },
 
     applyLanguage() {
         const html = document.documentElement;
         html.lang = state.lang;
         html.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
-        
         document.querySelector('.lang-text').textContent = TRANSLATIONS[state.lang].lang_toggle;
-        
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                el.placeholder = t(key);
-            } else {
-                el.textContent = t(key);
-            }
-        });
-        
         this.updateNav();
     },
 
@@ -233,23 +283,47 @@ const app = {
         this.currentRoute = hash;
         await this.renderCurrentView();
         this.updateNav();
+        window.scrollTo(0, 0);
     },
 
     updateNav() {
-        const container = document.getElementById('auth-nav-container');
+        const container = document.getElementById('bottom-nav-container');
+        const r = this.currentRoute.split('/')[0];
+        
         if (state.currentUser) {
             container.innerHTML = `
-                <button class="btn btn-outline" onclick="app.navigate('inbox')">
-                    <i class="fa-solid fa-inbox"></i> <span class="hide-mobile">${t('nav_inbox')}</span>
-                </button>
-                <button class="btn btn-outline" onclick="app.logout()">
+                <a class="nav-item ${r === 'home' ? 'active' : ''}" onclick="app.navigate('home')">
+                    <i class="fa-solid fa-house"></i>
+                    <span>${t('nav_home')}</span>
+                </a>
+                <a class="nav-item ${r === 'inbox' ? 'active' : ''}" onclick="app.navigate('inbox')">
+                    <i class="fa-solid fa-inbox"></i>
+                    <span>${t('nav_inbox')}</span>
+                    ${state.unreadCount > 0 ? `<div class="unread-badge">${state.unreadCount}</div>` : ''}
+                </a>
+                <a class="nav-item ${r === 'u' ? 'active' : ''}" onclick="app.navigate('u/${state.currentUser.username}')">
+                    <i class="fa-solid fa-user"></i>
+                    <span>${t('nav_profile')}</span>
+                </a>
+                <a class="nav-item" onclick="app.logout()">
                     <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
+                    <span>${t('nav_logout')}</span>
+                </a>
             `;
         } else {
             container.innerHTML = `
-                <button class="btn btn-outline" onclick="app.navigate('login')">${t('nav_login')}</button>
-                <button class="btn btn-primary" onclick="app.navigate('register')">${t('nav_register')}</button>
+                <a class="nav-item ${r === 'home' ? 'active' : ''}" onclick="app.navigate('home')">
+                    <i class="fa-solid fa-house"></i>
+                    <span>${t('nav_home')}</span>
+                </a>
+                <a class="nav-item ${r === 'login' ? 'active' : ''}" onclick="app.navigate('login')">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>${t('nav_login')}</span>
+                </a>
+                <a class="nav-item ${r === 'register' ? 'active' : ''}" onclick="app.navigate('register')">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>${t('nav_register')}</span>
+                </a>
             `;
         }
     },
@@ -299,13 +373,14 @@ const app = {
             this.setupLoginEvents();
         } else if (mainRoute === 'register') {
             this.setupRegisterEvents();
+        } else if (mainRoute === 'inbox') {
+            this.setupInboxEvents();
         }
     },
 
     // --- Actions ---
     async logout() {
         await supabase.auth.signOut();
-        state.currentUser = null;
         this.navigate('home');
         showToast(t('nav_logout'), 'success');
     },
@@ -314,6 +389,40 @@ const app = {
         navigator.clipboard.writeText(url).then(() => {
             showToast(t('link_copied'), 'success');
         });
+    },
+    
+    async blockIp(ip) {
+        if(!confirm(state.lang === 'ar' ? 'هل أنت متأكد من حظر هذا المرسل؟' : 'Are you sure you want to block this sender?')) return;
+        await supabase.from('blocked_ips').insert({ user_id: state.currentUser.id, ip_address: ip });
+        showToast(t('block_success'), 'success');
+        this.renderCurrentView();
+    },
+
+    async addReaction(msgId, emoji) {
+        await supabase.from('reactions').insert({ message_id: msgId, emoji });
+        this.renderCurrentView();
+    },
+
+    async uploadAvatar(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast(state.lang === 'ar' ? 'جاري رفع الصورة...' : 'Uploading avatar...', 'info');
+        
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${state.currentUser.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+        if (uploadError) {
+            showToast(uploadError.message, 'error');
+            return;
+        }
+        
+        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', state.currentUser.id);
+        state.currentUser.avatar_url = data.publicUrl;
+        showToast(t('avatar_updated'), 'success');
+        this.renderCurrentView();
     },
 
     // --- Views ---
@@ -349,7 +458,7 @@ const app = {
                             <label class="form-label">${t('password_label')}</label>
                             <input type="password" id="login-password" class="form-control" placeholder="${t('password_ph')}" required>
                         </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%">${t('btn_login_submit')}</button>
+                        <button type="submit" class="btn btn-primary">${t('btn_login_submit')}</button>
                     </form>
                     <div class="auth-footer">
                         ${t('no_account')} <a onclick="app.navigate('register')" class="auth-link">${t('create_account')}</a>
@@ -378,7 +487,7 @@ const app = {
                             <label class="form-label">${t('password_label')}</label>
                             <input type="password" id="reg-password" class="form-control" placeholder="${t('password_ph')}" required minlength="6">
                         </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%">${t('btn_register_submit')}</button>
+                        <button type="submit" class="btn btn-primary">${t('btn_register_submit')}</button>
                     </form>
                     <div class="auth-footer">
                         ${t('have_account')} <a onclick="app.navigate('login')" class="auth-link">${t('login_now')}</a>
@@ -390,30 +499,62 @@ const app = {
         profile: async (username) => {
             const { data: user, error } = await supabase.from('profiles').select('*').eq('username', username).single();
             if (error || !user) {
-                return { html: `<div class="view active empty-state"><h2>${t('err_user_not_found')}</h2></div>`, user: null };
+                return { html: `<div class="view active empty-state"><i class="fa-solid fa-ghost empty-icon"></i><h2>${t('err_user_not_found')}</h2></div>`, user: null };
+            }
+            
+            // Record profile view
+            if (!state.currentUser || state.currentUser.id !== user.id) {
+                supabase.from('profile_views').insert({ profile_id: user.id }).then();
             }
 
+            const now = new Date().toISOString();
             const { data: messages } = await supabase.from('messages')
-                .select('id, content, created_at, replies(content, created_at)')
-                .eq('recipient_id', user.id);
+                .select('id, content, created_at, replies(content, created_at), reactions(emoji)')
+                .eq('recipient_id', user.id)
+                .gt('expires_at', now);
             
-            const publicReplies = (messages || []).filter(m => m.replies && m.replies.length > 0).map(m => ({
-                id: m.id,
-                content: m.content,
-                timestamp: new Date(m.created_at).getTime(),
-                reply: m.replies[0].content
-            })).sort((a,b) => b.timestamp - a.timestamp);
+            const publicReplies = (messages || []).filter(m => m.replies && m.replies.length > 0).map(m => {
+                const reactionsCount = {};
+                if(m.reactions) m.reactions.forEach(r => { reactionsCount[r.emoji] = (reactionsCount[r.emoji]||0)+1; });
+                return {
+                    id: m.id,
+                    content: m.content,
+                    timestamp: new Date(m.created_at).getTime(),
+                    reply: m.replies[0].content,
+                    reactions: reactionsCount
+                };
+            }).sort((a,b) => b.timestamp - a.timestamp);
+
+            const isOwner = state.currentUser && state.currentUser.id === user.id;
+            const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
 
             const html = `
                 <div class="view active">
                     <div class="profile-header">
                         <div class="avatar-container">
-                            <div class="avatar-placeholder">${username.charAt(0).toUpperCase()}</div>
+                            ${user.avatar_url 
+                                ? `<img src="${user.avatar_url}" class="avatar" alt="Avatar">`
+                                : `<div class="avatar-placeholder">${username.charAt(0).toUpperCase()}</div>`
+                            }
+                            ${isOwner ? `
+                                <label class="upload-btn">
+                                    <i class="fa-solid fa-camera"></i>
+                                    <input type="file" id="avatar-upload" accept="image/*" class="d-none" onchange="app.uploadAvatar(event)">
+                                </label>
+                            ` : ''}
                         </div>
                         <h2 class="profile-name">@${username}</h2>
                         <p class="text-muted">${user.bio || t('bio_default')}</p>
+                        ${isOwner ? `
+                            <div style="margin-top: 16px;">
+                                <button class="btn btn-outline" style="border-radius:30px; min-height:40px;" onclick="app.copyLink('${shareUrl}')">
+                                    <i class="fa-solid fa-link"></i> ${t('btn_copy')}
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
                     
+                    ${!isOwner ? `
                     <div class="glass-card send-message-card">
                         <div class="msg-header">
                             <i class="fa-solid fa-paper-plane"></i>
@@ -425,16 +566,17 @@ const app = {
                             </div>
                             <div class="msg-footer">
                                 <span class="char-count" id="char-counter">300 ${t('chars_left')}</span>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" style="width:auto; padding:0 20px;">
                                     <i class="fa-solid fa-lock"></i> ${t('btn_send')}
                                 </button>
                             </div>
                         </form>
                     </div>
+                    ` : ''}
                     
                     ${publicReplies.length > 0 ? `
                         <div class="inbox-container">
-                            <h3 style="margin-bottom:20px;text-align:center;">الردود السابقة</h3>
+                            <h3 style="margin-bottom:20px;text-align:center;">الردود العامة</h3>
                             <div class="messages-grid">
                                 ${publicReplies.map(msg => `
                                     <div class="glass-card message-card">
@@ -443,6 +585,13 @@ const app = {
                                         <div class="reply-content">
                                             <div class="reply-label">${t('reply_label')}</div>
                                             <div>${msg.reply}</div>
+                                        </div>
+                                        <div class="reactions-bar">
+                                            ${['❤️','😂','🔥','😮','😢'].map(emoji => `
+                                                <button class="reaction-btn" onclick="app.addReaction('${msg.id}', '${emoji}')">
+                                                    ${emoji} <span class="reaction-count">${msg.reactions[emoji] || 0}</span>
+                                                </button>
+                                            `).join('')}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -456,31 +605,49 @@ const app = {
 
         inbox: async () => {
             const user = state.currentUser;
+            const now = new Date().toISOString();
             
+            // Fetch Blocked IPs
+            const { data: blocked } = await supabase.from('blocked_ips').select('ip_address').eq('user_id', user.id);
+            const blockedIps = (blocked || []).map(b => b.ip_address);
+            
+            // Fetch Messages
             const { data: messages } = await supabase.from('messages')
-                .select('id, content, created_at, replies(content, created_at)')
+                .select('id, content, created_at, sender_ip, is_read, replies(content, created_at), reactions(emoji)')
                 .eq('recipient_id', user.id)
+                .gt('expires_at', now)
                 .order('created_at', { ascending: false });
 
-            const myMessages = (messages || []).map(m => ({
-                id: m.id,
-                content: m.content,
-                timestamp: new Date(m.created_at).getTime(),
-                reply: m.replies && m.replies.length > 0 ? m.replies[0].content : null
-            }));
+            const myMessages = (messages || [])
+                .filter(m => !blockedIps.includes(m.sender_ip)) // Client-side filter
+                .map(m => {
+                    const reactionsCount = {};
+                    if(m.reactions) m.reactions.forEach(r => { reactionsCount[r.emoji] = (reactionsCount[r.emoji]||0)+1; });
+                    return {
+                        id: m.id,
+                        content: m.content,
+                        sender_ip: m.sender_ip,
+                        is_read: m.is_read,
+                        timestamp: new Date(m.created_at).getTime(),
+                        reply: m.replies && m.replies.length > 0 ? m.replies[0].content : null,
+                        reactions: reactionsCount
+                    };
+                });
 
-            const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
+            // Analytics
+            const { count: msgCount } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('recipient_id', user.id);
+            const { count: viewsCount } = await supabase.from('profile_views').select('*', { count: 'exact', head: true }).eq('profile_id', user.id);
 
             return `
                 <div class="view active inbox-container">
-                    <div class="profile-header" style="margin-bottom: 30px;">
-                        <h2 class="profile-name">@${user.username}</h2>
-                        <div class="share-link-container">
-                            <span style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap;">${t('share_link')}</span>
-                            <div class="share-url" dir="ltr">${shareUrl}</div>
-                            <button class="btn-icon" onclick="app.copyLink('${shareUrl}')" title="${t('btn_copy')}">
-                                <i class="fa-regular fa-copy"></i>
-                            </button>
+                    <div class="analytics-dashboard">
+                        <div class="stat-card">
+                            <div class="stat-value">${msgCount || 0}</div>
+                            <div class="stat-label">${t('stat_msgs')}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${viewsCount || 0}</div>
+                            <div class="stat-label">${t('stat_views')}</div>
                         </div>
                     </div>
 
@@ -498,7 +665,7 @@ const app = {
                                 <p>${t('no_messages')}</p>
                             </div>
                         ` : myMessages.map(msg => `
-                            <div class="glass-card message-card">
+                            <div class="glass-card message-card" style="${!msg.is_read ? 'border-color: var(--primary);' : ''}">
                                 <div class="msg-time"><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</div>
                                 <div class="msg-content">"${msg.content}"</div>
                                 
@@ -509,17 +676,29 @@ const app = {
                                     </div>
                                 ` : `
                                     <div class="msg-actions">
-                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active')">
+                                        <button class="btn btn-outline" style="min-height: 36px; padding: 0 16px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active')">
                                             <i class="fa-solid fa-reply"></i> ${t('btn_reply')}
                                         </button>
+                                        ${msg.sender_ip ? `
+                                        <button class="btn-icon" style="width:36px; height:36px;" onclick="app.blockIp('${msg.sender_ip}')" title="Block Sender">
+                                            <i class="fa-solid fa-ban text-danger"></i>
+                                        </button>
+                                        ` : ''}
                                     </div>
                                     <div class="msg-reply-area" id="reply-area-${msg.id}">
                                         <form onsubmit="app.submitReply(event, '${msg.id}')">
                                             <textarea class="form-control" placeholder="${t('reply_ph')}" required style="min-height: 80px; margin-bottom: 10px;"></textarea>
-                                            <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">${t('btn_reply')}</button>
+                                            <button type="submit" class="btn btn-primary" style="min-height: 40px;">${t('btn_reply')}</button>
                                         </form>
                                     </div>
                                 `}
+                                <div class="reactions-bar">
+                                    ${['❤️','😂','🔥','😮','😢'].map(emoji => `
+                                        <button class="reaction-btn" onclick="app.addReaction('${msg.id}', '${emoji}')">
+                                            ${emoji} <span class="reaction-count">${msg.reactions[emoji] || 0}</span>
+                                        </button>
+                                    `).join('')}
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -548,7 +727,9 @@ const app = {
             } else if (data.user) {
                 const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
                 if (profile) {
-                    state.currentUser = { id: profile.id, username: profile.username };
+                    state.currentUser = profile;
+                    this.setupRealtime();
+                    await this.fetchUnreadCount();
                     this.navigate('inbox');
                     showToast(`أهلاً بك @${profile.username}`, 'success');
                 }
@@ -586,7 +767,9 @@ const app = {
                 if (profileError) {
                     showToast(profileError.message, 'error');
                 } else {
-                    state.currentUser = { id: data.user.id, username: un };
+                    const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+                    state.currentUser = p;
+                    this.setupRealtime();
                     this.navigate('inbox');
                     showToast(t('reg_success'), 'success');
                 }
@@ -596,6 +779,9 @@ const app = {
     },
 
     setupProfileEvents(user) {
+        const form = document.getElementById('send-msg-form');
+        if(!form) return;
+        
         const ta = document.getElementById('msg-content');
         const counter = document.getElementById('char-counter');
         
@@ -604,7 +790,7 @@ const app = {
             counter.textContent = `${left} ${t('chars_left')}`;
         });
 
-        document.getElementById('send-msg-form').addEventListener('submit', async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = ta.value.trim();
             if (!content) return;
@@ -612,8 +798,9 @@ const app = {
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
 
+            const ip = state.clientIp || 'unknown';
             const { error } = await supabase.from('messages').insert([
-                { recipient_id: user.id, content: content }
+                { recipient_id: user.id, content: content, sender_ip: ip }
             ]);
             
             if (error) {
@@ -622,10 +809,21 @@ const app = {
                 ta.value = '';
                 counter.textContent = `300 ${t('chars_left')}`;
                 showToast(t('msg_sent'), 'success');
-                this.celebrateSend(btn);
             }
             btn.disabled = false;
         });
+    },
+    
+    setupInboxEvents() {
+        if (!state.currentUser) return;
+        // Mark all as read when opening inbox
+        supabase.from('messages').update({ is_read: true })
+            .eq('recipient_id', state.currentUser.id)
+            .eq('is_read', false)
+            .then(() => {
+                state.unreadCount = 0;
+                this.updateNav();
+            });
     },
 
     async submitReply(e, msgId) {
@@ -648,93 +846,6 @@ const app = {
                 this.renderCurrentView(); 
             }
         }
-    },
-
-    // --- Visual Effects ---
-    celebrateSend(button) {
-        const rect = button.getBoundingClientRect();
-        for(let i=0; i<10; i++) {
-            const p = document.createElement('div');
-            p.style.position = 'fixed';
-            p.style.left = (rect.left + rect.width/2) + 'px';
-            p.style.top = (rect.top + rect.height/2) + 'px';
-            p.style.width = '10px';
-            p.style.height = '10px';
-            p.style.backgroundColor = i%2===0 ? 'var(--primary)' : 'var(--secondary)';
-            p.style.borderRadius = '50%';
-            p.style.zIndex = 9999;
-            p.style.pointerEvents = 'none';
-            document.body.appendChild(p);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const velocity = 2 + Math.random() * 5;
-            let tx = Math.cos(angle) * velocity * 20;
-            let ty = Math.sin(angle) * velocity * 20;
-            
-            p.animate([
-                { transform: 'translate(0,0) scale(1)', opacity: 1 },
-                { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-            ], {
-                duration: 600 + Math.random() * 400,
-                easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
-            }).onfinish = () => p.remove();
-        }
-    },
-
-    initParticles() {
-        const container = document.getElementById('particles');
-        if (!container) return;
-        const colors = ['#8a2be2', '#ff007f', '#00f0ff'];
-        
-        for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            const size = Math.random() * 4 + 2;
-            const left = Math.random() * 100;
-            const delay = Math.random() * 20;
-            const duration = Math.random() * 10 + 10;
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.left = `${left}%`;
-            particle.style.bottom = `-10px`;
-            particle.style.backgroundColor = color;
-            particle.style.animationDelay = `${delay}s`;
-            particle.style.animationDuration = `${duration}s`;
-            
-            container.appendChild(particle);
-        }
-    },
-
-    initCursor() {
-        const cursor = document.getElementById('cursor');
-        const follower = document.getElementById('cursor-follower');
-        
-        if (!cursor || !follower) return;
-
-        let mouseX = 0, mouseY = 0;
-        let cursorX = 0, cursorY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            
-            cursor.style.left = mouseX + 'px';
-            cursor.style.top = mouseY + 'px';
-        });
-
-        const render = () => {
-            cursorX += (mouseX - cursorX) * 0.2;
-            cursorY += (mouseY - cursorY) * 0.2;
-            
-            follower.style.left = cursorX + 'px';
-            follower.style.top = cursorY + 'px';
-            
-            requestAnimationFrame(render);
-        };
-        requestAnimationFrame(render);
     }
 };
 

@@ -2,27 +2,23 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Whispr | رسائل مجهولة</title>
     <meta name="description" content="استقبل رسائل مجهولة من أصدقائك ومتابعيك.">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-theme="dark">
     <!-- Background Elements -->
     <div class="bg-gradient"></div>
     <div class="particles" id="particles"></div>
 
-    <!-- Custom Cursor (Desktop Only) -->
-    <div class="cursor" id="cursor"></div>
-    <div class="cursor-follower" id="cursor-follower"></div>
-
-    <!-- Navbar -->
-    <nav class="navbar">
+    <!-- Top Navigation (Mobile First: Logo and Settings) -->
+    <nav class="top-bar">
         <div class="nav-container">
             <div class="logo" onclick="app.navigate('home')">
-                <div class="logo-icon" style="background: transparent; box-shadow: none; width: auto; height: auto; display: flex; align-items: center; justify-content: center;">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e0aaff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M9 10h.01"></path>
                         <path d="M15 10h.01"></path>
                         <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"></path>
@@ -31,19 +27,26 @@
                 <span>Whispr</span>
             </div>
             
-            <div class="nav-actions">
+            <div class="top-actions">
+                <button id="theme-toggle" class="btn-icon theme-btn" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-moon" id="theme-icon"></i>
+                </button>
                 <button id="lang-toggle" class="btn-icon lang-btn" aria-label="Toggle Language">
                     <span class="lang-text">EN</span>
                 </button>
-                <div id="auth-nav-container">
-                    <!-- Populated by JS -->
-                </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content Container (SPA) -->
     <main id="app-root" class="page-container"></main>
+
+    <!-- Bottom Navigation Bar (Mobile First) -->
+    <nav class="bottom-nav" id="bottom-nav" style="display: none;">
+        <div class="bottom-nav-container" id="bottom-nav-container">
+            <!-- Populated by JS -->
+        </div>
+    </nav>
 
     <!-- Toast Notifications -->
     <div id="toast-container"></div>
