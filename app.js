@@ -458,6 +458,7 @@ const app = {
     },
 
     async renderCurrentView() {
+            if (!this.currentRoute) return;
         const routeParts = this.currentRoute.split('/');
         const mainRoute = routeParts[0];
 
