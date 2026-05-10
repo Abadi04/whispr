@@ -1117,8 +1117,81 @@ const app = {
             
             // Add a little celebration effect
             this.celebrateSend(e.target.querySelector('button'));
+            
+            // Smooth scroll to latest on send
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         });
         
+        // Smart scrolling logic
+        const oldBtn = document.getElementById('scroll-to-bottom-btn');
+        if (oldBtn) oldBtn.remove();
+
+        const scrollBtn = document.createElement('button');
+        scrollBtn.id = 'scroll-to-bottom-btn';
+        scrollBtn.className = 'btn btn-primary';
+        scrollBtn.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 1000; border-radius: 30px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: opacity 0.3s ease, transform 0.3s ease; padding: 10px 20px; font-size: 0.95rem; opacity: 0; transform: translate(-50%, 20px); pointer-events: none;';
+        scrollBtn.innerHTML = '<i class="fa-solid fa-arrow-down" style="margin-left: 8px;"></i> الانتقال لآخر رسالة';
+        document.body.appendChild(scrollBtn);
+        
+        const scrollToBottom = () => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+        
+        scrollBtn.addEventListener('click', scrollToBottom);
+
+        // Scroll smoothly on open
+        setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 150);
+
+        let scrollTimeout;
+        const handleScroll = () => {
+            if (app.currentRoute !== 'u') {
+                window.removeEventListener('scroll', handleScroll);
+                if (scrollBtn) scrollBtn.remove();
+                return;
+            }
+            
+            // Calculate if user is near bottom (within 200px)
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const threshold = document.body.scrollHeight - 200;
+            
+            if (scrollPosition < threshold) {
+                scrollBtn.style.display = 'block';
+                // Trigger reflow for animation
+                void scrollBtn.offsetWidth;
+                scrollBtn.style.opacity = '1';
+                scrollBtn.style.transform = 'translate(-50%, 0)';
+                scrollBtn.style.pointerEvents = 'auto';
+            } else {
+                scrollBtn.style.opacity = '0';
+                scrollBtn.style.transform = 'translate(-50%, 20px)';
+                scrollBtn.style.pointerEvents = 'none';
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    if (scrollBtn.style.opacity === '0') {
+                        scrollBtn.style.display = 'none';
+                    }
+                }, 300);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // Mock incoming message detection for smart scroll demo
+        const originalPush = state.messages.push;
+        state.messages.push = function() {
+            const res = originalPush.apply(this, arguments);
+            if (app.currentRoute === 'u') {
+                const scrollPosition = window.innerHeight + window.scrollY;
+                const threshold = document.body.scrollHeight - 200;
+                if (scrollPosition >= threshold) {
+                    setTimeout(scrollToBottom, 50);
+                }
+            }
+            return res;
+        };
+
         this.initSwipeActions();
     },
 
