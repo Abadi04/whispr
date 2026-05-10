@@ -756,10 +756,18 @@ const app = {
             ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
         });
 
-        document.getElementById('send-msg-form').addEventListener('submit', (e) => {
+        document.getElementById('send-msg-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = ta.value.trim();
             if (!content) return;
+            
+            if (state.currentUser) {
+                const isBlocked = await blocksAPI.isBlocked(user.id, state.currentUser.id);
+                if (isBlocked) {
+                    showToast("لقد تم حظرك من قبل هذا المستخدم", "error");
+                    return;
+                }
+            }
             
             state.messages.push({
                 id: generateId(),
