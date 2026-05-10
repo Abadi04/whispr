@@ -115,26 +115,27 @@ const TRANSLATIONS = {
     }
 };
 
-// --- Supabase Setup ---
-const supabaseUrl = 'https://hhbhmhyqgszvgkaacbvm.supabase.co';
-const supabaseKey = 'sb_publishable_H_ZX2gdYhq606lCTUqXPQA_KrnRefL_';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
 // --- App State ---
 const state = {
     lang: localStorage.getItem('bawh_lang') || 'ar',
-    currentUser: null
+    users: JSON.parse(localStorage.getItem('bawh_users')) || [],
+    messages: JSON.parse(localStorage.getItem('bawh_messages')) || [],
+    currentUser: JSON.parse(localStorage.getItem('bawh_current_user')) || null
 };
 
 // --- Utility Functions ---
 const saveState = () => {
+    localStorage.setItem('bawh_users', JSON.stringify(state.users));
+    localStorage.setItem('bawh_messages', JSON.stringify(state.messages));
+    localStorage.setItem('bawh_current_user', JSON.stringify(state.currentUser));
     localStorage.setItem('bawh_lang', state.lang);
 };
 
 const t = (key) => TRANSLATIONS[state.lang][key] || key;
 
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
 const formatDate = (timestamp) => {
-    if (!timestamp) return '';
     const d = new Date(timestamp);
     return d.toLocaleDateString(state.lang === 'ar' ? 'ar-SA' : 'en-US', {
         month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'
@@ -161,30 +162,27 @@ const showToast = (message, type = 'info') => {
 
 // --- Core Application Logic ---
 const app = {
-    async init() {
+    init() {
         this.root = document.getElementById('app-root');
         this.setupEventListeners();
         this.applyLanguage();
+        this.handleRoute();
         this.initParticles();
         this.initCursor();
         
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profile) {
-                state.currentUser = { id: profile.id, username: profile.username };
-            }
-        }
-        
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT') {
-                state.currentUser = null;
-                this.navigate('home');
-            }
-        });
-
-        this.handleRoute();
         window.addEventListener('hashchange', () => this.handleRoute());
+        
+        // Add sample user if empty for demo purposes
+        if (state.users.length === 0) {
+            state.users.push({
+                id: generateId(),
+                username: 'demo',
+                password: '123',
+                email: 'demo@bawh.com',
+                bio: 'Demo User - Testing the app'
+            });
+            saveState();
+        }
     },
 
     setupEventListeners() {
@@ -212,6 +210,7 @@ const app = {
         
         document.querySelector('.lang-text').textContent = TRANSLATIONS[state.lang].lang_toggle;
         
+        // Update static translations
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
@@ -228,10 +227,10 @@ const app = {
         window.location.hash = route;
     },
 
-    async handleRoute() {
+    handleRoute() {
         const hash = window.location.hash.slice(1) || 'home';
         this.currentRoute = hash;
-        await this.renderCurrentView();
+        this.renderCurrentView();
         this.updateNav();
     },
 
@@ -254,12 +253,11 @@ const app = {
         }
     },
 
-    async renderCurrentView() {
+    renderCurrentView() {
         const routeParts = this.currentRoute.split('/');
         const mainRoute = routeParts[0];
 
         let content = '';
-        let profileUser = null;
 
         switch (mainRoute) {
             case 'home':
@@ -275,16 +273,13 @@ const app = {
                 break;
             case 'inbox':
                 if (!state.currentUser) return this.navigate('login');
-                content = await this.views.inbox();
+                content = this.views.inbox();
                 break;
             case 'u':
                 if (routeParts[1]) {
-                    const result = await this.views.profile(routeParts[1]);
-                    content = result.html;
-                    profileUser = result.user;
+                    content = this.views.profile(routeParts[1]);
                 } else {
                     this.navigate('home');
-                    return;
                 }
                 break;
             default:
@@ -293,8 +288,11 @@ const app = {
 
         this.root.innerHTML = content;
         
-        if (mainRoute === 'u' && profileUser) {
-            this.setupProfileEvents(profileUser);
+        // Execute post-render scripts
+        if (mainRoute === 'u' && routeParts[1]) {
+            this.setupProfileEvents(routeParts[1]);
+        } else if (mainRoute === 'inbox') {
+            this.setupInboxEvents();
         } else if (mainRoute === 'login') {
             this.setupLoginEvents();
         } else if (mainRoute === 'register') {
@@ -303,9 +301,9 @@ const app = {
     },
 
     // --- Actions ---
-    async logout() {
-        await supabase.auth.signOut();
+    logout() {
         state.currentUser = null;
+        saveState();
         this.navigate('home');
         showToast(t('nav_logout'), 'success');
     },
@@ -342,8 +340,8 @@ const app = {
                     </div>
                     <form id="login-form">
                         <div class="form-group">
-                            <label class="form-label">${t('email_label')}</label>
-                            <input type="email" id="login-email" class="form-control" placeholder="${t('email_ph')}" required>
+                            <label class="form-label">${t('username_label')}</label>
+                            <input type="text" id="login-username" class="form-control" placeholder="${t('username_ph')}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">${t('password_label')}</label>
@@ -387,24 +385,15 @@ const app = {
             </div>
         `,
 
-        profile: async (username) => {
-            const { data: user, error } = await supabase.from('profiles').select('*').eq('username', username).single();
-            if (error || !user) {
-                return { html: `<div class="view active empty-state"><h2>${t('err_user_not_found')}</h2></div>`, user: null };
+        profile: (username) => {
+            const user = state.users.find(u => u.username === username);
+            if (!user) {
+                return `<div class="view active empty-state"><h2>${t('err_user_not_found')}</h2></div>`;
             }
 
-            const { data: messages } = await supabase.from('messages')
-                .select('id, content, created_at, replies(content, created_at)')
-                .eq('recipient_id', user.id);
-            
-            const publicReplies = (messages || []).filter(m => m.replies && m.replies.length > 0).map(m => ({
-                id: m.id,
-                content: m.content,
-                timestamp: new Date(m.created_at).getTime(),
-                reply: m.replies[0].content
-            })).sort((a,b) => b.timestamp - a.timestamp);
+            const publicReplies = state.messages.filter(m => m.recipientId === user.id && m.reply);
 
-            const html = `
+            return `
                 <div class="view active">
                     <div class="profile-header">
                         <div class="avatar-container">
@@ -451,24 +440,11 @@ const app = {
                     ` : ''}
                 </div>
             `;
-            return { html, user };
         },
 
-        inbox: async () => {
+        inbox: () => {
             const user = state.currentUser;
-            
-            const { data: messages } = await supabase.from('messages')
-                .select('id, content, created_at, replies(content, created_at)')
-                .eq('recipient_id', user.id)
-                .order('created_at', { ascending: false });
-
-            const myMessages = (messages || []).map(m => ({
-                id: m.id,
-                content: m.content,
-                timestamp: new Date(m.created_at).getTime(),
-                reply: m.replies && m.replies.length > 0 ? m.replies[0].content : null
-            }));
-
+            const myMessages = state.messages.filter(m => m.recipientId === user.id).sort((a,b) => b.timestamp - a.timestamp);
             const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
 
             return `
@@ -530,72 +506,55 @@ const app = {
 
     // --- Form Handlers ---
     setupLoginEvents() {
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true;
-
-            const em = document.getElementById('login-email').value;
+            const un = document.getElementById('login-username').value;
             const pw = document.getElementById('login-password').value;
             
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: em,
-                password: pw,
-            });
-            
-            if (error) {
+            const user = state.users.find(u => u.username === un && u.password === pw);
+            if (user) {
+                state.currentUser = { id: user.id, username: user.username };
+                saveState();
+                this.navigate('inbox');
+                showToast(`أهلاً بك @${user.username}`, 'success');
+            } else {
                 showToast(t('err_invalid_creds'), 'error');
-            } else if (data.user) {
-                const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-                if (profile) {
-                    state.currentUser = { id: profile.id, username: profile.username };
-                    this.navigate('inbox');
-                    showToast(`أهلاً بك @${profile.username}`, 'success');
-                }
             }
-            btn.disabled = false;
         });
     },
 
     setupRegisterEvents() {
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
+        document.getElementById('register-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true;
-
             const un = document.getElementById('reg-username').value;
             const em = document.getElementById('reg-email').value;
             const pw = document.getElementById('reg-password').value;
             
-            const { data, error } = await supabase.auth.signUp({
-                email: em,
-                password: pw,
-            });
-            
-            if (error) {
-                showToast(error.message, 'error');
-                btn.disabled = false;
+            if (state.users.some(u => u.username === un)) {
+                showToast(t('err_user_exists'), 'error');
                 return;
             }
-
-            if (data.user) {
-                const { error: profileError } = await supabase.from('profiles').insert([
-                    { id: data.user.id, username: un, bio: '' }
-                ]);
-                
-                if (profileError) {
-                    showToast(profileError.message, 'error');
-                } else {
-                    state.currentUser = { id: data.user.id, username: un };
-                    this.navigate('inbox');
-                    showToast(t('reg_success'), 'success');
-                }
-            }
-            btn.disabled = false;
+            
+            const newUser = {
+                id: generateId(),
+                username: un,
+                email: em,
+                password: pw,
+                bio: ''
+            };
+            
+            state.users.push(newUser);
+            state.currentUser = { id: newUser.id, username: newUser.username };
+            saveState();
+            this.navigate('inbox');
+            showToast(t('reg_success'), 'success');
         });
     },
 
-    setupProfileEvents(user) {
+    setupProfileEvents(username) {
+        const user = state.users.find(u => u.username === username);
+        if (!user) return;
+
         const ta = document.getElementById('msg-content');
         const counter = document.getElementById('char-counter');
         
@@ -604,49 +563,40 @@ const app = {
             counter.textContent = `${left} ${t('chars_left')}`;
         });
 
-        document.getElementById('send-msg-form').addEventListener('submit', async (e) => {
+        document.getElementById('send-msg-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const content = ta.value.trim();
             if (!content) return;
             
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true;
-
-            const { error } = await supabase.from('messages').insert([
-                { recipient_id: user.id, content: content }
-            ]);
+            state.messages.push({
+                id: generateId(),
+                recipientId: user.id,
+                content: content,
+                timestamp: Date.now(),
+                reply: null
+            });
+            saveState();
             
-            if (error) {
-                showToast('حدث خطأ أثناء الإرسال', 'error');
-            } else {
-                ta.value = '';
-                counter.textContent = `300 ${t('chars_left')}`;
-                showToast(t('msg_sent'), 'success');
-                this.celebrateSend(btn);
-            }
-            btn.disabled = false;
+            ta.value = '';
+            counter.textContent = `300 ${t('chars_left')}`;
+            showToast(t('msg_sent'), 'success');
+            
+            // Add a little celebration effect
+            this.celebrateSend(e.target.querySelector('button'));
         });
     },
 
-    async submitReply(e, msgId) {
+    submitReply(e, msgId) {
         e.preventDefault();
         const textarea = e.target.querySelector('textarea');
         const replyText = textarea.value.trim();
-        const btn = e.target.querySelector('button[type="submit"]');
         
-        if (replyText) {
-            btn.disabled = true;
-            const { error } = await supabase.from('replies').insert([
-                { message_id: msgId, content: replyText }
-            ]);
-            
-            if (error) {
-                showToast(error.message, 'error');
-                btn.disabled = false;
-            } else {
-                showToast(t('reply_added'), 'success');
-                this.renderCurrentView(); 
-            }
+        const msgIndex = state.messages.findIndex(m => m.id === msgId);
+        if (msgIndex !== -1 && replyText) {
+            state.messages[msgIndex].reply = replyText;
+            saveState();
+            showToast(t('reply_added'), 'success');
+            this.renderCurrentView(); // re-render to show the reply
         }
     },
 
@@ -683,13 +633,13 @@ const app = {
 
     initParticles() {
         const container = document.getElementById('particles');
-        if (!container) return;
         const colors = ['#8a2be2', '#ff007f', '#00f0ff'];
         
         for (let i = 0; i < 30; i++) {
             const particle = document.createElement('div');
             particle.className = 'particle';
             
+            // Random properties
             const size = Math.random() * 4 + 2;
             const left = Math.random() * 100;
             const delay = Math.random() * 20;
@@ -721,10 +671,12 @@ const app = {
             mouseX = e.clientX;
             mouseY = e.clientY;
             
+            // Immediate cursor
             cursor.style.left = mouseX + 'px';
             cursor.style.top = mouseY + 'px';
         });
 
+        // Smooth follower
         const render = () => {
             cursorX += (mouseX - cursorX) * 0.2;
             cursorY += (mouseY - cursorY) * 0.2;
