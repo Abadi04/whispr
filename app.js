@@ -245,7 +245,6 @@ const app = {
         this.applyLanguage();
         
         try {
-            this.root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-muted)">جاري التحميل...</div>`;
             await this.initAuth();
         } catch(e) {
             console.error(e);
@@ -349,6 +348,7 @@ const app = {
         if (this.authPromise) return this.authPromise;
         
         this.authPromise = (async () => {
+                    this.root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-muted)">جاري التحميل...</div>`;
             
             
             if (window.supabaseClient) {
