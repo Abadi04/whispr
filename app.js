@@ -335,7 +335,37 @@ const app = {
         window.location.hash = route;
     },
 
+    async initAuth() {
+        if (this.authPromise) return this.authPromise;
+        
+        this.authPromise = (async () => {
+            this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
+            
+            let authEmail = null;
+            if (window.supabaseClient) {
+                try {
+                    const { data } = await window.supabaseClient.auth.getUser();
+                    if (data && data.user && data.user.email) {
+                        authEmail = data.user.email;
+                    }
+                } catch (err) {}
+            }
+            
+            if (!authEmail && state.currentUser) {
+                const localU = state.users.find(u => u.id === state.currentUser.id);
+                if (localU) authEmail = localU.email;
+            }
+
+            app.authEmail = authEmail;
+            app.isOwner = authEmail === 'admin@whispr.app';
+        })();
+        
+        return this.authPromise;
+    },
+
     async handleRoute() {
+        await this.initAuth();
+        
         const hash = window.location.hash.slice(1) || 'home';
         
         if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/')) {
@@ -383,21 +413,7 @@ const app = {
         container.style.alignItems = 'center';
         container.style.gap = '8px';
         
-        let authEmail = "غير مسجل الدخول";
-        if (window.supabaseClient) {
-            try {
-                const { data } = await window.supabaseClient.auth.getUser();
-                if (data && data.user && data.user.email) {
-                    authEmail = data.user.email;
-                } else if (state.currentUser) {
-                    const fullUser = state.users.find(u => u.id === state.currentUser.id);
-                    if (fullUser && fullUser.email) authEmail = fullUser.email;
-                }
-            } catch (err) {}
-        } else if (state.currentUser) {
-            const fullUser = state.users.find(u => u.id === state.currentUser.id);
-            if (fullUser && fullUser.email) authEmail = fullUser.email;
-        }
+        let authEmail = app.authEmail || "غير مسجل الدخول";
 
         const userIndicatorHtml = `
             <div class="current-user-indicator" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
@@ -438,42 +454,53 @@ const app = {
 
         let content = '';
 
-        switch (mainRoute) {
-            case 'home':
-                content = this.views.home();
-                break;
-            case 'login':
-                if (state.currentUser) return this.navigate('inbox');
-                content = this.views.login();
-                break;
-            case 'register':
-                if (state.currentUser) return this.navigate('inbox');
-                content = this.views.register();
-                break;
-            case 'inbox':
-                if (!state.currentUser) return this.navigate('login');
-                content = this.views.inbox();
-                break;
-            case 'blocked':
-                if (!state.currentUser) return this.navigate('login');
-                content = this.views.blocked();
-                break;
-            case 'analytics':
-                if (!state.currentUser) return this.navigate('login');
-                content = this.views.analytics();
-                break;
-            case 'onboarding':
-                content = this.views.onboarding();
-                break;
-            case 'u':
-                if (routeParts[1]) {
-                    content = this.views.profile(routeParts[1]);
-                } else {
-                    this.navigate('home');
-                }
-                break;
-            default:
-                content = this.views.home();
+        try {
+            switch (mainRoute) {
+                case 'home':
+                    content = this.views.home();
+                    break;
+                case 'login':
+                    if (state.currentUser) return this.navigate('inbox');
+                    content = this.views.login();
+                    break;
+                case 'register':
+                    if (state.currentUser) return this.navigate('inbox');
+                    content = this.views.register();
+                    break;
+                case 'inbox':
+                    if (!state.currentUser) return this.navigate('login');
+                    content = this.views.inbox();
+                    break;
+                case 'blocked':
+                    if (!state.currentUser) return this.navigate('login');
+                    content = this.views.blocked();
+                    break;
+                case 'analytics':
+                    if (!state.currentUser) return this.navigate('login');
+                    if (!app.isOwner) return this.navigate('inbox');
+                    content = this.views.analytics();
+                    break;
+                case 'onboarding':
+                    content = this.views.onboarding();
+                    break;
+                case 'u':
+                    if (routeParts[1]) {
+                        content = this.views.profile(routeParts[1]);
+                    } else {
+                        this.navigate('home');
+                    }
+                    break;
+                default:
+                    content = this.views.home();
+            }
+        } catch (error) {
+            console.error("Render error:", error);
+            content = `<div class="view active empty-state" style="padding: 40px; text-align: center;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--danger); margin-bottom: 20px;"></i>
+                <h3>حدث خطأ غير متوقع</h3>
+                <p style="color: var(--text-muted); margin-top: 10px;">عذراً، حدثت مشكلة أثناء تحميل هذه الصفحة.</p>
+                <button class="btn btn-primary" style="margin-top: 20px; width: auto; padding: 10px 24px; border-radius: 20px;" onclick="app.navigate('home')">العودة للرئيسية</button>
+            </div>`;
         }
 
         this.root.innerHTML = content;
@@ -782,30 +809,30 @@ const app = {
                                     const dateLabel = getDateLabel(msg.timestamp);
                                     let separatorHtml = '';
                                     if (dateLabel !== lastDateLabelProfile) {
-                                        separatorHtml = \`<div class="date-separator" style="text-align: center; margin: 24px 0 16px;"><span style="background: var(--surface); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); box-shadow: var(--glass-shadow);">\${dateLabel}</span></div>\`;
+                                        separatorHtml = `<div class="date-separator" style="text-align: center; margin: 24px 0 16px;"><span style="background: var(--surface); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); box-shadow: var(--glass-shadow);">${dateLabel}</span></div>`;
                                         lastDateLabelProfile = dateLabel;
                                     }
-                                    return \`
-                                    \${separatorHtml}
+                                    return `
+                                    ${separatorHtml}
                                     <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
                                         <div class="swipe-actions" style="position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; gap: 8px; z-index: 1;">
-                                            <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('\${window.location.origin}\${window.location.pathname}#u/\${username}')"><i class="fa-solid fa-copy"></i></button>
-                                            \${state.currentUser && state.currentUser.id === user.id ? \`<button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('\${msg.id}')"><i class="fa-solid fa-trash"></i></button>\` : ''}
+                                            <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('${window.location.origin}${window.location.pathname}#u/${username}')"><i class="fa-solid fa-copy"></i></button>
+                                            ${state.currentUser && state.currentUser.id === user.id ? `<button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('${msg.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
                                         </div>
-                                        <div class="glass-card message-card message-swipe-front" id="swipe-front-\${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
+                                        <div class="glass-card message-card message-swipe-front" id="swipe-front-${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
                                             <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                                                <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> \${formatTime(msg.timestamp)}</span>
+                                                <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> ${formatTime(msg.timestamp)}</span>
                                                 <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
                                             </div>
-                                            <div class="msg-content">"\${msg.content}"</div>
+                                            <div class="msg-content">"${msg.content}"</div>
                                             <div class="reply-content">
-                                                <div class="reply-label">\${t('reply_label')}</div>
-                                                <div>\${msg.reply}</div>
+                                                <div class="reply-label">${t('reply_label')}</div>
+                                                <div>${msg.reply}</div>
                                             </div>
-                                            \${app.renderReactions(msg)}
+                                            ${app.renderReactions(msg)}
                                         </div>
                                     </div>
-                                    \`;
+                                    `;
                                 }).join('')}
                             </div>
                         </div>
@@ -1044,46 +1071,46 @@ const app = {
                                 const dateLabel = getDateLabel(msg.timestamp);
                                 let separatorHtml = '';
                                 if (dateLabel !== lastDateLabelInbox) {
-                                    separatorHtml = \`<div class="date-separator" style="text-align: center; margin: 24px 0 16px;"><span style="background: var(--surface); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); box-shadow: var(--glass-shadow);">\${dateLabel}</span></div>\`;
+                                    separatorHtml = `<div class="date-separator" style="text-align: center; margin: 24px 0 16px;"><span style="background: var(--surface); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); box-shadow: var(--glass-shadow);">${dateLabel}</span></div>`;
                                     lastDateLabelInbox = dateLabel;
                                 }
-                                return \`
-                                \${separatorHtml}
+                                return `
+                                ${separatorHtml}
                                 <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
                                     <div class="swipe-actions" style="position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; gap: 8px; z-index: 1;">
-                                        \${!msg.reply ? \`<button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="document.getElementById('reply-area-\${msg.id}').classList.toggle('active'); document.querySelector('#swipe-front-\${msg.id}').style.transform='translateX(0)';"><i class="fa-solid fa-reply"></i></button>\` : ''}
-                                        <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('\${msg.content}')"><i class="fa-solid fa-copy"></i></button>
-                                        <button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('\${msg.id}')"><i class="fa-solid fa-trash"></i></button>
+                                        ${!msg.reply ? `<button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active'); document.querySelector('#swipe-front-${msg.id}').style.transform='translateX(0)';"><i class="fa-solid fa-reply"></i></button>` : ''}
+                                        <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('${msg.content}')"><i class="fa-solid fa-copy"></i></button>
+                                        <button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('${msg.id}')"><i class="fa-solid fa-trash"></i></button>
                                     </div>
-                                    <div class="glass-card message-card message-swipe-front" id="swipe-front-\${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
+                                    <div class="glass-card message-card message-swipe-front" id="swipe-front-${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
                                         <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                                            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> \${formatTime(msg.timestamp)}</span>
+                                            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> ${formatTime(msg.timestamp)}</span>
                                             <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
                                         </div>
-                                        <div class="msg-content">"\${msg.content}"</div>
+                                        <div class="msg-content">"${msg.content}"</div>
                                         
-                                        \${msg.reply ? \`
+                                        ${msg.reply ? `
                                             <div class="reply-content">
-                                                <div class="reply-label">\${t('reply_label')}</div>
-                                                <div>\${msg.reply}</div>
+                                                <div class="reply-label">${t('reply_label')}</div>
+                                                <div>${msg.reply}</div>
                                             </div>
-                                        \` : \`
+                                        ` : `
                                             <div class="msg-actions">
-                                                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-\${msg.id}').classList.toggle('active')">
-                                                    <i class="fa-solid fa-reply"></i> \${t('btn_reply')}
+                                                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active')">
+                                                    <i class="fa-solid fa-reply"></i> ${t('btn_reply')}
                                                 </button>
                                             </div>
-                                            <div class="msg-reply-area" id="reply-area-\${msg.id}">
-                                                <form onsubmit="app.submitReply(event, '\${msg.id}')">
-                                                    <textarea class="form-control" placeholder="\${t('reply_ph')}" required style="min-height: 80px; margin-bottom: 10px;"></textarea>
-                                                    <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">\${t('btn_reply')}</button>
+                                            <div class="msg-reply-area" id="reply-area-${msg.id}">
+                                                <form onsubmit="app.submitReply(event, '${msg.id}')">
+                                                    <textarea class="form-control" placeholder="${t('reply_ph')}" required style="min-height: 80px; margin-bottom: 10px;"></textarea>
+                                                    <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">${t('btn_reply')}</button>
                                                 </form>
                                             </div>
-                                        \`}
-                                        \${app.renderReactions(msg)}
+                                        `}
+                                        ${app.renderReactions(msg)}
                                     </div>
                                 </div>
-                                \`;
+                                `;
                             }).join('');
                         })()}
                     </div>
