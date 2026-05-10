@@ -374,6 +374,10 @@ const app = {
                 if (!state.currentUser) return this.navigate('login');
                 content = this.views.blocked();
                 break;
+            case 'analytics':
+                if (!state.currentUser) return this.navigate('login');
+                content = this.views.analytics();
+                break;
             case 'u':
                 if (routeParts[1]) {
                     content = this.views.profile(routeParts[1]);
@@ -669,6 +673,64 @@ const app = {
             `;
         },
 
+        analytics: () => {
+            const fullUser = state.currentUser ? state.users.find(u => u.id === state.currentUser.id) : null;
+            if (!fullUser || fullUser.email !== 'admin@whispr.app') {
+                return `<div class="view active empty-state"><h2>غير مصرح لك بالدخول</h2></div>`;
+            }
+
+            const totalUsers = state.users.length;
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            
+            const recentMessages = state.messages.filter(m => m.timestamp >= sevenDaysAgo);
+            const totalRecentMessages = recentMessages.length;
+            
+            const activeUserIds = new Set();
+            recentMessages.forEach(m => {
+                if (m.senderId) activeUserIds.add(m.senderId);
+                if (m.recipientId) activeUserIds.add(m.recipientId);
+            });
+            const activeUsersCount = activeUserIds.size;
+            const avgMessages = activeUsersCount === 0 ? 0 : (totalRecentMessages / activeUsersCount).toFixed(1);
+
+            return `
+                <div class="view active inbox-container">
+                    <div class="inbox-header">
+                        <h2>لوحة الإحصائيات</h2>
+                        <button class="btn btn-outline" onclick="app.navigate('inbox')" style="padding: 6px 12px; font-size: 0.9rem;">
+                            <i class="fa-solid fa-arrow-right"></i> رجوع
+                        </button>
+                    </div>
+                    
+                    <div class="messages-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                        <div class="glass-card" style="text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-users" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 1.8rem; margin: 0;">${totalUsers}</h3>
+                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">إجمالي المستخدمين</p>
+                        </div>
+                        
+                        <div class="glass-card" style="text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-user-check" style="font-size: 2rem; color: #10b981; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 1.8rem; margin: 0;">${activeUsersCount}</h3>
+                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">نشطون آخر 7 أيام</p>
+                        </div>
+                        
+                        <div class="glass-card" style="text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-envelope" style="font-size: 2rem; color: #f59e0b; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 1.8rem; margin: 0;">${totalRecentMessages}</h3>
+                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">رسائل آخر 7 أيام</p>
+                        </div>
+                        
+                        <div class="glass-card" style="text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-chart-pie" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 1.8rem; margin: 0;">${avgMessages}</h3>
+                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">متوسط الرسائل/مستخدم</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+
         blocked: () => {
             const user = state.currentUser;
             const blockedIds = user.blockedUsers || [];
@@ -709,6 +771,8 @@ const app = {
 
         inbox: () => {
             const user = state.currentUser;
+            const fullUser = state.users.find(u => u.id === user.id);
+            const isAdmin = fullUser && fullUser.email === 'admin@whispr.app';
             const blockedIds = user.blockedUsers || [];
             const myMessages = state.messages.filter(m => 
                 m.recipientId === user.id && 
@@ -748,6 +812,13 @@ const app = {
                         <div style="font-weight: 600;">المستخدمون المحظورون</div>
                         <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
                     </div>
+                    
+                    ${isAdmin ? `
+                    <div class="glass-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('analytics')">
+                        <div style="font-weight: 600; color: var(--primary);"><i class="fa-solid fa-chart-line"></i> لوحة الإحصائيات</div>
+                        <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
+                    </div>
+                    ` : ''}
 
                     <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
                         <div>
