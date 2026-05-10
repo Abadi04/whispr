@@ -832,10 +832,51 @@ html[dir="ltr"] .unread-badge {
 @media (max-width: 768px) {
   .hero-title { font-size: 2rem; }
   .hero-actions { flex-direction: column; }
-  .btn { width: 100%; }
-  .page-container { padding-top: 80px; }
+  
+  .btn { 
+    width: 100%; 
+    min-height: 48px; 
+    font-size: 1.1rem;
+    padding: 14px 24px;
+  }
+  
+  .btn-icon, .reaction-toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .form-control {
+    min-height: 48px;
+    font-size: 1.05rem; 
+  }
+  
+  .page-container { padding-top: 80px; padding-left: 16px; padding-right: 16px; }
   
   .glass-card {
-    padding: 24px;
+    padding: 16px;
+    box-shadow: none; 
+    border-color: rgba(255,255,255,0.05);
+    will-change: transform;
   }
+  
+  .message-card {
+    padding: 16px;
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+  
+  .avatar-container img, .avatar-placeholder {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 1.5rem !important;
+  }
+  
+  .reaction-emoji-btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.8rem;
+  }
+  
+  /* Less background clutter */
+  .particles { display: none; }
 }
