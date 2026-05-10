@@ -314,6 +314,12 @@ const app = {
         });
     },
 
+    copyProfileLink() {
+        navigator.clipboard.writeText(window.location.href)
+            .then(() => showToast("تم نسخ الرابط", "success"))
+            .catch(() => showToast("حدث خطأ في النسخ", "error"));
+    },
+
     // --- Views ---
     views: {
         home: () => `
@@ -401,6 +407,9 @@ const app = {
                         </div>
                         <h2 class="profile-name">@${username}</h2>
                         <p class="text-muted">${user.bio || t('bio_default')}</p>
+                        <button class="btn btn-outline" style="margin-top: 15px; border-radius: 20px; font-size: 0.9rem;" onclick="app.copyProfileLink()">
+                            <i class="fa-solid fa-link"></i> نسخ الرابط
+                        </button>
                     </div>
                     
                     <div class="glass-card send-message-card">
