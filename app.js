@@ -955,9 +955,13 @@ const app = {
                     
                     <div class="messages-grid">
                         ${myMessages.length === 0 ? `
-                            <div class="glass-card empty-state">
-                                <i class="fa-solid fa-ghost empty-icon"></i>
-                                <p>${t('no_messages')}</p>
+                            <div class="glass-card empty-state" style="text-align: center; padding: 40px 20px;">
+                                <i class="fa-solid fa-ghost empty-icon" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; opacity: 0.8;"></i>
+                                <h3 style="margin-bottom: 10px; font-size: 1.3rem;">صندوق الوارد فارغ</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">لم تصلك أي رسائل حتى الآن. انشر رابطك الخاص في حساباتك (مثل تويتر أو انستقرام) ليستطيع الناس إرسال رسائل لك بسرية تامة.</p>
+                                <button class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem; border-radius: 30px;" onclick="app.copyLink('${shareUrl}')">
+                                    <i class="fa-solid fa-link"></i> نسخ رابط الحساب
+                                </button>
                             </div>
                         ` : myMessages.map(msg => `
                             <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
