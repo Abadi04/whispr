@@ -693,6 +693,13 @@ const app = {
             const activeUsersCount = activeUserIds.size;
             const avgMessages = activeUsersCount === 0 ? 0 : (totalRecentMessages / activeUsersCount).toFixed(1);
 
+            const senders = new Set();
+            for (let i = 0; i < state.messages.length; i++) {
+                if (state.messages[i].senderId) senders.add(state.messages[i].senderId);
+            }
+            const activatedUsersCount = senders.size;
+            const activationRate = totalUsers === 0 ? 0 : Math.round((activatedUsersCount / totalUsers) * 100);
+
             const dailyStats = [];
             let maxDailyMsgs = 0;
             const now = new Date();
@@ -744,6 +751,18 @@ const app = {
                             <i class="fa-solid fa-chart-pie" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 10px;"></i>
                             <h3 style="font-size: 1.8rem; margin: 0;">${avgMessages}</h3>
                             <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">متوسط الرسائل/مستخدم</p>
+                        </div>
+                        
+                        <div class="glass-card" style="text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-rocket" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 1.8rem; margin: 0;">${activatedUsersCount}</h3>
+                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">مستخدمون مفعلون</p>
+                        </div>
+                        
+                        <div class="glass-card" style="text-align: center; padding: 20px;">
+                            <i class="fa-solid fa-percent" style="font-size: 2rem; color: #3b82f6; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 1.8rem; margin: 0;">${activationRate}%</h3>
+                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">معدل التفعيل</p>
                         </div>
                     </div>
                     
