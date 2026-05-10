@@ -347,6 +347,20 @@ const app = {
                     const { data } = await window.supabaseClient.auth.getUser();
                     if (data && data.user && data.user.email) {
                         authEmail = data.user.email;
+                        app.authUser = data.user;
+                        
+                        // Fetch from public.profiles
+                        try {
+                            const { data: profile } = await window.supabaseClient
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', data.user.id)
+                                .single();
+                                
+                            if (profile) {
+                                app.currentProfile = profile;
+                            }
+                        } catch (err) {}
                     }
                 } catch (err) {}
             }
@@ -413,7 +427,7 @@ const app = {
         container.style.alignItems = 'center';
         container.style.gap = '8px';
         
-        let authEmail = app.authEmail || "غير مسجل الدخول";
+        let authEmail = (app.currentProfile && app.currentProfile.email) ? app.currentProfile.email : (app.authEmail || "غير مسجل الدخول");
 
         const userIndicatorHtml = `
             <div class="current-user-indicator" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
@@ -515,9 +529,16 @@ const app = {
     },
 
     // --- Actions ---
-    logout() {
+    async logout() {
+        if (window.supabaseClient) {
+            await window.supabaseClient.auth.signOut();
+        }
         state.currentUser = null;
+        app.currentProfile = null;
+        app.authUser = null;
         saveState();
+        app.authPromise = null;
+        await app.initAuth();
         this.navigate('home');
         showToast(t('nav_logout'), 'success');
     },
@@ -687,8 +708,8 @@ const app = {
                     </div>
                     <form id="login-form">
                         <div class="form-group">
-                            <label class="form-label">${t('username_label')}</label>
-                            <input type="text" id="login-username" class="form-control" placeholder="${t('username_ph')}" required>
+                            <label class="form-label">البريد الإلكتروني</label>
+                            <input type="email" id="login-email" class="form-control" placeholder="أدخل بريدك الإلكتروني" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">${t('password_label')}</label>
@@ -1113,48 +1134,130 @@ const app = {
 
     // --- Form Handlers ---
     setupLoginEvents() {
-        document.getElementById('login-form').addEventListener('submit', (e) => {
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const un = document.getElementById('login-username').value;
+            const em = document.getElementById('login-email').value;
             const pw = document.getElementById('login-password').value;
+            const btn = document.querySelector('#login-form button[type="submit"]');
             
-            const user = state.users.find(u => u.username === un && u.password === pw);
-            if (user) {
-                state.currentUser = { id: user.id, username: user.username };
-                saveState();
-                this.navigate('inbox');
-                showToast(`أهلاً بك @${user.username}`, 'success');
+            btn.disabled = true;
+            const originalBtnText = btn.textContent;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري الدخول...';
+            
+            if (window.supabaseClient) {
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: em,
+                    password: pw
+                });
+                
+                if (error) {
+                    showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error');
+                } else {
+                    app.authPromise = null;
+                    await app.initAuth();
+                    
+                    let localU = state.users.find(u => u.email === em);
+                    if (!localU) {
+                        localU = { id: data.user.id, username: em.split('@')[0], email: em, password: pw, bio: '' };
+                        state.users.push(localU);
+                    }
+                    state.currentUser = { id: localU.id, username: localU.username };
+                    saveState();
+                    
+                    app.navigate('inbox');
+                    showToast('تم تسجيل الدخول بنجاح', 'success');
+                }
             } else {
-                showToast(t('err_invalid_creds'), 'error');
+                const user = state.users.find(u => u.email === em && u.password === pw);
+                if (user) {
+                    state.currentUser = { id: user.id, username: user.username };
+                    saveState();
+                    app.authPromise = null;
+                    await app.initAuth();
+                    app.navigate('inbox');
+                    showToast(`أهلاً بك @${user.username}`, 'success');
+                } else {
+                    showToast(t('err_invalid_creds'), 'error');
+                }
             }
+            
+            btn.disabled = false;
+            btn.textContent = originalBtnText;
         });
     },
 
     setupRegisterEvents() {
-        document.getElementById('register-form').addEventListener('submit', (e) => {
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const un = document.getElementById('reg-username').value;
             const em = document.getElementById('reg-email').value;
             const pw = document.getElementById('reg-password').value;
+            const btn = document.querySelector('#register-form button[type="submit"]');
+            
+            btn.disabled = true;
+            const originalBtnText = btn.textContent;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري التسجيل...';
             
             if (state.users.some(u => u.username === un)) {
                 showToast(t('err_user_exists'), 'error');
+                btn.disabled = false;
+                btn.textContent = originalBtnText;
                 return;
             }
             
-            const newUser = {
-                id: generateId(),
-                username: un,
-                email: em,
-                password: pw,
-                bio: ''
-            };
+            if (window.supabaseClient) {
+                const { data, error } = await window.supabaseClient.auth.signUp({
+                    email: em,
+                    password: pw,
+                    options: {
+                        data: {
+                            full_name: un
+                        }
+                    }
+                });
+                
+                if (error) {
+                    showToast(error.message.includes('already registered') ? 'البريد الإلكتروني مسجل مسبقاً' : 'حدث خطأ أثناء التسجيل', 'error');
+                    btn.disabled = false;
+                    btn.textContent = originalBtnText;
+                    return;
+                }
+                
+                const newUser = {
+                    id: data.user?.id || generateId(),
+                    username: un,
+                    email: em,
+                    password: pw,
+                    bio: ''
+                };
+                state.users.push(newUser);
+                state.currentUser = { id: newUser.id, username: newUser.username };
+                saveState();
+                
+                app.authPromise = null;
+                await app.initAuth();
+                app.navigate('inbox');
+                showToast(t('reg_success'), 'success');
+            } else {
+                const newUser = {
+                    id: generateId(),
+                    username: un,
+                    email: em,
+                    password: pw,
+                    bio: ''
+                };
+                
+                state.users.push(newUser);
+                state.currentUser = { id: newUser.id, username: newUser.username };
+                saveState();
+                app.authPromise = null;
+                await app.initAuth();
+                app.navigate('inbox');
+                showToast(t('reg_success'), 'success');
+            }
             
-            state.users.push(newUser);
-            state.currentUser = { id: newUser.id, username: newUser.username };
-            saveState();
-            this.navigate('inbox');
-            showToast(t('reg_success'), 'success');
+            btn.disabled = false;
+            btn.textContent = originalBtnText;
         });
     },
 
