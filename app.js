@@ -348,7 +348,7 @@ const app = {
         const mainRoute = routeParts[0];
 
         // Fetch blocked users before rendering inbox or profile
-        if ((mainRoute === 'inbox' || mainRoute === 'u') && state.currentUser) {
+        if ((mainRoute === 'inbox' || mainRoute === 'u' || mainRoute === 'blocked') && state.currentUser) {
             state.currentUser.blockedUsers = await blocksAPI.getBlockedUsers(state.currentUser.id);
         }
 
@@ -369,6 +369,10 @@ const app = {
             case 'inbox':
                 if (!state.currentUser) return this.navigate('login');
                 content = this.views.inbox();
+                break;
+            case 'blocked':
+                if (!state.currentUser) return this.navigate('login');
+                content = this.views.blocked();
                 break;
             case 'u':
                 if (routeParts[1]) {
@@ -443,6 +447,13 @@ const app = {
         navigator.clipboard.writeText(window.location.href)
             .then(() => showToast("تم نسخ الرابط", "success"))
             .catch(() => showToast("حدث خطأ في النسخ", "error"));
+    },
+
+    async unblockFromList(targetId) {
+        if (!state.currentUser) return;
+        await blocksAPI.unblockUser(state.currentUser.id, targetId);
+        showToast('تم إلغاء الحظر', 'success');
+        this.renderCurrentView();
     },
 
     async toggleBlockUser(targetId) {
@@ -658,6 +669,44 @@ const app = {
             `;
         },
 
+        blocked: () => {
+            const user = state.currentUser;
+            const blockedIds = user.blockedUsers || [];
+            
+            const blockedUsers = blockedIds.map(id => state.users.find(u => u.id === id)).filter(Boolean);
+
+            return `
+                <div class="view active inbox-container">
+                    <div class="inbox-header">
+                        <h2>المستخدمون المحظورون</h2>
+                        <button class="btn btn-outline" onclick="app.navigate('inbox')" style="padding: 6px 12px; font-size: 0.9rem;">
+                            <i class="fa-solid fa-arrow-right"></i> رجوع
+                        </button>
+                    </div>
+                    <div class="messages-grid">
+                        ${blockedUsers.length === 0 ? `
+                            <div class="glass-card empty-state">
+                                <i class="fa-solid fa-user-slash empty-icon"></i>
+                                <p>لا يوجد مستخدمون محظورون</p>
+                            </div>
+                        ` : blockedUsers.map(bu => `
+                            <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    ${bu.avatar_url ? `<img src="${bu.avatar_url}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;" />` : `<div class="avatar-placeholder" style="width: 48px; height: 48px; font-size: 1.2rem;">${bu.username.charAt(0).toUpperCase()}</div>`}
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 1.1rem;">@${bu.username}</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.85rem; color: var(--danger); border-color: rgba(255,51,102,0.3);" onclick="app.unblockFromList('${bu.id}')">
+                                    إلغاء الحظر
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        },
+
         inbox: () => {
             const user = state.currentUser;
             const blockedIds = user.blockedUsers || [];
@@ -695,6 +744,11 @@ const app = {
                         </div>
                     </div>
                     
+                    <div class="glass-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('blocked')">
+                        <div style="font-weight: 600;">المستخدمون المحظورون</div>
+                        <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
+                    </div>
+
                     <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
                         <div>
                             <span style="font-weight: 600;">تكبير حجم الخط في المحادثات</span>
