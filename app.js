@@ -620,6 +620,7 @@ const app = {
                                     <span class="desktop-only-text"><i class="fa-solid fa-lock"></i> ${t('btn_send')}</span>
                                 </button>
                             </div>
+                            <div id="block-error-msg" style="color: var(--danger); font-size: 0.85rem; margin-top: -10px; margin-bottom: 10px; display: none;">لا يمكنك إرسال رسائل لهذا المستخدم.</div>
                             <div class="msg-footer">
                                 <span class="char-count" id="char-counter">300 ${t('chars_left')}</span>
                             </div>
@@ -829,10 +830,13 @@ const app = {
             const content = ta.value.trim();
             if (!content) return;
             
+            const errorMsg = document.getElementById('block-error-msg');
+            if (errorMsg) errorMsg.style.display = 'none';
+            
             if (state.currentUser) {
                 const isBlocked = await blocksAPI.isBlocked(user.id, state.currentUser.id);
                 if (isBlocked) {
-                    showToast("لقد تم حظرك من قبل هذا المستخدم", "error");
+                    if (errorMsg) errorMsg.style.display = 'block';
                     return;
                 }
             }
