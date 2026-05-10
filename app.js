@@ -390,7 +390,7 @@ const app = {
         
         const hash = window.location.hash.slice(1) || 'home';
         
-        if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/')) {
+        if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/') && hash !== 'onboarding') {
             window.location.hash = 'onboarding';
             return;
         }
