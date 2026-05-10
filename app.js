@@ -29,19 +29,27 @@ const blocksAPI = {
     
     async blockUser(blockerId, blockedId) {
         if (!supabaseClient) return { error: 'No client' };
-        
-        // Ensure it doesn't already exist to avoid duplicate errors, or just let DB handle unique constraint
-        return await supabaseClient
-            .from('blocks')
-            .insert({ blocker_id: blockerId, blocked_id: blockedId });
+        try {
+            return await supabaseClient
+                .from('blocks')
+                .insert({ blocker_id: blockerId, blocked_id: blockedId });
+        } catch (err) {
+            console.error("Error blocking user:", err);
+            return { error: err };
+        }
     },
     
     async unblockUser(blockerId, blockedId) {
         if (!supabaseClient) return { error: 'No client' };
-        return await supabaseClient
-            .from('blocks')
-            .delete()
-            .match({ blocker_id: blockerId, blocked_id: blockedId });
+        try {
+            return await supabaseClient
+                .from('blocks')
+                .delete()
+                .match({ blocker_id: blockerId, blocked_id: blockedId });
+        } catch (err) {
+            console.error("Error unblocking user:", err);
+            return { error: err };
+        }
     },
     
     async getBlockedUsers(blockerId) {
@@ -58,7 +66,7 @@ const blocksAPI = {
 const TRANSLATIONS = {
     ar: {
         logo: "Whispr",
-        lang_toggle: "EN",
+        lang_toggle: "عربي",
         nav_login: "دخول",
         nav_register: "تسجيل جديد",
         nav_inbox: "صندوق الوارد",
@@ -168,7 +176,7 @@ const TRANSLATIONS = {
 
 // --- App State ---
 const state = {
-    lang: localStorage.getItem('bawh_lang') || 'ar',
+    lang: 'ar',
     theme: localStorage.getItem('whispr_theme') || 'dark',
     largeText: localStorage.getItem('whispr_largetext') === 'true',
     users: JSON.parse(localStorage.getItem('bawh_users')) || [],
@@ -256,7 +264,7 @@ const app = {
                 username: 'demo',
                 password: '123',
                 email: 'demo@bawh.com',
-                bio: 'Demo User - Testing the app'
+                bio: 'حساب تجريبي لاختبار التطبيق'
             });
             saveState();
         }
@@ -264,10 +272,11 @@ const app = {
 
     setupEventListeners() {
         document.getElementById('lang-toggle').addEventListener('click', () => {
-            state.lang = state.lang === 'ar' ? 'en' : 'ar';
+            state.lang = 'ar';
             saveState();
             this.applyLanguage();
             this.renderCurrentView();
+            showToast('الواجهة العربية مفعلة', 'info');
         });
 
         const themeToggle = document.getElementById('theme-toggle');
@@ -459,7 +468,7 @@ const app = {
     },
 
     async renderCurrentView() {
-            if (!this.currentRoute) return;369
+            if (!this.currentRoute) return;
 
         const routeParts = this.currentRoute.split('/');
         const mainRoute = routeParts[0];
@@ -553,38 +562,64 @@ const app = {
     },
 
     copyLink(url) {
-        navigator.clipboard.writeText(url).then(() => {
-            showToast(t('link_copied'), 'success');
-        });
+        navigator.clipboard.writeText(url)
+            .then(() => showToast(t('link_copied'), 'success'))
+            .catch(() => showToast('تعذر نسخ الرابط، حاول مرة أخرى', 'error'));
+    },
+
+    shareTo(platform, url, text = 'اسألني بسرية على Whispr') {
+        try {
+            const encodedUrl = encodeURIComponent(url);
+            const encodedText = encodeURIComponent(text);
+            const shareUrl = platform === 'whatsapp'
+                ? `https://wa.me/?text=${encodedText}%20${encodedUrl}`
+                : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        } catch (err) {
+            showToast('تعذر فتح المشاركة الآن', 'error');
+        }
+    },
+
+    insertPrompt(text) {
+        const ta = document.getElementById('msg-content');
+        if (!ta) return;
+        ta.value = text;
+        ta.focus();
+        ta.dispatchEvent(new Event('input'));
     },
 
     async uploadAvatar(file) {
-        if (!supabaseClient || !state.currentUser) return showToast("Supabase not initialized", "error");
+        if (!supabaseClient || !state.currentUser) return showToast("تعذر الاتصال بالخدمة الآن", "error");
         if (!file) return;
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${state.currentUser.id}-${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${state.currentUser.id}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
 
-        showToast("جاري رفع الصورة...", "info");
+            showToast("جاري رفع الصورة...", "info");
 
-        let { error: uploadError } = await supabaseClient.storage
-            .from('avatars')
-            .upload(filePath, file);
+            let { error: uploadError } = await supabaseClient.storage
+                .from('avatars')
+                .upload(filePath, file);
 
-        if (uploadError) {
-            return showToast("فشل في رفع الصورة", "error");
-        }
+            if (uploadError) {
+                return showToast("فشل في رفع الصورة", "error");
+            }
 
-        const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
-        
-        const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
-        if (userIndex !== -1) {
-            state.users[userIndex].avatar_url = data.publicUrl;
-            state.currentUser.avatar_url = data.publicUrl;
-            saveState();
-            showToast("تم تحديث الصورة!", "success");
-            this.renderCurrentView();
+            const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+            
+            const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
+            if (userIndex !== -1) {
+                state.users[userIndex].avatar_url = data.publicUrl;
+                state.currentUser.avatar_url = data.publicUrl;
+                saveState();
+                showToast("تم تحديث الصورة!", "success");
+                this.renderCurrentView();
+            }
+        } catch (err) {
+            console.error("Avatar upload error:", err);
+            showToast("حدث خطأ أثناء تحديث الصورة", "error");
         }
     },
 
@@ -695,15 +730,63 @@ const app = {
 
         home: () => `
             <div class="view active hero">
-                <h1 class="hero-title text-gradient">${t('hero_title')}</h1>
-                <p class="hero-subtitle">${t('hero_subtitle')}</p>
-                <div class="hero-actions">
-                    <button class="btn btn-primary" onclick="app.navigate('register')">
-                        <i class="fa-solid fa-rocket"></i> ${t('btn_start')}
-                    </button>
-                    <button class="btn btn-outline" onclick="app.navigate('login')">
-                        ${t('btn_login_submit')}
-                    </button>
+                <div class="hero-shell">
+                    <div class="hero-copy">
+                        <div class="eyebrow"><i class="fa-solid fa-shield-heart"></i> مساحة صريحة وآمنة</div>
+                        <h1 class="hero-title text-gradient">${t('hero_title')}</h1>
+                        <p class="hero-subtitle">${t('hero_subtitle')}، مع رابط خاص ومظهر أنيق يناسب المشاركة في كل مكان.</p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary" onclick="app.navigate('register')">
+                                <i class="fa-solid fa-rocket"></i> ${t('btn_start')}
+                            </button>
+                            <button class="btn btn-outline" onclick="app.navigate('login')">
+                                <i class="fa-solid fa-right-to-bracket"></i> ${t('btn_login_submit')}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-preview" aria-hidden="true">
+                        <div class="floating-note note-a">
+                            <span>رسالة جديدة</span>
+                            <strong>كلامك اليوم كان ملهمًا جدًا</strong>
+                        </div>
+                        <div class="phone-frame">
+                            <div class="phone-top"></div>
+                            <div class="preview-bubble">ما أكثر شيء تحب الناس يعرفونه عنك؟</div>
+                            <div class="preview-bubble alt">رد جميل ومختصر يظهر للكل بدون كشف المرسل.</div>
+                            <div class="preview-composer">
+                                <span>اكتب بسرية...</span>
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </div>
+                        </div>
+                        <div class="floating-note note-b">
+                            <span>خصوصية</span>
+                            <strong>حظر، ردود، وتنبيهات مرئية</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-strip">
+                    <div><i class="fa-solid fa-link"></i><span>رابط شخصي جاهز</span></div>
+                    <div><i class="fa-solid fa-user-secret"></i><span>إرسال مجهول</span></div>
+                    <div><i class="fa-solid fa-ban"></i><span>تحكم بالحظر</span></div>
+                </div>
+
+                <div class="how-it-works">
+                    <div class="mini-card">
+                        <span class="step-number">١</span>
+                        <h3>أنشئ حسابك</h3>
+                        <p>اختر اسمًا قصيرًا واحصل على رابطك خلال ثوان.</p>
+                    </div>
+                    <div class="mini-card">
+                        <span class="step-number">٢</span>
+                        <h3>شارك الرابط</h3>
+                        <p>ضعه في حساباتك أو أرسله لمن تريد سماع رأيه.</p>
+                    </div>
+                    <div class="mini-card">
+                        <span class="step-number">٣</span>
+                        <h3>اقرأ ورد</h3>
+                        <p>استقبل الرسائل ورد عليها بشكل عام بدون كشف الهوية.</p>
+                    </div>
                 </div>
             </div>
         `,
@@ -743,7 +826,7 @@ const app = {
                     <form id="register-form">
                         <div class="form-group">
                             <label class="form-label">${t('username_label')}</label>
-                            <input type="text" id="reg-username" class="form-control" placeholder="${t('username_ph')}" required pattern="[A-Za-z0-9_]+" title="Only letters, numbers, and underscores">
+                            <input type="text" id="reg-username" class="form-control" placeholder="${t('username_ph')}" required pattern="[A-Za-z0-9_]+" title="استخدم حروفاً إنجليزية أو أرقاماً أو شرطة سفلية فقط">
                         </div>
                         <div class="form-group">
                             <label class="form-label">${t('email_label')}</label>
@@ -787,7 +870,7 @@ const app = {
                         <div class="avatar-container">
                             ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: var(--glass-shadow); border: 2px solid var(--primary);" />` : `<div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 2rem;">${username.charAt(0).toUpperCase()}</div>`}
                         </div>
-                        <h2 class="profile-name">@${username}</h2>
+                        <h2 class="profile-name" dir="ltr">@${username}</h2>
                         <p class="text-muted">${user.bio || t('bio_default')}</p>
                         <div style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; flex-wrap: wrap;">
                             <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.9rem;" onclick="app.copyProfileLink()">
@@ -805,6 +888,11 @@ const app = {
                         <div class="msg-header">
                             <i class="fa-solid fa-paper-plane"></i>
                             <h3>${t('profile_title')}</h3>
+                        </div>
+                        <div class="prompt-row">
+                            <button type="button" class="prompt-chip" onclick="app.insertPrompt('ما الشيء الذي تتمنى أن أخبرك به بصراحة؟')">سؤال صريح</button>
+                            <button type="button" class="prompt-chip" onclick="app.insertPrompt('رسالة لطيفة وصلتني منك وأحببتها...')">رسالة لطيفة</button>
+                            <button type="button" class="prompt-chip" onclick="app.insertPrompt('نصيحة قصيرة لي بدون مجاملة:')">نصيحة</button>
                         </div>
                         <form id="send-msg-form" class="mobile-composer-form">
                             <div class="form-group composer-row">
@@ -1027,10 +1115,13 @@ const app = {
                 (!m.senderId || !blockedIds.includes(m.senderId))
             ).sort((a,b) => b.timestamp - a.timestamp);
             const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
+            const unreadCount = myMessages.filter(m => !m.isRead).length;
+            const repliedCount = myMessages.filter(m => m.reply).length;
+            const shareText = `أرسل لي رسالة مجهولة على Whispr`;
 
             return `
                 <div class="view active inbox-container">
-                    <div class="profile-header" style="margin-bottom: 30px;">
+                    <div class="profile-header inbox-hero">
                         <div class="avatar-container" style="position: relative; display: inline-block;">
                             ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: var(--glass-shadow); border: 2px solid var(--primary);" />` : `<div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 2rem;">${user.username.charAt(0).toUpperCase()}</div>`}
                             <label class="btn-icon" style="position: absolute; bottom: 0; right: -10px; background: var(--primary); padding: 6px; border-radius: 50%; cursor: pointer; color: white; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="تغيير الصورة">
@@ -1038,12 +1129,25 @@ const app = {
                                 <input type="file" accept="image/*" style="display: none;" onchange="app.uploadAvatar(this.files[0])">
                             </label>
                         </div>
-                        <h2 class="profile-name">@${user.username}</h2>
+                        <h2 class="profile-name" dir="ltr">@${user.username}</h2>
+                        <div class="inbox-stats-row">
+                            <div><strong>${myMessages.length}</strong><span>رسالة</span></div>
+                            <div><strong>${unreadCount}</strong><span>غير مقروءة</span></div>
+                            <div><strong>${repliedCount}</strong><span>تم الرد</span></div>
+                        </div>
                         <div class="share-link-container">
                             <span style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap;">${t('share_link')}</span>
                             <div class="share-url" dir="ltr">${shareUrl}</div>
                             <button class="btn-icon" onclick="app.copyLink('${shareUrl}')" title="${t('btn_copy')}">
                                 <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="quick-share-row">
+                            <button class="btn btn-outline" onclick="app.shareTo('whatsapp', '${shareUrl}', '${shareText}')">
+                                <i class="fa-brands fa-whatsapp"></i> واتساب
+                            </button>
+                            <button class="btn btn-outline" onclick="app.shareTo('twitter', '${shareUrl}', '${shareText}')">
+                                <i class="fa-brands fa-twitter"></i> تويتر
                             </button>
                         </div>
                     </div>
