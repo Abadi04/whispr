@@ -30,6 +30,16 @@
   --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+[data-theme="light"] {
+  --bg-color: #f0f2f5;
+  --surface: rgba(255, 255, 255, 0.8);
+  --glass-bg: rgba(0, 0, 0, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  --text-main: #121212;
+  --text-muted: #6c757d;
+}
+
 @font-face {
   font-family: 'Thamaniah';
   src: url('fonts/thmanyahsans-Regular.woff2') format('woff2');
@@ -59,6 +69,7 @@ body {
   min-height: 100vh;
   position: relative;
   line-height: 1.6;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* Custom Cursor */

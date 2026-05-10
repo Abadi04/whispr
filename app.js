@@ -118,6 +118,7 @@ const TRANSLATIONS = {
 // --- App State ---
 const state = {
     lang: localStorage.getItem('bawh_lang') || 'ar',
+    theme: localStorage.getItem('whispr_theme') || 'dark',
     users: JSON.parse(localStorage.getItem('bawh_users')) || [],
     messages: JSON.parse(localStorage.getItem('bawh_messages')) || [],
     currentUser: JSON.parse(localStorage.getItem('bawh_current_user')) || null
@@ -129,6 +130,7 @@ const saveState = () => {
     localStorage.setItem('bawh_messages', JSON.stringify(state.messages));
     localStorage.setItem('bawh_current_user', JSON.stringify(state.currentUser));
     localStorage.setItem('bawh_lang', state.lang);
+    localStorage.setItem('whispr_theme', state.theme);
 };
 
 const t = (key) => TRANSLATIONS[state.lang][key] || key;
@@ -164,6 +166,7 @@ const showToast = (message, type = 'info') => {
 const app = {
     init() {
         this.root = document.getElementById('app-root');
+        this.applyTheme();
         this.setupEventListeners();
         this.applyLanguage();
         this.handleRoute();
@@ -193,6 +196,15 @@ const app = {
             this.renderCurrentView();
         });
 
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                state.theme = state.theme === 'dark' ? 'light' : 'dark';
+                saveState();
+                this.applyTheme();
+            });
+        }
+
         window.addEventListener('scroll', () => {
             const nav = document.querySelector('.navbar');
             if (window.scrollY > 20) {
@@ -201,6 +213,14 @@ const app = {
                 nav.classList.remove('scrolled');
             }
         });
+    },
+
+    applyTheme() {
+        document.body.setAttribute('data-theme', state.theme);
+        const icon = document.getElementById('theme-icon');
+        if (icon) {
+            icon.className = state.theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
     },
 
     applyLanguage() {
