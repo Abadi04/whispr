@@ -41,6 +41,16 @@ const blocksAPI = {
             .from('blocks')
             .delete()
             .match({ blocker_id: blockerId, blocked_id: blockedId });
+    },
+    
+    async getBlockedUsers(blockerId) {
+        if (!supabaseClient) return [];
+        try {
+            const { data } = await supabaseClient.from('blocks').select('blocked_id').eq('blocker_id', blockerId);
+            return data ? data.map(r => r.blocked_id) : [];
+        } catch (e) {
+            return [];
+        }
     }
 };
 
@@ -305,10 +315,10 @@ const app = {
         window.location.hash = route;
     },
 
-    handleRoute() {
+    async handleRoute() {
         const hash = window.location.hash.slice(1) || 'home';
         this.currentRoute = hash;
-        this.renderCurrentView();
+        await this.renderCurrentView();
         this.updateNav();
     },
 
@@ -333,9 +343,14 @@ const app = {
         }
     },
 
-    renderCurrentView() {
+    async renderCurrentView() {
         const routeParts = this.currentRoute.split('/');
         const mainRoute = routeParts[0];
+
+        // Fetch blocked users before rendering inbox or profile
+        if ((mainRoute === 'inbox' || mainRoute === 'u') && state.currentUser) {
+            state.currentUser.blockedUsers = await blocksAPI.getBlockedUsers(state.currentUser.id);
+        }
 
         let content = '';
 
@@ -564,7 +579,13 @@ const app = {
                 return `<div class="view active empty-state"><h2>${t('err_user_not_found')}</h2></div>`;
             }
 
-            const publicReplies = state.messages.filter(m => m.recipientId === user.id && m.reply && (!m.expiresAt || m.expiresAt > Date.now()));
+            const blockedIds = (state.currentUser && state.currentUser.blockedUsers) ? state.currentUser.blockedUsers : [];
+            const publicReplies = state.messages.filter(m => 
+                m.recipientId === user.id && 
+                m.reply && 
+                (!m.expiresAt || m.expiresAt > Date.now()) &&
+                (!m.senderId || !blockedIds.includes(m.senderId))
+            );
 
             return `
                 <div class="view active">
@@ -638,7 +659,12 @@ const app = {
 
         inbox: () => {
             const user = state.currentUser;
-            const myMessages = state.messages.filter(m => m.recipientId === user.id && (!m.expiresAt || m.expiresAt > Date.now())).sort((a,b) => b.timestamp - a.timestamp);
+            const blockedIds = user.blockedUsers || [];
+            const myMessages = state.messages.filter(m => 
+                m.recipientId === user.id && 
+                (!m.expiresAt || m.expiresAt > Date.now()) &&
+                (!m.senderId || !blockedIds.includes(m.senderId))
+            ).sort((a,b) => b.timestamp - a.timestamp);
             const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
 
             return `
@@ -814,6 +840,7 @@ const app = {
             state.messages.push({
                 id: generateId(),
                 recipientId: user.id,
+                senderId: state.currentUser ? state.currentUser.id : null,
                 content: content,
                 timestamp: Date.now(),
                 expiresAt: Date.now() + 24 * 60 * 60 * 1000,
