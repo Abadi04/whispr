@@ -372,8 +372,6 @@ const app = {
             }
 
             app.authEmail = authEmail;
-            app.isOwner = authEmail === 'abadihdar@gmail.com';
-            console.log('Auth email:', authEmail, '| isOwner:', app.isOwner);
         })();
         
         return this.authPromise;
@@ -491,11 +489,14 @@ const app = {
                     if (!state.currentUser) return this.navigate('login');
                     content = this.views.blocked();
                     break;
-                case 'analytics':
-                    if (!state.currentUser) return this.navigate('login');
-                    if (!app.isOwner) return this.navigate('inbox');
+                case 'analytics': {
+                    if (!window.supabaseClient) return this.navigate('inbox');
+                    const { data } = await window.supabaseClient.auth.getUser();
+                    const email = data?.user?.email || '';
+                    if (email !== 'abadihdar@gmail.com') return this.navigate('inbox');
                     content = this.views.analytics();
                     break;
+                }
                 case 'onboarding':
                     content = this.views.onboarding();
                     break;
@@ -866,10 +867,6 @@ const app = {
         },
 
         analytics: () => {
-            if (!app.isOwner) {
-                return `<div class="view active empty-state"><h2>غير مصرح لك بالدخول</h2></div>`;
-            }
-
             const totalUsers = state.users.length;
             const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
             
@@ -1020,7 +1017,6 @@ const app = {
         inbox: () => {
             const user = state.currentUser;
             const fullUser = state.users.find(u => u.id === user.id);
-            const isAdmin = app.isOwner;
             const blockedIds = user.blockedUsers || [];
             const myMessages = state.messages.filter(m => 
                 m.recipientId === user.id && 
@@ -1061,15 +1057,13 @@ const app = {
                         <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
                     </div>
                     
-                    ${isAdmin ? `
-                    <div class="glass-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('analytics')">
+                    <div id="analytics-nav-link" class="glass-card" style="display: none; margin-bottom: 12px; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('analytics')">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <i class="fa-solid fa-chart-line" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <span style="font-weight: bold; color: var(--text-main);">لوحة التحليلات</span>
                         </div>
                         <i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 0.9rem;"></i>
                     </div>
-                    ` : ''}
 
                     <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
                         <div>
@@ -1445,6 +1439,15 @@ const app = {
 
     setupInboxEvents() {
         if (!state.currentUser) return;
+        
+        if (window.supabaseClient) {
+            window.supabaseClient.auth.getUser().then(({ data }) => {
+                const email = data?.user?.email || '';
+                const link = document.getElementById('analytics-nav-link');
+                if (link) link.style.display = email === 'abadihdar@gmail.com' ? 'flex' : 'none';
+            });
+        }
+        
         let modified = false;
         state.messages.forEach(m => {
             if (m.recipientId === state.currentUser.id && !m.isRead) {
