@@ -245,7 +245,7 @@ const app = {
         this.applyLanguage();
         
         try {
-            this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
+            this.root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-muted)">جاري التحميل...</div>`;
             await this.initAuth();
         } catch(e) {
             console.error(e);
