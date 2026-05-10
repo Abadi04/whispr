@@ -430,6 +430,30 @@ const app = {
             .catch(() => showToast("حدث خطأ في النسخ", "error"));
     },
 
+    async toggleBlockUser(targetId) {
+        if (!state.currentUser) return;
+        const btn = document.getElementById(`block-btn-${targetId}`);
+        const txt = document.getElementById(`block-text-${targetId}`);
+        if (!btn || !txt) return;
+
+        const currentlyBlocked = btn.dataset.blocked === 'true';
+        btn.disabled = true;
+
+        if (currentlyBlocked) {
+            await blocksAPI.unblockUser(state.currentUser.id, targetId);
+            btn.dataset.blocked = 'false';
+            txt.textContent = 'حظر هذا المرسل';
+            showToast('تم إلغاء الحظر', 'success');
+        } else {
+            await blocksAPI.blockUser(state.currentUser.id, targetId);
+            btn.dataset.blocked = 'true';
+            txt.textContent = 'إلغاء الحظر';
+            showToast('تم حظر هذا المستخدم', 'success');
+        }
+        
+        btn.disabled = false;
+    },
+
     toggleReactions(id) {
         document.getElementById(`reactions-popup-${id}`).classList.toggle('active');
     },
@@ -550,9 +574,16 @@ const app = {
                         </div>
                         <h2 class="profile-name">@${username}</h2>
                         <p class="text-muted">${user.bio || t('bio_default')}</p>
-                        <button class="btn btn-outline" style="margin-top: 15px; border-radius: 20px; font-size: 0.9rem;" onclick="app.copyProfileLink()">
-                            <i class="fa-solid fa-link"></i> نسخ الرابط
-                        </button>
+                        <div style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; flex-wrap: wrap;">
+                            <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.9rem;" onclick="app.copyProfileLink()">
+                                <i class="fa-solid fa-link"></i> نسخ الرابط
+                            </button>
+                            ${state.currentUser && state.currentUser.id !== user.id ? `
+                                <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.9rem; color: var(--danger); border-color: rgba(255,51,102,0.3);" id="block-btn-${user.id}" onclick="app.toggleBlockUser('${user.id}')">
+                                    <i class="fa-solid fa-ban"></i> <span id="block-text-${user.id}">...</span>
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                     
                     <div class="glass-card send-message-card">
@@ -755,6 +786,17 @@ const app = {
             ta.style.height = 'auto';
             ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
         });
+
+        if (state.currentUser && state.currentUser.id !== user.id) {
+            blocksAPI.isBlocked(state.currentUser.id, user.id).then(isBlocked => {
+                const btn = document.getElementById(`block-btn-${user.id}`);
+                const txt = document.getElementById(`block-text-${user.id}`);
+                if (btn && txt) {
+                    btn.dataset.blocked = isBlocked ? 'true' : 'false';
+                    txt.textContent = isBlocked ? 'إلغاء الحظر' : 'حظر هذا المرسل';
+                }
+            });
+        }
 
         document.getElementById('send-msg-form').addEventListener('submit', async (e) => {
             e.preventDefault();
