@@ -373,6 +373,7 @@ const app = {
 
             app.authEmail = authEmail;
             app.isOwner = authEmail === 'abadihdar@gmail.com';
+            console.log('Auth email:', authEmail, '| isOwner:', app.isOwner);
         })();
         
         return this.authPromise;
@@ -865,8 +866,7 @@ const app = {
         },
 
         analytics: () => {
-            const fullUser = state.currentUser ? state.users.find(u => u.id === state.currentUser.id) : null;
-            if (!fullUser || fullUser.email !== '') {
+            if (!app.isOwner) {
                 return `<div class="view active empty-state"><h2>غير مصرح لك بالدخول</h2></div>`;
             }
 
