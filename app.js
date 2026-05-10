@@ -317,9 +317,40 @@ const app = {
 
     async handleRoute() {
         const hash = window.location.hash.slice(1) || 'home';
+        
+        if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/')) {
+            window.location.hash = 'onboarding';
+            return;
+        }
+
         this.currentRoute = hash;
         await this.renderCurrentView();
         this.updateNav();
+    },
+
+    finishOnboarding() {
+        localStorage.setItem('whispr_onboarding_completed', 'true');
+        if (state.currentUser) {
+            this.navigate('inbox');
+        } else {
+            this.navigate('home');
+        }
+    },
+
+    nextOnboardingStep() {
+        const step1 = document.getElementById('onboard-1');
+        const step2 = document.getElementById('onboard-2');
+        const step3 = document.getElementById('onboard-3');
+        
+        if (step1 && step1.style.display !== 'none') {
+            step1.style.display = 'none';
+            step2.style.display = 'block';
+        } else if (step2 && step2.style.display !== 'none') {
+            step2.style.display = 'none';
+            step3.style.display = 'block';
+        } else {
+            this.finishOnboarding();
+        }
     },
 
     updateNav() {
@@ -377,6 +408,9 @@ const app = {
             case 'analytics':
                 if (!state.currentUser) return this.navigate('login');
                 content = this.views.analytics();
+                break;
+            case 'onboarding':
+                content = this.views.onboarding();
                 break;
             case 'u':
                 if (routeParts[1]) {
@@ -519,6 +553,39 @@ const app = {
 
     // --- Views ---
     views: {
+        onboarding: () => `
+            <div class="view active auth-wrapper" style="text-align: center; padding: 20px;">
+                <div class="glass-card auth-card" id="onboard-1" style="display: block; max-width: 400px; margin: 0 auto; width: 100%;">
+                    <i class="fa-solid fa-ghost" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px;"></i>
+                    <h2 class="auth-title text-gradient">مرحباً بك في Whispr</h2>
+                    <p class="auth-subtitle" style="margin-bottom: 30px;">استقبل رسائل سرية من أصدقائك أو متابعينك بدون أن تعرف هويتهم، مساحة آمنة للصراحة.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-outline" style="flex: 1;" onclick="app.finishOnboarding()">تخطي</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="app.nextOnboardingStep()">التالي</button>
+                    </div>
+                </div>
+                
+                <div class="glass-card auth-card" id="onboard-2" style="display: none; max-width: 400px; margin: 0 auto; width: 100%;">
+                    <i class="fa-solid fa-link" style="font-size: 4rem; color: #10b981; margin-bottom: 20px;"></i>
+                    <h2 class="auth-title text-gradient">شارك رابطك الخاص</h2>
+                    <p class="auth-subtitle" style="margin-bottom: 30px;">بمجرد إنشاء حسابك، انسخ رابطك الخاص وشاركه في انستقرام أو تويتر لتبدأ بتلقي الرسائل.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-outline" style="flex: 1;" onclick="app.finishOnboarding()">تخطي</button>
+                        <button class="btn btn-primary" style="flex: 1;" onclick="app.nextOnboardingStep()">التالي</button>
+                    </div>
+                </div>
+
+                <div class="glass-card auth-card" id="onboard-3" style="display: none; max-width: 400px; margin: 0 auto; width: 100%;">
+                    <i class="fa-solid fa-shield-halved" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px;"></i>
+                    <h2 class="auth-title text-gradient">تحكم كامل بخصوصيتك</h2>
+                    <p class="auth-subtitle" style="margin-bottom: 30px;">هل أزعجتك رسالة؟ يمكنك بضغطة زر واحدة حظر أي مرسل مزعج لمنعه من مراسلتك مجدداً.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="app.finishOnboarding()">ابدأ الآن!</button>
+                    </div>
+                </div>
+            </div>
+        `,
+
         home: () => `
             <div class="view active hero">
                 <h1 class="hero-title text-gradient">${t('hero_title')}</h1>
