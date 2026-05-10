@@ -4,6 +4,10 @@
  */
 
 // --- Constants & Translations ---
+const supabaseUrl = 'https://hhbhmhyqgszvgkaacbvm.supabase.co';
+const supabaseKey = 'sb_publishable_H_ZX2gdYhq606lCTUqXPQA_KrnRefL_';
+const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+
 const TRANSLATIONS = {
     ar: {
         logo: "Whispr",
@@ -336,6 +340,36 @@ const app = {
         });
     },
 
+    async uploadAvatar(file) {
+        if (!supabaseClient || !state.currentUser) return showToast("Supabase not initialized", "error");
+        if (!file) return;
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${state.currentUser.id}-${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        showToast("جاري رفع الصورة...", "info");
+
+        let { error: uploadError } = await supabaseClient.storage
+            .from('avatars')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            return showToast("فشل في رفع الصورة", "error");
+        }
+
+        const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+        
+        const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
+        if (userIndex !== -1) {
+            state.users[userIndex].avatar_url = data.publicUrl;
+            state.currentUser.avatar_url = data.publicUrl;
+            saveState();
+            showToast("تم تحديث الصورة!", "success");
+            this.renderCurrentView();
+        }
+    },
+
     copyProfileLink() {
         navigator.clipboard.writeText(window.location.href)
             .then(() => showToast("تم نسخ الرابط", "success"))
@@ -458,7 +492,7 @@ const app = {
                 <div class="view active">
                     <div class="profile-header">
                         <div class="avatar-container">
-                            <div class="avatar-placeholder">${username.charAt(0).toUpperCase()}</div>
+                            ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: var(--glass-shadow); border: 2px solid var(--primary);" />` : `<div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 2rem;">${username.charAt(0).toUpperCase()}</div>`}
                         </div>
                         <h2 class="profile-name">@${username}</h2>
                         <p class="text-muted">${user.bio || t('bio_default')}</p>
@@ -515,6 +549,13 @@ const app = {
             return `
                 <div class="view active inbox-container">
                     <div class="profile-header" style="margin-bottom: 30px;">
+                        <div class="avatar-container" style="position: relative; display: inline-block;">
+                            ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: var(--glass-shadow); border: 2px solid var(--primary);" />` : `<div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 2rem;">${user.username.charAt(0).toUpperCase()}</div>`}
+                            <label class="btn-icon" style="position: absolute; bottom: 0; right: -10px; background: var(--primary); padding: 6px; border-radius: 50%; cursor: pointer; color: white; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="تغيير الصورة">
+                                <i class="fa-solid fa-camera" style="font-size: 0.9rem;"></i>
+                                <input type="file" accept="image/*" style="display: none;" onchange="app.uploadAvatar(this.files[0])">
+                            </label>
+                        </div>
                         <h2 class="profile-name">@${user.username}</h2>
                         <div class="share-link-container">
                             <span style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap;">${t('share_link')}</span>
