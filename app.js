@@ -524,17 +524,23 @@ const app = {
                             <h3 style="margin-bottom:20px;text-align:center;">الردود السابقة</h3>
                             <div class="messages-grid">
                                 ${publicReplies.map(msg => `
-                                    <div class="glass-card message-card">
-                                        <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center;">
-                                            <span><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</span>
-                                            <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
+                                    <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
+                                        <div class="swipe-actions" style="position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; gap: 8px; z-index: 1;">
+                                            <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('${window.location.origin}${window.location.pathname}#u/${username}')"><i class="fa-solid fa-copy"></i></button>
+                                            ${state.currentUser && state.currentUser.id === user.id ? `<button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('${msg.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
                                         </div>
-                                        <div class="msg-content">"${msg.content}"</div>
-                                        <div class="reply-content">
-                                            <div class="reply-label">${t('reply_label')}</div>
-                                            <div>${msg.reply}</div>
+                                        <div class="glass-card message-card message-swipe-front" id="swipe-front-${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
+                                            <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center;">
+                                                <span><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</span>
+                                                <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
+                                            </div>
+                                            <div class="msg-content">"${msg.content}"</div>
+                                            <div class="reply-content">
+                                                <div class="reply-label">${t('reply_label')}</div>
+                                                <div>${msg.reply}</div>
+                                            </div>
+                                            ${app.renderReactions(msg)}
                                         </div>
-                                        ${app.renderReactions(msg)}
                                     </div>
                                 `).join('')}
                             </div>
@@ -583,32 +589,39 @@ const app = {
                                 <p>${t('no_messages')}</p>
                             </div>
                         ` : myMessages.map(msg => `
-                            <div class="glass-card message-card">
-                                <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</span>
-                                    <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
+                            <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
+                                <div class="swipe-actions" style="position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; gap: 8px; z-index: 1;">
+                                    ${!msg.reply ? `<button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active'); document.querySelector('#swipe-front-${msg.id}').style.transform='translateX(0)';"><i class="fa-solid fa-reply"></i></button>` : ''}
+                                    <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('${msg.content}')"><i class="fa-solid fa-copy"></i></button>
+                                    <button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('${msg.id}')"><i class="fa-solid fa-trash"></i></button>
                                 </div>
-                                <div class="msg-content">"${msg.content}"</div>
-                                
-                                ${msg.reply ? `
-                                    <div class="reply-content">
-                                        <div class="reply-label">${t('reply_label')}</div>
-                                        <div>${msg.reply}</div>
+                                <div class="glass-card message-card message-swipe-front" id="swipe-front-${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
+                                    <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</span>
+                                        <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
                                     </div>
-                                ` : `
-                                    <div class="msg-actions">
-                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active')">
-                                            <i class="fa-solid fa-reply"></i> ${t('btn_reply')}
-                                        </button>
-                                    </div>
-                                    <div class="msg-reply-area" id="reply-area-${msg.id}">
-                                        <form onsubmit="app.submitReply(event, '${msg.id}')">
-                                            <textarea class="form-control" placeholder="${t('reply_ph')}" required style="min-height: 80px; margin-bottom: 10px;"></textarea>
-                                            <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">${t('btn_reply')}</button>
-                                        </form>
-                                    </div>
-                                `}
-                                ${app.renderReactions(msg)}
+                                    <div class="msg-content">"${msg.content}"</div>
+                                    
+                                    ${msg.reply ? `
+                                        <div class="reply-content">
+                                            <div class="reply-label">${t('reply_label')}</div>
+                                            <div>${msg.reply}</div>
+                                        </div>
+                                    ` : `
+                                        <div class="msg-actions">
+                                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active')">
+                                                <i class="fa-solid fa-reply"></i> ${t('btn_reply')}
+                                            </button>
+                                        </div>
+                                        <div class="msg-reply-area" id="reply-area-${msg.id}">
+                                            <form onsubmit="app.submitReply(event, '${msg.id}')">
+                                                <textarea class="form-control" placeholder="${t('reply_ph')}" required style="min-height: 80px; margin-bottom: 10px;"></textarea>
+                                                <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">${t('btn_reply')}</button>
+                                            </form>
+                                        </div>
+                                    `}
+                                    ${app.renderReactions(msg)}
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -703,6 +716,8 @@ const app = {
             // Add a little celebration effect
             this.celebrateSend(e.target.querySelector('button'));
         });
+        
+        this.initSwipeActions();
     },
 
     setupInboxEvents() {
@@ -718,6 +733,71 @@ const app = {
             saveState();
             this.updateNav();
         }
+        this.initSwipeActions();
+    },
+
+    deleteMessage(msgId) {
+        if(confirm('هل أنت متأكد من الحذف؟')) {
+            state.messages = state.messages.filter(m => m.id !== msgId);
+            saveState();
+            this.renderCurrentView();
+        }
+    },
+
+    initSwipeActions() {
+        if (window.innerWidth > 768) return; 
+        
+        const fronts = document.querySelectorAll('.message-swipe-front');
+        fronts.forEach(front => {
+            let startX = 0, startY = 0;
+            let isSwiping = false;
+            let isVertical = false;
+
+            front.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isSwiping = true;
+                isVertical = false;
+                front.style.transition = 'none';
+            }, {passive: true});
+
+            front.addEventListener('touchmove', e => {
+                if (!isSwiping) return;
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                const diffX = touchX - startX;
+                const diffY = touchY - startY;
+
+                if (!isVertical && Math.abs(diffY) > Math.abs(diffX)) {
+                    isVertical = true;
+                }
+
+                if (isVertical) return; 
+
+                if (diffX < 0 && diffX > -160) {
+                    front.style.transform = `translateX(${diffX}px)`;
+                }
+            }, {passive: true});
+
+            front.addEventListener('touchend', e => {
+                if (!isSwiping || isVertical) return;
+                isSwiping = false;
+                front.style.transition = 'transform 0.3s ease';
+                
+                const transform = window.getComputedStyle(front).transform;
+                let currentX = 0;
+                if (transform !== 'none') {
+                    const matrix = new DOMMatrixReadOnly(transform);
+                    currentX = matrix.m41;
+                }
+
+                if (currentX < -60) {
+                    front.style.transform = `translateX(-140px)`;
+                } else {
+                    front.style.transform = `translateX(0)`;
+                }
+            });
+        });
     },
 
     submitReply(e, msgId) {
