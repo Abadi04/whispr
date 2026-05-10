@@ -486,7 +486,7 @@ const app = {
                 return `<div class="view active empty-state"><h2>${t('err_user_not_found')}</h2></div>`;
             }
 
-            const publicReplies = state.messages.filter(m => m.recipientId === user.id && m.reply);
+            const publicReplies = state.messages.filter(m => m.recipientId === user.id && m.reply && (!m.expiresAt || m.expiresAt > Date.now()));
 
             return `
                 <div class="view active">
@@ -525,7 +525,10 @@ const app = {
                             <div class="messages-grid">
                                 ${publicReplies.map(msg => `
                                     <div class="glass-card message-card">
-                                        <div class="msg-time"><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</div>
+                                        <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</span>
+                                            <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
+                                        </div>
                                         <div class="msg-content">"${msg.content}"</div>
                                         <div class="reply-content">
                                             <div class="reply-label">${t('reply_label')}</div>
@@ -543,7 +546,7 @@ const app = {
 
         inbox: () => {
             const user = state.currentUser;
-            const myMessages = state.messages.filter(m => m.recipientId === user.id).sort((a,b) => b.timestamp - a.timestamp);
+            const myMessages = state.messages.filter(m => m.recipientId === user.id && (!m.expiresAt || m.expiresAt > Date.now())).sort((a,b) => b.timestamp - a.timestamp);
             const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
 
             return `
@@ -581,7 +584,10 @@ const app = {
                             </div>
                         ` : myMessages.map(msg => `
                             <div class="glass-card message-card">
-                                <div class="msg-time"><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</div>
+                                <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span><i class="fa-regular fa-clock"></i> ${formatDate(msg.timestamp)}</span>
+                                    <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
+                                </div>
                                 <div class="msg-content">"${msg.content}"</div>
                                 
                                 ${msg.reply ? `
@@ -680,6 +686,7 @@ const app = {
                 recipientId: user.id,
                 content: content,
                 timestamp: Date.now(),
+                expiresAt: Date.now() + 24 * 60 * 60 * 1000,
                 reply: null,
                 isRead: false
             });
