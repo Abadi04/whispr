@@ -7,6 +7,7 @@
 const supabaseUrl = 'https://hhbhmhyqgszvgkaacbvm.supabase.co';
 const supabaseKey = 'sb_publishable_H_ZX2gdYhq606lCTUqXPQA_KrnRefL_';
 const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+window.supabaseClient = supabaseClient;
 
 // --- Backend Data Layer: Blocks ---
 const blocksAPI = {
