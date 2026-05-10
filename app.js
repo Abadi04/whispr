@@ -237,17 +237,26 @@ const showToast = (message, type = 'info') => {
 
 // --- Core Application Logic ---
 const app = {
-    init() {
+    async init() {
         this.root = document.getElementById('app-root');
         this.applyTheme();
         this.applyLargeText();
         this.setupEventListeners();
         this.applyLanguage();
-        this.handleRoute();
+        
+        try {
+            this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
+            await this.initAuth();
+        } catch(e) {
+            console.error(e);
+        } finally {
+            await this.handleRoute();
+        }
+        
         this.initParticles();
         this.initCursor();
         
-        window.addEventListener('hashchange', () => this.handleRoute());
+        window.addEventListener('hashchange', () => app.handleRoute());
         
         // Add sample user if empty for demo purposes
         if (state.users.length === 0) {
@@ -340,7 +349,6 @@ const app = {
         if (this.authPromise) return this.authPromise;
         
         this.authPromise = (async () => {
-            this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
             
             
             if (window.supabaseClient) {
