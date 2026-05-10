@@ -302,7 +302,7 @@ const app = {
         document.body.setAttribute('data-theme', state.theme);
         const icon = document.getElementById('theme-icon');
         if (icon) {
-            icon.className = state.theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            icon.textContent = state.theme === 'light' ? '☾' : '☀';
         }
     },
 
@@ -370,6 +370,23 @@ const app = {
                                 
                             if (profile) {
                                 app.currentProfile = profile;
+                                const localIndex = state.users.findIndex(u => u.id === data.user.id);
+                                if (localIndex !== -1) {
+                                    state.users[localIndex] = {
+                                        ...state.users[localIndex],
+                                        email: profile.email || data.user.email,
+                                        username: profile.full_name || state.users[localIndex].username,
+                                        avatar_url: profile.avatar_url || state.users[localIndex].avatar_url
+                                    };
+                                    if (state.currentUser && state.currentUser.id === data.user.id) {
+                                        state.currentUser = {
+                                            ...state.currentUser,
+                                            username: state.users[localIndex].username,
+                                            avatar_url: state.users[localIndex].avatar_url
+                                        };
+                                    }
+                                    saveState();
+                                }
                             }
                         } catch (err) {}
                     }
@@ -450,19 +467,23 @@ const app = {
             const unreadCount = state.messages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
             container.innerHTML = `
                 ${userIndicatorHtml}
-                <button class="btn btn-outline" style="position: relative;" onclick="app.navigate('inbox')">
-                    <i class="fa-solid fa-inbox"></i> <span class="hide-mobile">${t('nav_inbox')}</span>
+                <button class="btn btn-outline nav-btn" style="position: relative;" onclick="app.navigate('inbox')" aria-label="${t('nav_inbox')}">
+                    <span class="nav-symbol" aria-hidden="true">✉</span> <span class="hide-mobile">${t('nav_inbox')}</span>
                     ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
                 </button>
-                <button class="btn btn-outline" onclick="app.logout()">
-                    <i class="fa-solid fa-right-from-bracket"></i>
+                <button class="btn btn-outline nav-btn" onclick="app.logout()" aria-label="${t('nav_logout')}">
+                    <span class="nav-symbol" aria-hidden="true">↩</span>
                 </button>
             `;
         } else {
             container.innerHTML = `
                 ${userIndicatorHtml}
-                <button class="btn btn-outline" onclick="app.navigate('login')">${t('nav_login')}</button>
-                <button class="btn btn-primary" onclick="app.navigate('register')">${t('nav_register')}</button>
+                <button class="btn btn-outline nav-btn" onclick="app.navigate('login')">
+                    <span class="nav-symbol" aria-hidden="true">↪</span> <span>${t('nav_login')}</span>
+                </button>
+                <button class="btn btn-primary nav-btn" onclick="app.navigate('register')">
+                    <span class="nav-symbol" aria-hidden="true">＋</span> <span>${t('nav_register')}</span>
+                </button>
             `;
         }
     },
@@ -571,9 +592,14 @@ const app = {
         try {
             const encodedUrl = encodeURIComponent(url);
             const encodedText = encodeURIComponent(text);
-            const shareUrl = platform === 'whatsapp'
-                ? `https://wa.me/?text=${encodedText}%20${encodedUrl}`
-                : `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+            if (platform === 'instagram') {
+                navigator.clipboard.writeText(`${text} ${url}`)
+                    .then(() => showToast('تم نسخ الرابط، افتح إنستغرام والصقه في قصتك', 'success'))
+                    .catch(() => showToast('افتح إنستغرام وانسخ الرابط من صندوقك', 'info'));
+                window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+                return;
+            }
+            const shareUrl = `https://x.com/intent/post?text=${encodedText}&url=${encodedUrl}`;
             window.open(shareUrl, '_blank', 'noopener,noreferrer');
         } catch (err) {
             showToast('تعذر فتح المشاركة الآن', 'error');
@@ -593,30 +619,80 @@ const app = {
         if (!file) return;
 
         try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${state.currentUser.id}-${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            if (!file.type.startsWith('image/')) {
+                showToast("اختر ملف صورة فقط", "error");
+                return;
+            }
+            if (file.size > 3 * 1024 * 1024) {
+                showToast("حجم الصورة يجب أن يكون أقل من ٣ ميجابايت", "error");
+                return;
+            }
+
+            const { data: authData, error: authError } = await window.supabaseClient.auth.getUser();
+            if (authError || !authData?.user) {
+                showToast("سجل الدخول أولاً لتحديث الصورة", "error");
+                return;
+            }
+
+            const userId = authData.user.id;
+            const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+            const filePath = `${userId}/avatar.${fileExt}`;
 
             showToast("جاري رفع الصورة...", "info");
 
-            let { error: uploadError } = await supabaseClient.storage
+            const { error: uploadError } = await supabaseClient.storage
                 .from('avatars')
-                .upload(filePath, file);
+                .upload(filePath, file, {
+                    cacheControl: '60',
+                    upsert: true
+                });
 
             if (uploadError) {
+                console.error("Avatar upload storage error:", uploadError);
                 return showToast("فشل في رفع الصورة", "error");
             }
 
             const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+            const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+
+            const { data: updatedProfile, error: profileUpdateError } = await supabaseClient
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', userId)
+                .select('id')
+                .maybeSingle();
+
+            if (profileUpdateError || !updatedProfile) {
+                console.warn("Profile avatar update failed, trying upsert:", profileUpdateError);
+                const { error: profileUpsertError } = await supabaseClient
+                    .from('profiles')
+                    .upsert({
+                        id: userId,
+                        email: authData.user.email,
+                        full_name: state.currentUser.username,
+                        avatar_url: publicUrl
+                    });
+
+                if (profileUpsertError) {
+                    console.error("Profile avatar upsert error:", profileUpsertError);
+                    return showToast("تم رفع الصورة لكن تعذر حفظها في الحساب", "error");
+                }
+            }
             
             const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
             if (userIndex !== -1) {
-                state.users[userIndex].avatar_url = data.publicUrl;
-                state.currentUser.avatar_url = data.publicUrl;
-                saveState();
-                showToast("تم تحديث الصورة!", "success");
-                this.renderCurrentView();
+                state.users[userIndex].avatar_url = publicUrl;
             }
+            state.currentUser.avatar_url = publicUrl;
+            app.currentProfile = {
+                ...(app.currentProfile || {}),
+                id: userId,
+                email: authData.user.email,
+                avatar_url: publicUrl
+            };
+            saveState();
+            showToast("تم تحديث الصورة بنجاح", "success");
+            this.renderCurrentView();
         } catch (err) {
             console.error("Avatar upload error:", err);
             showToast("حدث خطأ أثناء تحديث الصورة", "error");
@@ -710,7 +786,7 @@ const app = {
                 <div class="glass-card auth-card" id="onboard-2" style="display: none; max-width: 400px; margin: 0 auto; width: 100%;">
                     <i class="fa-solid fa-link" style="font-size: 4rem; color: #10b981; margin-bottom: 20px;"></i>
                     <h2 class="auth-title text-gradient">شارك رابطك الخاص</h2>
-                    <p class="auth-subtitle" style="margin-bottom: 30px;">بمجرد إنشاء حسابك، انسخ رابطك الخاص وشاركه في انستقرام أو تويتر لتبدأ بتلقي الرسائل.</p>
+                    <p class="auth-subtitle" style="margin-bottom: 30px;">بمجرد إنشاء حسابك، انسخ رابطك الخاص وشاركه في إنستغرام أو X لتبدأ بتلقي الرسائل.</p>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-outline" style="flex: 1;" onclick="app.finishOnboarding()">تخطي</button>
                         <button class="btn btn-primary" style="flex: 1;" onclick="app.nextOnboardingStep()">التالي</button>
@@ -1108,6 +1184,7 @@ const app = {
         inbox: () => {
             const user = state.currentUser;
             const fullUser = state.users.find(u => u.id === user.id);
+            const displayUser = { ...(fullUser || {}), ...user };
             const blockedIds = user.blockedUsers || [];
             const myMessages = state.messages.filter(m => 
                 m.recipientId === user.id && 
@@ -1122,14 +1199,14 @@ const app = {
             return `
                 <div class="view active inbox-container">
                     <div class="profile-header inbox-hero">
-                        <div class="avatar-container" style="position: relative; display: inline-block;">
-                            ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: var(--glass-shadow); border: 2px solid var(--primary);" />` : `<div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 2rem;">${user.username.charAt(0).toUpperCase()}</div>`}
-                            <label class="btn-icon" style="position: absolute; bottom: 0; right: -10px; background: var(--primary); padding: 6px; border-radius: 50%; cursor: pointer; color: white; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;" title="تغيير الصورة">
-                                <i class="fa-solid fa-camera" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-container inbox-avatar-wrap">
+                            ${displayUser.avatar_url ? `<img src="${displayUser.avatar_url}" class="avatar-img" alt="صورة الحساب" />` : `<div class="avatar-placeholder avatar-img">${displayUser.username.charAt(0).toUpperCase()}</div>`}
+                            <label class="btn-icon avatar-upload-btn" title="تغيير الصورة" aria-label="تغيير الصورة">
+                                <i class="fa-solid fa-camera"></i>
                                 <input type="file" accept="image/*" style="display: none;" onchange="app.uploadAvatar(this.files[0])">
                             </label>
                         </div>
-                        <h2 class="profile-name" dir="ltr">@${user.username}</h2>
+                        <h2 class="profile-name" dir="ltr">@${displayUser.username}</h2>
                         <div class="inbox-stats-row">
                             <div><strong>${myMessages.length}</strong><span>رسالة</span></div>
                             <div><strong>${unreadCount}</strong><span>غير مقروءة</span></div>
@@ -1143,11 +1220,11 @@ const app = {
                             </button>
                         </div>
                         <div class="quick-share-row">
-                            <button class="btn btn-outline" onclick="app.shareTo('whatsapp', '${shareUrl}', '${shareText}')">
-                                <i class="fa-brands fa-whatsapp"></i> واتساب
+                            <button class="btn btn-outline" onclick="app.shareTo('instagram', '${shareUrl}', '${shareText}')">
+                                <i class="fa-brands fa-instagram"></i> إنستغرام
                             </button>
-                            <button class="btn btn-outline" onclick="app.shareTo('twitter', '${shareUrl}', '${shareText}')">
-                                <i class="fa-brands fa-twitter"></i> تويتر
+                            <button class="btn btn-outline" onclick="app.shareTo('x', '${shareUrl}', '${shareText}')">
+                                <i class="fa-brands fa-x-twitter"></i> X
                             </button>
                         </div>
                     </div>
@@ -1186,7 +1263,7 @@ const app = {
                             <div class="glass-card empty-state" style="text-align: center; padding: 40px 20px;">
                                 <i class="fa-solid fa-ghost empty-icon" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; opacity: 0.8;"></i>
                                 <h3 style="margin-bottom: 10px; font-size: 1.3rem;">صندوق الوارد فارغ</h3>
-                                <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">لم تصلك أي رسائل حتى الآن. انشر رابطك الخاص في حساباتك (مثل تويتر أو انستقرام) ليستطيع الناس إرسال رسائل لك بسرية تامة.</p>
+                                <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">لم تصلك أي رسائل حتى الآن. انشر رابطك الخاص في حساباتك مثل إنستغرام أو X ليستطيع الناس إرسال رسائل لك بسرية تامة.</p>
                                 <button class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem; border-radius: 30px;" onclick="app.copyLink('${shareUrl}')">
                                     <i class="fa-solid fa-link"></i> نسخ رابط الحساب
                                 </button>
