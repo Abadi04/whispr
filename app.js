@@ -372,7 +372,7 @@ const app = {
             }
 
             app.authEmail = authEmail;
-            app.isOwner = authEmail === 'admin@whispr.app';
+            app.isOwner = authEmail === '';
         })();
         
         return this.authPromise;
@@ -863,7 +863,7 @@ const app = {
 
         analytics: () => {
             const fullUser = state.currentUser ? state.users.find(u => u.id === state.currentUser.id) : null;
-            if (!fullUser || fullUser.email !== 'admin@whispr.app') {
+            if (!fullUser || fullUser.email !== '') {
                 return `<div class="view active empty-state"><h2>غير مصرح لك بالدخول</h2></div>`;
             }
 
@@ -1017,7 +1017,7 @@ const app = {
         inbox: () => {
             const user = state.currentUser;
             const fullUser = state.users.find(u => u.id === user.id);
-            const isAdmin = fullUser && fullUser.email === 'admin@whispr.app';
+            const isAdmin = fullUser && fullUser.email === '';
             const blockedIds = user.blockedUsers || [];
             const myMessages = state.messages.filter(m => 
                 m.recipientId === user.id && 
