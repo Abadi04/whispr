@@ -342,6 +342,39 @@ const app = {
             .catch(() => showToast("حدث خطأ في النسخ", "error"));
     },
 
+    toggleReactions(id) {
+        document.getElementById(`reactions-popup-${id}`).classList.toggle('active');
+    },
+
+    addReaction(msgId, emoji) {
+        const msg = state.messages.find(m => m.id === msgId);
+        if (msg) {
+            if (!msg.reactions) msg.reactions = [];
+            msg.reactions.push(emoji);
+            saveState();
+            this.renderCurrentView();
+        }
+    },
+
+    renderReactions(msg) {
+        const emojis = ['❤️', '😂', '😮', '😢', '🔥'];
+        return `
+            <div style="position: relative; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--glass-border);">
+                <button class="reaction-toggle-btn" onclick="app.toggleReactions('${msg.id}')" title="أضف تفاعل">
+                    😀
+                </button>
+                <div class="reactions-popup" id="reactions-popup-${msg.id}">
+                    ${emojis.map(e => `<button class="reaction-emoji-btn" onclick="app.addReaction('${msg.id}', '${e}')">${e}</button>`).join('')}
+                </div>
+                ${msg.reactions && msg.reactions.length > 0 ? `
+                    <div class="reactions-row">
+                        ${msg.reactions.join(' ')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    },
+
     // --- Views ---
     views: {
         home: () => `
@@ -464,6 +497,7 @@ const app = {
                                             <div class="reply-label">${t('reply_label')}</div>
                                             <div>${msg.reply}</div>
                                         </div>
+                                        ${app.renderReactions(msg)}
                                     </div>
                                 `).join('')}
                             </div>
@@ -527,6 +561,7 @@ const app = {
                                         </form>
                                     </div>
                                 `}
+                                ${app.renderReactions(msg)}
                             </div>
                         `).join('')}
                     </div>
