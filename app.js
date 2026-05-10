@@ -430,7 +430,7 @@ const app = {
         let authEmail = (app.currentProfile && app.currentProfile.email) ? app.currentProfile.email : (app.authEmail || "غير مسجل الدخول");
 
         const userIndicatorHtml = `
-            <div class="current-user-indicator" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
+            <div class="current-user-indicator hide-mobile" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
                 <i class="fa-regular fa-user" style="margin-left: 4px;"></i>
                 <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; display: inline-block; width: 100%; text-align: left;">${authEmail}</span>
             </div>
@@ -440,11 +440,11 @@ const app = {
             const unreadCount = state.messages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
             container.innerHTML = `
                 ${userIndicatorHtml}
-                <button class="btn btn-outline" style="position: relative;" onclick="app.navigate('inbox')">
-                    <i class="fa-solid fa-inbox"></i> <span class="hide-mobile">${t('nav_inbox')}</span>
+                <button class="btn-icon" style="position: relative; color: var(--text-main);" onclick="app.navigate('inbox')" title="${t('nav_inbox')}">
+                    <i class="fa-solid fa-inbox"></i>
                     ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
                 </button>
-                <button class="btn btn-outline" onclick="app.logout()">
+                <button class="btn-icon" style="color: var(--danger); border-color: rgba(255,51,102,0.3);" onclick="app.logout()" title="خروج">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             `;

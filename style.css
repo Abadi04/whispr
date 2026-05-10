@@ -61,6 +61,10 @@
   font-family: 'Thamaniah', sans-serif !important;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-primary);
   background-color: var(--bg-color);
@@ -118,8 +122,8 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   z-index: -2;
   background: 
     radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 40%),
@@ -418,9 +422,9 @@ textarea.form-control {
 }
 
 .hero-title {
-  font-size: 2.8rem;
+  font-size: clamp(1.4rem, 6vw, 2.5rem);
   margin-bottom: 24px;
-  line-height: 1.1;
+  line-height: 1.3;
 }
 
 .hero-subtitle {
@@ -845,8 +849,11 @@ html[dir="ltr"] .unread-badge {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .hero-title { font-size: 2rem; }
+  .logo span { display: none; }
+  .hero-title { font-size: clamp(1.4rem, 6vw, 2.5rem); }
   .hero-actions { flex-direction: column; }
+  .nav-container { padding: 0 12px; }
+  .nav-actions { gap: 8px; }
   
   .btn { 
     width: 100%; 
@@ -975,6 +982,7 @@ html[dir="ltr"] .unread-badge {
   
   .mobile-only-icon { display: block; font-size: 1.2rem; }
   .desktop-only-text { display: none; }
+  .hide-mobile { display: none !important; }
   
   /* Less background clutter */
   .particles { display: none; }
