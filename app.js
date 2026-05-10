@@ -237,25 +237,17 @@ const showToast = (message, type = 'info') => {
 
 // --- Core Application Logic ---
 const app = {
-    async init() {
+    init() {
         this.root = document.getElementById('app-root');
         this.applyTheme();
         this.applyLargeText();
         this.setupEventListeners();
         this.applyLanguage();
-        
-        try {
-            await this.initAuth();
-        } catch(e) {
-            console.error(e);
-        } finally {
-            await this.handleRoute();
-        }
-        
+        this.handleRoute();
         this.initParticles();
         this.initCursor();
         
-        window.addEventListener('hashchange', () => app.handleRoute());
+        window.addEventListener('hashchange', () => this.handleRoute());
         
         // Add sample user if empty for demo purposes
         if (state.users.length === 0) {
@@ -348,7 +340,7 @@ const app = {
         if (this.authPromise) return this.authPromise;
         
         this.authPromise = (async () => {
-                    this.root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text-muted)">جاري التحميل...</div>`;
+            this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
             
             
             if (window.supabaseClient) {
@@ -390,7 +382,7 @@ const app = {
         
         const hash = window.location.hash.slice(1) || 'home';
         
-        if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/') && hash !== 'onboarding') {
+        if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/')) {
             window.location.hash = 'onboarding';
             return;
         }
@@ -438,7 +430,7 @@ const app = {
         let authEmail = (app.currentProfile && app.currentProfile.email) ? app.currentProfile.email : (app.authEmail || "غير مسجل الدخول");
 
         const userIndicatorHtml = `
-            <div class="current-user-indicator hide-mobile" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
+            <div class="current-user-indicator" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
                 <i class="fa-regular fa-user" style="margin-left: 4px;"></i>
                 <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; display: inline-block; width: 100%; text-align: left;">${authEmail}</span>
             </div>
@@ -448,11 +440,11 @@ const app = {
             const unreadCount = state.messages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
             container.innerHTML = `
                 ${userIndicatorHtml}
-                <button class="btn-icon" style="position: relative; color: var(--text-main);" onclick="app.navigate('inbox')" title="${t('nav_inbox')}">
-                    <i class="fa-solid fa-inbox"></i>
+                <button class="btn btn-outline" style="position: relative;" onclick="app.navigate('inbox')">
+                    <i class="fa-solid fa-inbox"></i> <span class="hide-mobile">${t('nav_inbox')}</span>
                     ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
                 </button>
-                <button class="btn-icon" style="color: var(--danger); border-color: rgba(255,51,102,0.3);" onclick="app.logout()" title="خروج">
+                <button class="btn btn-outline" onclick="app.logout()">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             `;
