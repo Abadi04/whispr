@@ -343,6 +343,10 @@ const app = {
             return;
         }
 
+        if (this.currentRoute !== hash) {
+            app.chatLimit = 30; // Reset pagination on route change
+        }
+
         this.currentRoute = hash;
         await this.renderCurrentView();
         this.updateNav();
@@ -688,6 +692,11 @@ const app = {
                 (!m.expiresAt || m.expiresAt > Date.now()) &&
                 (!m.senderId || !blockedIds.includes(m.senderId))
             );
+            
+            app.chatTotalCount = publicReplies.length;
+            const limit = app.chatLimit || 30;
+            const visibleReplies = publicReplies.slice(Math.max(publicReplies.length - limit, 0));
+            const hasMore = publicReplies.length > limit;
 
             return `
                 <div class="view active">
@@ -735,7 +744,12 @@ const app = {
                         <div class="inbox-container">
                             <h3 style="margin-bottom:20px;text-align:center;">الردود السابقة</h3>
                             <div class="messages-grid">
-                                ${publicReplies.map(msg => {
+                                ${hasMore ? `
+                                    <div id="chat-loader" style="text-align: center; padding: 15px; color: var(--primary); display: flex; justify-content: center; align-items: center; gap: 8px; opacity: 0.7; transition: opacity 0.3s ease;">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> جاري تحميل الرسائل القديمة...
+                                    </div>
+                                ` : ''}
+                                ${visibleReplies.map(msg => {
                                     const dateLabel = getDateLabel(msg.timestamp);
                                     let separatorHtml = '';
                                     if (dateLabel !== lastDateLabelProfile) {
@@ -1183,12 +1197,17 @@ const app = {
         
         scrollBtn.addEventListener('click', scrollToBottom);
 
-        // Scroll smoothly on open
-        setTimeout(() => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }, 150);
+        // Scroll smoothly on open ONLY if it's a fresh load (not pagination)
+        if (!app.isPaginating) {
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 150);
+        } else {
+            app.isPaginating = false;
+        }
 
         let scrollTimeout;
+        let isFetchingMore = false;
         const handleScroll = () => {
             if (app.currentRoute !== 'u') {
                 window.removeEventListener('scroll', handleScroll);
@@ -1217,6 +1236,28 @@ const app = {
                         scrollBtn.style.display = 'none';
                     }
                 }, 300);
+            }
+            
+            // Pagination logic
+            if (window.scrollY < 50 && !isFetchingMore && app.chatLimit < app.chatTotalCount) {
+                isFetchingMore = true;
+                const loader = document.getElementById('chat-loader');
+                if (loader) {
+                    loader.style.opacity = '1';
+                }
+                
+                setTimeout(async () => {
+                    const oldScrollHeight = document.body.scrollHeight;
+                    const oldScrollY = window.scrollY;
+                    
+                    app.chatLimit += 30;
+                    app.isPaginating = true;
+                    await app.renderCurrentView();
+                    
+                    const newScrollHeight = document.body.scrollHeight;
+                    window.scrollTo(0, oldScrollY + (newScrollHeight - oldScrollHeight));
+                    isFetchingMore = false;
+                }, 600); // Artificial delay to show loader
             }
         };
 
