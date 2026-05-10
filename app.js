@@ -342,7 +342,7 @@ const app = {
         this.authPromise = (async () => {
             this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
             
-            let authEmail = null;
+            
             if (window.supabaseClient) {
                 try {
                     const { data } = await window.supabaseClient.auth.getUser();
