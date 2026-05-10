@@ -693,6 +693,25 @@ const app = {
             const activeUsersCount = activeUserIds.size;
             const avgMessages = activeUsersCount === 0 ? 0 : (totalRecentMessages / activeUsersCount).toFixed(1);
 
+            const dailyStats = [];
+            let maxDailyMsgs = 0;
+            const now = new Date();
+            now.setHours(23, 59, 59, 999);
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                date.setHours(0, 0, 0, 0);
+                const endOfDay = date.getTime() + 24 * 60 * 60 * 1000;
+                
+                const count = state.messages.filter(m => m.timestamp >= date.getTime() && m.timestamp < endOfDay).length;
+                if (count > maxDailyMsgs) maxDailyMsgs = count;
+                
+                const dayLabel = date.toLocaleDateString('ar-EG', { weekday: 'short' });
+                dailyStats.push({ label: dayLabel, count: count });
+            }
+            
+            const chartMax = maxDailyMsgs === 0 ? 1 : maxDailyMsgs;
+
             return `
                 <div class="view active inbox-container">
                     <div class="inbox-header">
@@ -725,6 +744,25 @@ const app = {
                             <i class="fa-solid fa-chart-pie" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 10px;"></i>
                             <h3 style="font-size: 1.8rem; margin: 0;">${avgMessages}</h3>
                             <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">متوسط الرسائل/مستخدم</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="margin-top: 24px; padding: 20px;">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.2rem; text-align: center;">الرسائل المرسلة في آخر 7 أيام</h3>
+                        <div style="display: flex; align-items: flex-end; justify-content: space-around; height: 150px; padding-top: 20px; border-bottom: 1px solid var(--glass-border);">
+                            ${dailyStats.map(stat => {
+                                const heightPercentage = (stat.count / chartMax) * 100;
+                                return `
+                                    <div style="display: flex; flex-direction: column; align-items: center; width: 10%; height: 100%;">
+                                        <div style="flex-grow: 1; display: flex; align-items: flex-end; width: 100%; justify-content: center;">
+                                            <div style="width: 100%; max-width: 30px; height: ${heightPercentage}%; min-height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; transition: height 0.3s ease; position: relative;">
+                                                <span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: var(--text-muted);">${stat.count}</span>
+                                            </div>
+                                        </div>
+                                        <span style="font-size: 0.75rem; margin-top: 8px; color: var(--text-muted);">${stat.label}</span>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 </div>
