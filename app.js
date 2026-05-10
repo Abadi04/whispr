@@ -8,6 +8,42 @@ const supabaseUrl = 'https://hhbhmhyqgszvgkaacbvm.supabase.co';
 const supabaseKey = 'sb_publishable_H_ZX2gdYhq606lCTUqXPQA_KrnRefL_';
 const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 
+// --- Backend Data Layer: Blocks ---
+const blocksAPI = {
+    async isBlocked(blockerId, blockedId) {
+        if (!supabaseClient) return false;
+        try {
+            const { data } = await supabaseClient
+                .from('blocks')
+                .select('id')
+                .eq('blocker_id', blockerId)
+                .eq('blocked_id', blockedId)
+                .single();
+            return !!data;
+        } catch (err) {
+            console.error("Error checking block:", err);
+            return false;
+        }
+    },
+    
+    async blockUser(blockerId, blockedId) {
+        if (!supabaseClient) return { error: 'No client' };
+        
+        // Ensure it doesn't already exist to avoid duplicate errors, or just let DB handle unique constraint
+        return await supabaseClient
+            .from('blocks')
+            .insert({ blocker_id: blockerId, blocked_id: blockedId });
+    },
+    
+    async unblockUser(blockerId, blockedId) {
+        if (!supabaseClient) return { error: 'No client' };
+        return await supabaseClient
+            .from('blocks')
+            .delete()
+            .match({ blocker_id: blockerId, blocked_id: blockedId });
+    }
+};
+
 const TRANSLATIONS = {
     ar: {
         logo: "Whispr",
