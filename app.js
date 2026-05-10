@@ -237,9 +237,11 @@ const app = {
     updateNav() {
         const container = document.getElementById('auth-nav-container');
         if (state.currentUser) {
+            const unreadCount = state.messages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
             container.innerHTML = `
-                <button class="btn btn-outline" onclick="app.navigate('inbox')">
+                <button class="btn btn-outline" style="position: relative;" onclick="app.navigate('inbox')">
                     <i class="fa-solid fa-inbox"></i> <span class="hide-mobile">${t('nav_inbox')}</span>
+                    ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
                 </button>
                 <button class="btn btn-outline" onclick="app.logout()">
                     <i class="fa-solid fa-right-from-bracket"></i>
@@ -582,9 +584,14 @@ const app = {
                 recipientId: user.id,
                 content: content,
                 timestamp: Date.now(),
-                reply: null
+                reply: null,
+                isRead: false
             });
             saveState();
+            
+            if (state.currentUser && state.currentUser.id === user.id) {
+                app.updateNav();
+            }
             
             ta.value = '';
             counter.textContent = `300 ${t('chars_left')}`;
@@ -593,6 +600,21 @@ const app = {
             // Add a little celebration effect
             this.celebrateSend(e.target.querySelector('button'));
         });
+    },
+
+    setupInboxEvents() {
+        if (!state.currentUser) return;
+        let modified = false;
+        state.messages.forEach(m => {
+            if (m.recipientId === state.currentUser.id && !m.isRead) {
+                m.isRead = true;
+                modified = true;
+            }
+        });
+        if (modified) {
+            saveState();
+            this.updateNav();
+        }
     },
 
     submitReply(e, msgId) {
