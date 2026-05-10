@@ -476,10 +476,7 @@ const app = {
                     content = this.views.blocked();
                     break;
                 case 'analytics':
-                    if (!state.currentUser) return this.navigate('login');
-                    if (!app.isOwner) return this.navigate('inbox');
-                    content = this.views.analytics();
-                    break;
+                    return this.navigate('inbox');
                 case 'onboarding':
                     content = this.views.onboarding();
                     break;
@@ -1039,12 +1036,7 @@ const app = {
                         <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
                     </div>
                     
-                    ${isAdmin ? `
-                    <div class="glass-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('analytics')">
-                        <div style="font-weight: 600; color: var(--primary);"><i class="fa-solid fa-chart-line"></i> لوحة الإحصائيات</div>
-                        <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
-                    </div>
-                    ` : ''}
+
 
                     <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
                         <div>
