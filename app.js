@@ -377,11 +377,39 @@ const app = {
         }
     },
 
-    updateNav() {
+    async updateNav() {
         const container = document.getElementById('auth-nav-container');
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.gap = '8px';
+        
+        let authEmail = "غير مسجل الدخول";
+        if (window.supabaseClient) {
+            try {
+                const { data } = await window.supabaseClient.auth.getUser();
+                if (data && data.user && data.user.email) {
+                    authEmail = data.user.email;
+                } else if (state.currentUser) {
+                    const fullUser = state.users.find(u => u.id === state.currentUser.id);
+                    if (fullUser && fullUser.email) authEmail = fullUser.email;
+                }
+            } catch (err) {}
+        } else if (state.currentUser) {
+            const fullUser = state.users.find(u => u.id === state.currentUser.id);
+            if (fullUser && fullUser.email) authEmail = fullUser.email;
+        }
+
+        const userIndicatorHtml = `
+            <div class="current-user-indicator" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
+                <i class="fa-regular fa-user" style="margin-left: 4px;"></i>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; display: inline-block; width: 100%; text-align: left;">${authEmail}</span>
+            </div>
+        `;
+
         if (state.currentUser) {
             const unreadCount = state.messages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
             container.innerHTML = `
+                ${userIndicatorHtml}
                 <button class="btn btn-outline" style="position: relative;" onclick="app.navigate('inbox')">
                     <i class="fa-solid fa-inbox"></i> <span class="hide-mobile">${t('nav_inbox')}</span>
                     ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
@@ -392,6 +420,7 @@ const app = {
             `;
         } else {
             container.innerHTML = `
+                ${userIndicatorHtml}
                 <button class="btn btn-outline" onclick="app.navigate('login')">${t('nav_login')}</button>
                 <button class="btn btn-primary" onclick="app.navigate('register')">${t('nav_register')}</button>
             `;
