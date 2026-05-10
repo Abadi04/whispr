@@ -372,7 +372,7 @@ const app = {
             }
 
             app.authEmail = authEmail;
-            app.isOwner = authEmail === '';
+            app.isOwner = authEmail === 'abadihdar@gmail.com';
         })();
         
         return this.authPromise;
@@ -491,7 +491,10 @@ const app = {
                     content = this.views.blocked();
                     break;
                 case 'analytics':
-                    return this.navigate('inbox');
+                    if (!state.currentUser) return this.navigate('login');
+                    if (!app.isOwner) return this.navigate('inbox');
+                    content = this.views.analytics();
+                    break;
                 case 'onboarding':
                     content = this.views.onboarding();
                     break;
@@ -1017,7 +1020,7 @@ const app = {
         inbox: () => {
             const user = state.currentUser;
             const fullUser = state.users.find(u => u.id === user.id);
-            const isAdmin = fullUser && fullUser.email === '';
+            const isAdmin = app.isOwner;
             const blockedIds = user.blockedUsers || [];
             const myMessages = state.messages.filter(m => 
                 m.recipientId === user.id && 
@@ -1058,7 +1061,15 @@ const app = {
                         <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
                     </div>
                     
-
+                    ${isAdmin ? `
+                    <div class="glass-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('analytics')">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-chart-line" style="color: var(--primary); font-size: 1.2rem;"></i>
+                            <span style="font-weight: bold; color: var(--text-main);">لوحة التحليلات</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 0.9rem;"></i>
+                    </div>
+                    ` : ''}
 
                     <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
                         <div>
