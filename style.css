@@ -891,12 +891,21 @@ html[dir="ltr"] .unread-badge {
     padding-right: 0;
   }
   
+  body.large-text-enabled .msg-content {
+    font-size: 1.35rem;
+    line-height: 1.7;
+  }
+  
   .msg-time {
     position: relative;
     top: auto;
     right: auto;
     left: auto;
     margin-bottom: 16px;
+  }
+  
+  body.large-text-enabled .msg-time {
+    font-size: 0.95rem;
   }
   
   .avatar-container img, .avatar-placeholder {

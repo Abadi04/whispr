@@ -123,6 +123,7 @@ const TRANSLATIONS = {
 const state = {
     lang: localStorage.getItem('bawh_lang') || 'ar',
     theme: localStorage.getItem('whispr_theme') || 'dark',
+    largeText: localStorage.getItem('whispr_largetext') === 'true',
     users: JSON.parse(localStorage.getItem('bawh_users')) || [],
     messages: JSON.parse(localStorage.getItem('bawh_messages')) || [],
     currentUser: JSON.parse(localStorage.getItem('bawh_current_user')) || null
@@ -135,6 +136,7 @@ const saveState = () => {
     localStorage.setItem('bawh_current_user', JSON.stringify(state.currentUser));
     localStorage.setItem('bawh_lang', state.lang);
     localStorage.setItem('whispr_theme', state.theme);
+    localStorage.setItem('whispr_largetext', state.largeText);
 };
 
 const t = (key) => TRANSLATIONS[state.lang][key] || key;
@@ -171,6 +173,7 @@ const app = {
     init() {
         this.root = document.getElementById('app-root');
         this.applyTheme();
+        this.applyLargeText();
         this.setupEventListeners();
         this.applyLanguage();
         this.handleRoute();
@@ -223,8 +226,23 @@ const app = {
         document.body.setAttribute('data-theme', state.theme);
         const icon = document.getElementById('theme-icon');
         if (icon) {
-            icon.className = state.theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            icon.className = state.theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
         }
+    },
+
+    applyLargeText() {
+        if (state.largeText) {
+            document.body.classList.add('large-text-enabled');
+        } else {
+            document.body.classList.remove('large-text-enabled');
+        }
+    },
+
+    toggleLargeText() {
+        state.largeText = !state.largeText;
+        saveState();
+        this.applyLargeText();
+        this.renderCurrentView();
     },
 
     applyLanguage() {
@@ -580,6 +598,15 @@ const app = {
                         <h2>${t('inbox_title')}</h2>
                         <div class="stats-pill">
                             <i class="fa-solid fa-envelope-open-text"></i> ${myMessages.length} ${t('msgs_count')}
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
+                        <div>
+                            <span style="font-weight: 600;">تكبير حجم الخط في المحادثات</span>
+                        </div>
+                        <div>
+                            <input type="checkbox" ${state.largeText ? 'checked' : ''} onchange="app.toggleLargeText()" style="width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer;">
                         </div>
                     </div>
                     
