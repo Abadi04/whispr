@@ -506,15 +506,16 @@ const app = {
                             <i class="fa-solid fa-paper-plane"></i>
                             <h3>${t('profile_title')}</h3>
                         </div>
-                        <form id="send-msg-form">
-                            <div class="form-group">
-                                <textarea id="msg-content" class="form-control" placeholder="${t('msg_ph')}" required maxlength="300"></textarea>
+                        <form id="send-msg-form" class="mobile-composer-form">
+                            <div class="form-group composer-row">
+                                <textarea id="msg-content" class="form-control auto-expand" placeholder="اكتب رسالتك هنا..." required maxlength="300" rows="1"></textarea>
+                                <button type="submit" class="btn btn-primary send-btn">
+                                    <i class="fa-solid fa-paper-plane mobile-only-icon"></i> 
+                                    <span class="desktop-only-text"><i class="fa-solid fa-lock"></i> ${t('btn_send')}</span>
+                                </button>
                             </div>
                             <div class="msg-footer">
                                 <span class="char-count" id="char-counter">300 ${t('chars_left')}</span>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fa-solid fa-lock"></i> ${t('btn_send')}
-                                </button>
                             </div>
                         </form>
                     </div>
@@ -687,6 +688,9 @@ const app = {
         ta.addEventListener('input', () => {
             const left = 300 - ta.value.length;
             counter.textContent = `${left} ${t('chars_left')}`;
+            
+            ta.style.height = 'auto';
+            ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
         });
 
         document.getElementById('send-msg-form').addEventListener('submit', (e) => {
@@ -710,6 +714,7 @@ const app = {
             }
             
             ta.value = '';
+            ta.style.height = 'auto';
             counter.textContent = `300 ${t('chars_left')}`;
             showToast(t('msg_sent'), 'success');
             

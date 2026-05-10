@@ -588,6 +588,21 @@ textarea.form-control {
   color: var(--text-muted);
 }
 
+.mobile-only-icon { display: none; }
+.desktop-only-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.mobile-composer-form .composer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mobile-composer-form .send-btn {
+  align-self: flex-start;
+}
+
 /* Inbox & Messages */
 .inbox-container {
   max-width: 700px;
@@ -850,7 +865,7 @@ html[dir="ltr"] .unread-badge {
     font-size: 1.05rem; 
   }
   
-  .page-container { padding-top: 80px; padding-left: 16px; padding-right: 16px; }
+  .page-container { padding-top: 80px; padding-left: 16px; padding-right: 16px; padding-bottom: 150px; }
   
   .glass-card {
     padding: 16px;
@@ -876,6 +891,62 @@ html[dir="ltr"] .unread-badge {
     min-height: 44px;
     font-size: 1.8rem;
   }
+  
+  /* Mobile Sticky Composer */
+  .send-message-card {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    padding: 16px 16px env(safe-area-inset-bottom, 16px) !important;
+    z-index: 1000;
+    background: rgba(18, 18, 24, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+  
+  .send-message-card .msg-header {
+    display: none; 
+  }
+
+  .mobile-composer-form .composer-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .mobile-composer-form textarea {
+    flex: 1;
+    min-height: 48px;
+    max-height: 120px;
+    border-radius: 24px;
+    padding: 12px 20px;
+    margin-bottom: 0;
+  }
+
+  .mobile-composer-form .send-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 50%;
+    padding: 0;
+    align-self: flex-end;
+  }
+
+  .mobile-composer-form .msg-footer {
+    justify-content: center;
+    margin-top: 8px;
+    font-size: 0.8rem;
+  }
+  
+  .mobile-only-icon { display: block; font-size: 1.2rem; }
+  .desktop-only-text { display: none; }
   
   /* Less background clutter */
   .particles { display: none; }
