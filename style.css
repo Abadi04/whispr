@@ -874,10 +874,29 @@ html[dir="ltr"] .unread-badge {
     will-change: transform;
   }
   
+  .message-swipe-container {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  
   .message-card {
-    padding: 16px;
+    padding: 20px;
+  }
+  
+  .msg-content {
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  .msg-time {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
     margin-bottom: 16px;
-    gap: 8px;
   }
   
   .avatar-container img, .avatar-placeholder {
