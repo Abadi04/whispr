@@ -224,7 +224,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .logo-icon{color:#c084fc;display:flex;}
 .nav-ctas{display:flex;align-items:center;gap:8px;}
 
-/* Mobile: focus on phones, allow vertical scroll if needed */
+/* Mobile: allow vertical scroll, but keep 3 cards side-by-side */
 @media(max-width:960px){
   html,body{height:auto;min-height:100vh;overflow-y:auto;}
   .shell{
@@ -233,9 +233,9 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     height:auto;min-height:100vh;
   }
   .panel-brand{padding:26px 20px 18px;}
-  .panel-options{padding:20px 16px 28px;}
-  .options-row{grid-template-columns:1fr;gap:10px;}
-  .is-featured{transform:scale(1.01);}  
+  .panel-options{padding:20px 12px 28px;}
+  .options-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .is-featured{transform:scale(1.03);}  
 }
 @media(max-width:640px){
   .navbar{inset-inline:14px;}
