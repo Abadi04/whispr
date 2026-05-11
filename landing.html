@@ -1,196 +1,519 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Whispr — صفحة البداية</title>
-  <meta name="description" content="Whispr يمنحك رابطاً شخصياً واحداً تستقبل عبره رسائل مجهولة بهوية مخفية بالكامل، في واجهة بسيطة مستوحاة من تجربة تسجيل الدخول لتويتر."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#000000;
-      --surface:#050815;
-      --surface-card:#060818;
-      --border:rgba(148,163,184,.45);
-      --primary:#1d9bf0;
-      --primary-soft:rgba(29,155,240,.18);
-      --accent:#00d4ff;
-      --text:#f9fafb;
-      --muted:#9ca3af;
-      --muted-soft:#6b7280;
-      --r-lg:18px;--r-full:999px;
-      --ease:cubic-bezier(.25,.8,.25,1);
-      --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html,body{min-height:100%;}
-    body{
-      font-family:var(--font);
-      background:radial-gradient(circle at top,rgba(15,23,42,.9),#020617 55%,#000 100%);
-      color:var(--text);
-      -webkit-font-smoothing:antialiased;
-      text-rendering:optimizeLegibility;
-    }
-    a{text-decoration:none;color:inherit;}
-    button{font-family:var(--font);cursor:pointer;border:none;background:none;}
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Whispr — رسائل مجهولة بلا حدود</title>
+<meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09070f;--surface:rgba(22,16,38,.78);--surface-2:rgba(28,20,46,.9);
+  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.16);
+  --primary:#8a2be2;--primary-h:#9d4edd;--secondary:#e8007a;--accent:#00d4ff;
+  --text:#f1f0f5;--muted:#8b8fa8;--dim:#5a5e75;
+  --r-xl:20px;--r-lg:14px;--r-md:10px;--r-sm:7px;--r-full:9999px;
+  --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
+  --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  --nav-h:58px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{overflow:hidden;height:100%;}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;
+}
+a{text-decoration:none;color:inherit;}
+button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
-    .shell{
-      min-height:100vh;
-      display:flex;flex-direction:column;
-      padding:16px 16px 24px;
-    }
-    .content{
-      flex:1;
-      max-width:1120px;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
-      gap:36px;
-      align-items:center;
-    }
+.bg-fx{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 55%,rgba(138,43,226,.16),transparent 42%),
+    radial-gradient(circle at 85% 20%,rgba(232,0,122,.12),transparent 40%),
+    radial-gradient(circle at 50% 95%,rgba(0,212,255,.06),transparent 48%);
+  animation:bgFx 20s ease-in-out infinite alternate;
+}
+@keyframes bgFx{from{opacity:.8;transform:scale(1)}to{opacity:1;transform:scale(1.05)}}
+.grid-fx{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:56px 56px;
+}
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.particle{position:absolute;border-radius:50%;opacity:0;animation:floatUp linear infinite;}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1);opacity:0}
+  10%{opacity:.35}90%{opacity:.35}
+  100%{transform:translateY(-100vh) scale(0);opacity:0}
+}
 
-    .brand-side{
-      display:flex;flex-direction:column;gap:24px;
-    }
-    .brand-logo{
-      display:flex;align-items:center;gap:10px;
-    }
-    .brand-mark{
-      width:44px;height:44px;border-radius:16px;
-      display:flex;align-items:center;justify-content:center;
-      background:radial-gradient(circle at 30% 0%,#0ea5e9,#1d4ed8);
-      box-shadow:0 0 0 1px rgba(15,23,42,1),0 16px 40px rgba(15,23,42,1);
-    }
-    .brand-mark svg{color:#f9fafb;}
-    .brand-text-main{font-size:1.2rem;font-weight:700;}
-    .brand-text-sub{font-size:.8rem;color:var(--muted-soft);}
+.shell{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-rows:var(--nav-h) 1fr;
+  height:100vh;width:100vw;
+  overflow:hidden;
+}
 
-    .brand-heading{
-      font-size:clamp(2rem,3.3vw,2.6rem);
-      line-height:1.15;font-weight:800;
-      letter-spacing:.01em;
-    }
-    .brand-heading span{
-      display:block;
-    }
+.navbar{
+  grid-row:1;
+  display:flex;align-items:center;
+  padding:0 28px;
+  background:rgba(9,7,15,.75);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 1px 0 rgba(255,255,255,.04);
+  gap:16px;
+}
+.logo{display:flex;align-items:center;gap:9px;font-size:1.2rem;font-weight:700;letter-spacing:-.3px;}
+.logo-icon{color:#c084fc;display:flex;flex-shrink:0;}
+.nav-tabs{
+  display:flex;gap:4px;margin:0 auto;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:4px;
+}
+.nav-tab{
+  padding:6px 18px;border-radius:var(--r-full);
+  font-size:.83rem;font-weight:500;color:var(--muted);
+  transition:all .22s var(--ease);cursor:pointer;white-space:nowrap;
+}
+.nav-tab.active{background:rgba(138,43,226,.22);color:var(--text);border:1px solid rgba(138,43,226,.3);}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.06);color:var(--text);}
+.nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
-    .brand-copy{
-      font-size:.9rem;color:var(--muted);
-      max-width:30rem;line-height:1.8;
-    }
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 20px;border-radius:var(--r-lg);
+  font-family:var(--font);font-size:.875rem;font-weight:600;
+  border:1px solid transparent;
+  transition:all .22s var(--bounce);
+  position:relative;overflow:hidden;white-space:nowrap;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.28);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(138,43,226,.46);}
+.btn-ghost{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text);}
+.btn-ghost:hover{background:rgba(255,255,255,.09);border-color:var(--border-h);}
+.btn-xl{padding:13px 30px;font-size:.95rem;border-radius:var(--r-xl);}
 
-    .auth-side{
-      display:flex;flex-direction:column;gap:16px;
-      align-items:stretch;
-    }
-    .auth-card{
-      border-radius:var(--r-lg);
-      padding:20px 20px 18px;
-      background:var(--surface-card);
-      border:1px solid rgba(148,163,184,.45);
-      box-shadow:0 18px 50px rgba(15,23,42,1);
-    }
-    .auth-title{
-      font-size:1.1rem;font-weight:700;margin-bottom:12px;
-    }
-    .auth-sub{
-      font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.6;
-    }
+.main{
+  grid-row:2;
+  display:grid;
+  grid-template-columns:1fr 1px 420px;
+  overflow:hidden;
+}
 
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      padding:10px 16px;border-radius:var(--r-full);
-      font-size:.85rem;font-weight:600;
-      border:1px solid transparent;white-space:nowrap;width:100%;
-      transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease),color .18s var(--ease);
-    }
-    .btn-primary{
-      background:#f9fafb;color:#020617;
-      box-shadow:0 10px 30px rgba(15,23,42,.9);
-    }
-    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 18px 40px rgba(15,23,42,1);}
-    .btn-outline{
-      background:transparent;
-      border-color:var(--border);
-      color:var(--text);
-    }
-    .btn-outline:hover{background:#020617;}
+.hero-panel{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:32px 44px;overflow:hidden;
+  position:relative;
+}
+.hero-panel::after{
+  content:'';position:absolute;top:0;bottom:0;left:0;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(138,43,226,.3) 30%,rgba(232,0,122,.2) 70%,transparent);
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--accent);border:1px solid rgba(0,212,255,.2);
+  background:rgba(0,212,255,.05);border-radius:var(--r-full);
+  padding:5px 14px;margin-bottom:18px;font-size:.82rem;font-weight:500;
+  width:fit-content;
+}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
-    .auth-divider{
-      display:flex;align-items:center;gap:8px;margin:10px 0;font-size:.8rem;color:var(--muted-soft);
-    }
-    .auth-divider::before,
-    .auth-divider::after{
-      content:"";flex:1;height:1px;background:rgba(51,65,85,.8);
-    }
+.hero-title{
+  font-size:clamp(1.8rem,3.2vw,3rem);
+  font-weight:700;line-height:1.15;margin-bottom:14px;
+}
+.grad{
+  background:linear-gradient(135deg,#c084fc,var(--secondary));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{font-size:.95rem;color:var(--muted);line-height:1.75;margin-bottom:24px;max-width:420px;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
 
-    .hint{
-      font-size:.78rem;color:var(--muted-soft);margin-top:6px;line-height:1.5;
-    }
+.hero-stats{display:flex;gap:22px;flex-wrap:wrap;}
+.stat-pill{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);}
+.stat-pill strong{color:var(--text);font-size:.95rem;}
+.stat-sep{width:1px;height:20px;background:var(--border);}
 
-    .footer{
-      max-width:1120px;margin:16px auto 0;
-      font-size:.7rem;color:var(--muted-soft);
-      display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;
-    }
+.gutter{background:linear-gradient(180deg,transparent,rgba(138,43,226,.15) 40%,rgba(232,0,122,.1) 60%,transparent);width:1px;}
 
-    @media (max-width:900px){
-      .shell{padding:12px 14px 18px;}
-      .content{grid-template-columns:1fr;gap:28px;}
-      .brand-side{margin-top:32px;}
-      .brand-heading{font-size:clamp(1.8rem,5vw,2.1rem);}
-      .brand-copy{font-size:.86rem;}
-      .auth-side{max-width:360px;}
-    }
-  </style>
+.side-panel{
+  display:flex;flex-direction:column;
+  overflow:hidden;background:rgba(12,9,22,.6);
+  border-right:1px solid var(--border);
+}
+
+.panel-header{
+  padding:16px 20px 0;flex-shrink:0;
+}
+.panel-tabs{
+  display:flex;gap:2px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:0;
+}
+.ptab{
+  padding:9px 16px;font-size:.8rem;font-weight:500;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s var(--ease);white-space:nowrap;
+  margin-bottom:-1px;
+}
+.ptab.active{color:var(--text);border-bottom-color:var(--primary);}
+.ptab:hover:not(.active){color:var(--text);}
+
+.panel-body{
+  flex:1;overflow:hidden;position:relative;
+}
+.panel-view{
+  position:absolute;inset:0;padding:20px;overflow-y:auto;
+  opacity:0;transform:translateX(12px);pointer-events:none;
+  transition:opacity .28s var(--ease),transform .28s var(--ease);
+}
+.panel-view.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+.panel-view::-webkit-scrollbar{width:3px;}
+.panel-view::-webkit-scrollbar-thumb{background:rgba(138,43,226,.3);border-radius:3px;}
+
+.phone-wrap{
+  display:flex;align-items:center;justify-content:center;
+  padding:10px 0;position:relative;
+}
+.phone-glow{
+  position:absolute;inset:-30px;
+  background:radial-gradient(circle,rgba(138,43,226,.2),transparent 60%);
+  pointer-events:none;
+}
+.phone{
+  width:240px;border-radius:28px;padding:16px;
+  background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
+  border:1px solid var(--border);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(12px);
+  animation:phoneFloat 6s ease-in-out infinite alternate;
+}
+@keyframes phoneFloat{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.phone-notch{width:60px;height:5px;border-radius:5px;background:rgba(255,255,255,.12);margin:0 auto 18px;}
+.chat-bubble{
+  border-radius:14px 14px 4px 14px;padding:10px 12px;margin-bottom:8px;
+  font-size:.82rem;line-height:1.5;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+}
+.chat-bubble.sent{
+  border-radius:14px 4px 14px 14px;
+  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(232,0,122,.1));
+  border-color:rgba(138,43,226,.2);
+}
+.bubble-time{font-size:.68rem;color:var(--dim);margin-top:3px;display:block;}
+.phone-bar{
+  margin-top:14px;display:flex;align-items:center;gap:7px;
+  background:rgba(0,0,0,.3);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:8px 12px;color:var(--dim);font-size:.78rem;
+}
+.bar-icon{color:var(--accent);display:flex;margin-right:auto;}
+
+.feat-list{display:flex;flex-direction:column;gap:12px;}
+.feat-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--border);
+  transition:border-color .2s var(--ease),transform .2s var(--ease);
+}
+.feat-row:hover{border-color:rgba(138,43,226,.3);transform:translateX(-3px);}
+.feat-ico{
+  width:38px;height:38px;flex-shrink:0;border-radius:var(--r-md);
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(0,212,255,.09));
+  border:1px solid rgba(138,43,226,.18);color:#c084fc;
+}
+.feat-info h4{font-size:.88rem;font-weight:600;margin-bottom:4px;}
+.feat-info p{font-size:.78rem;color:var(--muted);line-height:1.55;}
+
+.steps-list{display:flex;flex-direction:column;gap:0;}
+.step-row{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:16px 14px;position:relative;
+}
+.step-row:not(:last-child)::after{
+  content:'';position:absolute;right:27px;top:52px;bottom:0;
+  width:1px;background:linear-gradient(180deg,rgba(138,43,226,.35),transparent);
+}
+.step-num{
+  width:42px;height:42px;flex-shrink:0;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;font-size:1.05rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 14px rgba(138,43,226,.32);position:relative;z-index:1;
+}
+.step-body h4{font-size:.9rem;font-weight:600;margin-bottom:5px;}
+.step-body p{font-size:.8rem;color:var(--muted);line-height:1.6;}
+
+.kpi-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-top:16px;
+}
+.kpi{
+  padding:14px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--border);
+  text-align:center;
+}
+.kpi-val{font-size:1.4rem;font-weight:700;color:#c084fc;display:block;}
+.kpi-label{font-size:.73rem;color:var(--muted);margin-top:3px;display:block;}
+
+.panel-cta{
+  padding:14px 20px;flex-shrink:0;
+  border-top:1px solid var(--border);
+  background:rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:10px;
+}
+.panel-cta a{flex:1;text-align:center;}
+.panel-cta-text{font-size:.75rem;color:var(--muted);flex-shrink:0;}
+
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:var(--r-full);
+  font-size:.72rem;font-weight:500;
+  background:rgba(0,212,255,.08);color:var(--accent);
+  border:1px solid rgba(0,212,255,.18);
+}
+
+@media(max-width:960px){
+  .main{grid-template-columns:1fr;}
+  .gutter{display:none;}
+  .side-panel{display:none;}
+  .hero-panel{padding:28px 24px;justify-content:flex-start;padding-top:36px;}
+  .hero-panel::after{display:none;}
+  .nav-tabs{display:none;}
+  html,body{overflow:auto;}
+  .shell{height:auto;overflow:visible;}
+  .main{height:auto;}
+  .hero-panel{min-height:calc(100vh - var(--nav-h));}
+}
+@media(max-width:640px){
+  .navbar{padding:0 16px;}
+  .hero-panel{padding:24px 16px;}
+  .hero-title{font-size:clamp(1.7rem,7vw,2.6rem);}
+  .btn-xl{padding:12px 24px;font-size:.9rem;}
+  .hero-stats{gap:12px;}
+  .stat-sep{display:none;}
+}
+
+.fade-in{animation:fadeIn .5s var(--ease) both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.08s}.delay-2{animation-delay:.16s}
+.delay-3{animation-delay:.24s}.delay-4{animation-delay:.32s}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <main class="content" aria-label="صفحة البداية لـ Whispr">
-      <section class="brand-side" aria-label="تعريف Whispr">
-        <div class="brand-logo">
-          <div class="brand-mark" aria-hidden="true">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 9l2-3 2 3 3-3 2 3 3-2v8a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7V7z"/>
-              <path d="M9 13h.01"/>
-              <path d="M15 13h.01"/>
-              <path d="M10 16c.5.3 1.1.5 2 .5s1.5-.2 2-.5"/>
-            </svg>
+
+<div class="bg-fx"></div>
+<div class="grid-fx"></div>
+<div class="particles" id="particles"></div>
+
+<div class="shell">
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </span>
+      Whispr
+    </a>
+    <div class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-panel="preview" role="tab">معاينة</button>
+      <button class="nav-tab" data-panel="features" role="tab">المميزات</button>
+      <button class="nav-tab" data-panel="howto" role="tab">كيف يعمل</button>
+    </div>
+    <div class="nav-ctas">
+      <a href="index.html#login" class="btn btn-ghost" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">دخول</a>
+      <a href="index.html#register" class="btn btn-primary" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <div class="hero-panel">
+      <div class="eyebrow fade-in">
+        <span class="eyebrow-dot"></span>
+        رسائل مجهولة — آمنة وسريعة
+      </div>
+      <h1 class="hero-title fade-in delay-1">
+        ماذا يقولون<br>عنك <span class="grad">بصدق؟</span>
+      </h1>
+      <p class="hero-sub fade-in delay-2">
+        احصل على رابطك الخاص وشاركه مع أصدقائك. سيرسلون لك ما يريدون قوله دون أن تعرف هويتهم — صادقاً، وجريئاً، ومجاناً.
+      </p>
+      <div class="hero-actions fade-in delay-3">
+        <a href="index.html#register" class="btn btn-primary btn-xl">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          احصل على رابطك
+        </a>
+        <a href="index.html#login" class="btn btn-ghost btn-xl">دخول</a>
+      </div>
+      <div class="hero-stats fade-in delay-4">
+        <div class="stat-pill"><strong>100%</strong> مجاني</div>
+        <div class="stat-sep"></div>
+        <div class="stat-pill"><strong>0</strong> تتبع للهوية</div>
+        <div class="stat-sep"></div>
+        <div class="stat-pill"><strong>فوري</strong> بدون تأخير</div>
+      </div>
+    </div>
+
+    <div class="gutter"></div>
+
+    <div class="side-panel">
+      <div class="panel-header">
+        <div class="panel-tabs" role="tablist">
+          <button class="ptab active" data-view="preview" role="tab">معاينة المنتج</button>
+          <button class="ptab" data-view="features" role="tab">المميزات</button>
+          <button class="ptab" data-view="howto" role="tab">خطوات البدء</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="panel-view active" id="view-preview">
+          <div class="phone-wrap">
+            <div class="phone-glow"></div>
+            <div class="phone">
+              <div class="phone-notch"></div>
+              <div class="chat-bubble">
+                😂 أنت الشخص الوحيد اللي يضحكني بجد
+                <span class="bubble-time">الآن</span>
+              </div>
+              <div class="chat-bubble sent">
+                جداً، عندك شجاعة نادرة 🔥
+                <span class="bubble-time">منذ ثانيتين</span>
+              </div>
+              <div class="chat-bubble" style="opacity:.6">
+                كيف تجعلني أشعر بالتميز دائماً؟
+                <span class="bubble-time">منذ دقيقة</span>
+              </div>
+              <div class="phone-bar">
+                <span>اكتب رسالتك...</span>
+                <span class="bar-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+                </span>
+              </div>
+            </div>
           </div>
-          <div>
-            <div class="brand-text-main">Whispr</div>
-            <div class="brand-text-sub">استقبل رسائلك المجهولة بهدوء</div>
+          <div class="kpi-row">
+            <div class="kpi"><span class="kpi-val">+12</span><span class="kpi-label">رسائل اليوم ✨</span></div>
+            <div class="kpi"><span class="kpi-val" style="color:var(--accent);">0</span><span class="kpi-label">هويات مكشوفة 🔒</span></div>
+            <div class="kpi"><span class="kpi-val" style="color:var(--secondary);">فوري</span><span class="kpi-label">وصول الرسائل ⚡</span></div>
+            <div class="kpi"><span class="kpi-val" style="color:#6ee7b7;">مجاني</span><span class="kpi-label">100% بدون رسوم 🎉</span></div>
           </div>
         </div>
-        <h1 class="brand-heading">
-          <span>استقبل رسائلك المجهولة،</span>
-          <span>برابطك الشخصي فقط.</span>
-        </h1>
-        <p class="brand-copy">
-          شارك رابطك مع من تريد، واستقبل رأي الناس فيك بهوية مخفية ١٠٠٪ داخل صندوق واحد بسيط وواضح، بتجربة واجهة مألوفة تشبه صفحة تسجيل الدخول على تويتر.
-        </p>
-      </section>
 
-      <section class="auth-side" aria-label="بدء استخدام Whispr">
-        <div class="auth-card">
-          <h2 class="auth-title">ابدأ خلال ثوانٍ.</h2>
-          <p class="auth-sub">
-            أنشئ حسابك لتحصل على رابط شخصي واحد تستقبل عبره كل رسائلك المجهولة في مكان واحد منظم.
-          </p>
-          <a href="index.html#register" class="btn btn-primary">إنشاء حساب جديد</a>
-          <div class="auth-divider">أو</div>
-          <a href="index.html#login" class="btn btn-outline">تسجيل دخول</a>
-          <p class="hint">لا نطلب من المرسِل أي حساب أو اسم، ويمكنك إيقاف استقبال الرسائل أو حذفها في أي وقت.</p>
+        <div class="panel-view" id="view-features">
+          <div class="feat-list">
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div class="feat-info"><h4>رابط شخصي فوري</h4><p>احصل على <span style="color:var(--accent);font-family:monospace;font-size:.75rem;">whispr/u/اسمك</span> فور التسجيل وشاركه أينما تريد.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="feat-info"><h4>مجهولية تامة</h4><p>لا تعرف هوية المُرسل إطلاقاً، فيحكي الناس آراءهم الحقيقية بكل حرية.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+              <div class="feat-info"><h4>ردود مجهولة</h4><p>يمكنك الرد على الرسائل بشكل مجهول دون كشف هويتك.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="feat-info"><h4>حماية من الإزعاج</h4><p>حظر أي مُرسل مزعج بضغطة واحدة — بدون رسائل غير مرغوبة.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="feat-info"><h4>وصول فوري</h4><p>لا تأكيد بريد، لا إعداد معقد — سجّل وابدأ خلال ثوانٍ.</p></div>
+            </div>
+          </div>
         </div>
-      </section>
-    </main>
 
-    <footer class="footer" aria-label="معلومات إضافية">
-      <span>© 2026 Whispr</span>
-      <span>منصّة بسيطة لاستقبال الرسائل المجهولة بصندوق واحد واضح.</span>
-    </footer>
+        <div class="panel-view" id="view-howto">
+          <div class="steps-list">
+            <div class="step-row">
+              <div class="step-num">١</div>
+              <div class="step-body"><h4>سجّل حسابك</h4><p>أنشئ حسابك بالبريد الإلكتروني وكلمة مرور — مباشرة بدون تأكيد.</p></div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">٢</div>
+              <div class="step-body"><h4>شارك رابطك</h4><p>انسخ رابطك الشخصي وشاركه على تويتر، سناب، واتساب — أينما تريد.</p></div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">٣</div>
+              <div class="step-body"><h4>استقبل الرسائل</h4><p>اقرأ ما يقوله الناس عنك بصدق، ورد عليهم إن أردت — كل ذلك بشكل مجهول.</p></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid rgba(138,43,226,.2);border-radius:var(--r-lg);">
+            <div class="badge" style="margin-bottom:10px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              ابدأ الآن
+            </div>
+            <p style="font-size:.82rem;color:var(--muted);line-height:1.6;">جاهز تعرف رأيهم الحقيقي؟ انضم الآن واحصل على رابطك المجاني في ثوانٍ.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="panel-cta">
+        <span class="panel-cta-text">مجاني 100%</span>
+        <a href="index.html#register" class="btn btn-primary" style="flex:1;justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          احصل على رابطك الآن
+        </a>
+      </div>
+    </div>
+
   </div>
+</div>
+
+<script>
+(function(){
+  const c=document.getElementById('particles');
+  const cols=['#8a2be2','#e8007a','#00d4ff','#c084fc'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const s=Math.random()*4+2;
+    p.style.cssText='width:'+s+'px;height:'+s+'px;background:'+cols[~~(Math.random()*cols.length)]+';left:'+Math.random()*100+'%;bottom:'+Math.random()*20+'%;animation-duration:'+(Math.random()*14+8)+'s;animation-delay:'+(Math.random()*12)+'s;';
+    c.appendChild(p);
+  }
+})();
+
+document.querySelectorAll('.nav-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var target=btn.dataset.panel;
+    document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    var ptab=document.querySelector('.ptab[data-view="'+target+'"]');
+    if(ptab) ptab.click();
+  });
+});
+
+document.querySelectorAll('.ptab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var target=btn.dataset.view;
+    document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    document.querySelectorAll('.panel-view').forEach(function(v){v.classList.remove('active');});
+    var view=document.getElementById('view-'+target);
+    if(view) view.classList.add('active');
+    var ntab=document.querySelector('.nav-tab[data-panel="'+target+'"]');
+    if(ntab){
+      document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+      ntab.classList.add('active');
+    }
+  });
+});
+</script>
 </body>
 </html>
