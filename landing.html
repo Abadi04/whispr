@@ -283,6 +283,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   border:1px solid rgba(0,212,255,.18);
 }
 
+.mobile-dashboard{display:none;}
 @media(max-width:960px){
   .main{grid-template-columns:1fr;}
   .gutter{display:none;}
@@ -294,6 +295,18 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   .shell{height:auto;overflow:visible;}
   .main{height:auto;}
   .hero-panel{min-height:calc(100vh - var(--nav-h));}
+  .mobile-dashboard{display:block;padding:16px 0 32px;}
+  .mobile-accordion{margin-top:24px;border-radius:var(--r-xl);background:rgba(12,9,22,.85);border:1px solid var(--border);}
+  .acc-trigger{
+    width:100%;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+    font-size:.9rem;font-weight:600;color:var(--text);
+    background:none;border:none;border-bottom:1px solid var(--border);
+  }
+  .acc-trigger:last-of-type{border-bottom:none;}
+  .acc-chevron{transition:transform .2s var(--ease);}
+  .acc-trigger.active .acc-chevron{transform:rotate(180deg);}
+  .acc-panel{max-height:0;overflow:hidden;transition:max-height .22s var(--ease),opacity .22s var(--ease);opacity:0;padding:0 16px;}
+  .acc-panel.open{opacity:1;padding:8px 16px 14px;}
 }
 @media(max-width:640px){
   .navbar{padding:0 16px;}
@@ -428,92 +441,4 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
               <div class="feat-info"><h4>ردود مجهولة</h4><p>يمكنك الرد على الرسائل بشكل مجهول دون كشف هويتك.</p></div>
             </div>
             <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-              <div class="feat-info"><h4>حماية من الإزعاج</h4><p>حظر أي مُرسل مزعج بضغطة واحدة — بدون رسائل غير مرغوبة.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div class="feat-info"><h4>وصول فوري</h4><p>لا تأكيد بريد، لا إعداد معقد — سجّل وابدأ خلال ثوانٍ.</p></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel-view" id="view-howto">
-          <div class="steps-list">
-            <div class="step-row">
-              <div class="step-num">١</div>
-              <div class="step-body"><h4>سجّل حسابك</h4><p>أنشئ حسابك بالبريد الإلكتروني وكلمة مرور — مباشرة بدون تأكيد.</p></div>
-            </div>
-            <div class="step-row">
-              <div class="step-num">٢</div>
-              <div class="step-body"><h4>شارك رابطك</h4><p>انسخ رابطك الشخصي وشاركه على تويتر، سناب، واتساب — أينما تريد.</p></div>
-            </div>
-            <div class="step-row">
-              <div class="step-num">٣</div>
-              <div class="step-body"><h4>استقبل الرسائل</h4><p>اقرأ ما يقوله الناس عنك بصدق، ورد عليهم إن أردت — كل ذلك بشكل مجهول.</p></div>
-            </div>
-          </div>
-          <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid rgba(138,43,226,.2);border-radius:var(--r-lg);">
-            <div class="badge" style="margin-bottom:10px;">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              ابدأ الآن
-            </div>
-            <p style="font-size:.82rem;color:var(--muted);line-height:1.6;">جاهز تعرف رأيهم الحقيقي؟ انضم الآن واحصل على رابطك المجاني في ثوانٍ.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="panel-cta">
-        <span class="panel-cta-text">مجاني 100%</span>
-        <a href="index.html#register" class="btn btn-primary" style="flex:1;justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          احصل على رابطك الآن
-        </a>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-(function(){
-  const c=document.getElementById('particles');
-  const cols=['#8a2be2','#e8007a','#00d4ff','#c084fc'];
-  for(let i=0;i<18;i++){
-    const p=document.createElement('div');
-    p.className='particle';
-    const s=Math.random()*4+2;
-    p.style.cssText='width:'+s+'px;height:'+s+'px;background:'+cols[~~(Math.random()*cols.length)]+';left:'+Math.random()*100+'%;bottom:'+Math.random()*20+'%;animation-duration:'+(Math.random()*14+8)+'s;animation-delay:'+(Math.random()*12)+'s;';
-    c.appendChild(p);
-  }
-})();
-
-document.querySelectorAll('.nav-tab').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var target=btn.dataset.panel;
-    document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    var ptab=document.querySelector('.ptab[data-view="'+target+'"]');
-    if(ptab) ptab.click();
-  });
-});
-
-document.querySelectorAll('.ptab').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var target=btn.dataset.view;
-    document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    document.querySelectorAll('.panel-view').forEach(function(v){v.classList.remove('active');});
-    var view=document.getElementById('view-'+target);
-    if(view) view.classList.add('active');
-    var ntab=document.querySelector('.nav-tab[data-panel="'+target+'"]');
-    if(ntab){
-      document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
-      ntab.classList.add('active');
-    }
-  });
-});
-</script>
-</body>
-</html>
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7cоЌ
