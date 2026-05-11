@@ -167,38 +167,21 @@
     .section-sub{font-size:.8rem;color:var(--muted);}
 
     .features-row{
-      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:12px;
+      display:grid;grid-template-columns:1fr;
+      max-width:420px;
     }
     .feature-card{
       border-radius:var(--r-lg);
-      padding:12px 12px 10px;
-      background:rgba(11,16,32,.7);
-      border:1px solid rgba(255,255,255,.16);
-      box-shadow:0 14px 40px rgba(15,23,42,.95);
+      padding:16px 16px 14px;
+      background:linear-gradient(135deg,rgba(11,16,32,.82),rgba(15,23,42,.9));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 18px 50px rgba(15,23,42,.98);
       display:flex;flex-direction:column;gap:6px;
-      backdrop-filter:blur(18px);
+      backdrop-filter:blur(20px);
+      align-items:flex-start;
     }
-    .feature-card.main{
-      background:linear-gradient(145deg,rgba(138,43,226,.35),rgba(11,16,32,.9));
-      border-color:rgba(232,0,122,.9);
-      box-shadow:0 24px 70px rgba(138,43,226,.9);
-    }
-    .feature-icon{
-      width:26px;height:26px;border-radius:10px;
-      display:flex;align-items:center;justify-content:center;
-      background:rgba(15,23,42,.9);
-      border:1px solid rgba(148,163,184,.6);
-      color:var(--accent);font-size:.7rem;
-      backdrop-filter:blur(14px);
-    }
-    .feature-card.main .feature-icon{
-      background:rgba(15,23,42,.85);
-      border-color:rgba(232,121,193,.8);
-      color:#ffe4ff;
-    }
-    .feature-title{font-size:.8rem;font-weight:600;}
-    .feature-text{font-size:.74rem;color:var(--muted);line-height:1.5;}
+    .feature-title{font-size:.95rem;font-weight:600;letter-spacing:.04em;}
+    .feature-text{font-size:.74rem;color:var(--muted);line-height:1.6;margin-top:4px;}
 
     .how-steps{
       display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
@@ -239,10 +222,10 @@
       .phone{width:190px;height:320px;}
       .hero-title{font-size:clamp(1.5rem,5vw,1.9rem);}
       .hero-sub{font-size:.82rem;line-height:1.6;margin-bottom:12px;}
-      .features-row{gap:8px;}
-      .feature-card{padding:10px 9px 8px;}
-      .feature-title{font-size:.78rem;}
-      .feature-text{font-size:.7rem;}
+      .features-row{max-width:100%;}
+      .feature-card{padding:14px 12px 12px;}
+      .feature-title{font-size:.9rem;}
+      .feature-text{font-size:.72rem;}
       .how-steps{grid-template-columns:repeat(2,minmax(0,1fr));}
       .privacy-grid{grid-template-columns:1fr;}
     }
@@ -301,34 +284,14 @@
       </div>
     </section>
 
-    <section class="features" aria-label="مميزات Whispr">
+    <section class="features" aria-label="فكرة Whispr">
       <header>
-        <p class="section-title">خلاصة الفكرة في ثلاث نقاط.</p>
-        <p class="section-sub">لا أوضاع معقدة ولا قوائم طويلة — طريقة واحدة واضحة لاستقبال رسائل مجهولة بثقة.</p>
+        <p class="section-title">فكرة Whispr في كرت واحد.</p>
       </header>
       <div class="features-row">
-        <article class="feature-card">
-          <div class="feature-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18"/><path d="M12 5l7 7-7 7"/></svg>
-          </div>
-          <h2 class="feature-title">رابط واحد فقط</h2>
-          <p class="feature-text">انسخ رابطك وشاركه في بروفايلك أو حالاتك، وكل الرسائل تصلك في صندوق واحد.</p>
-        </article>
-
-        <article class="feature-card main" aria-label="وعد الخصوصية في Whispr">
-          <div class="feature-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/></svg>
-          </div>
-          <h2 class="feature-title">هوية مجهولة 100%</h2>
-          <p class="feature-text">لا نُخزّن أو نعرض أي بيانات تعريفية عن المرسِل — لا اسم، لا بريد، لا صورة، فقط النص.</p>
-        </article>
-
-        <article class="feature-card">
-          <div class="feature-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-          </div>
-          <h2 class="feature-title">تحكم كامل</h2>
-          <p class="feature-text">يمكنك إيقاف استقبال الرسائل أو حذفها في أي لحظة، بدون إعدادات معقدة أو خطوات كثيرة.</p>
+        <article class="feature-card" aria-label="ملخص فكرة التطبيق">
+          <h2 class="feature-title">رابط. رسائل. صراحة.</h2>
+          <p class="feature-text">رابط شخصي واحد، رسائل مجهولة بهوية مخفية ١٠٠٪، وتحكم بسيط في ما تقرأ وما تحظره وما ترد عليه.</p>
         </article>
       </div>
     </section>
