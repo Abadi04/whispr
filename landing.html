@@ -4,26 +4,26 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Whispr — رسائل مجهولة بلا حدود</title>
-<meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني."/>
+<meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني، في صفحة واحدة بسيطة تشبه تجربة تسجيل الدخول لتويتر."/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#09070f;--surface:rgba(22,16,38,.78);--surface-2:rgba(28,20,46,.9);
+  --bg:#09070f;--surface:rgba(22,16,38,.78);
   --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.16);
-  --primary:#8a2be2;--primary-h:#9d4edd;--secondary:#e8007a;--accent:#00d4ff;
+  --primary:#8a2be2;--secondary:#e8007a;--accent:#00d4ff;
   --text:#f1f0f5;--muted:#8b8fa8;--dim:#5a5e75;
-  --r-xl:20px;--r-lg:14px;--r-md:10px;--r-sm:7px;--r-full:9999px;
+  --r-xl:20px;--r-lg:14px;--r-full:9999px;
   --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
   --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
   --nav-h:58px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{overflow:hidden;height:100%;}
+html,body{height:100%;overflow:hidden;}
 body{
   font-family:var(--font);background:var(--bg);color:var(--text);
-  height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;
+  -webkit-font-smoothing:antialiased;
 }
 a{text-decoration:none;color:inherit;}
 button{font-family:var(--font);cursor:pointer;border:none;background:none;}
@@ -54,191 +54,197 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .shell{
   position:relative;z-index:1;
   display:grid;
-  grid-template-rows:var(--nav-h) 1fr;
+  grid-template-rows:var(--nav-h) 1fr 30px;
   height:100vh;width:100vw;
-  overflow:hidden;
 }
 
 .navbar{
   grid-row:1;
   display:flex;align-items:center;
-  padding:0 28px;
-  background:rgba(9,7,15,.75);
+  padding:0 24px;
+  background:rgba(9,7,15,.8);
   backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
   border-bottom:1px solid var(--border);
   box-shadow:0 1px 0 rgba(255,255,255,.04);
   gap:16px;
 }
-.logo{display:flex;align-items:center;gap:9px;font-size:1.2rem;font-weight:700;letter-spacing:-.3px;}
+.logo{display:flex;align-items:center;gap:9px;font-size:1.1rem;font-weight:700;letter-spacing:-.3px;}
 .logo-icon{color:#c084fc;display:flex;flex-shrink:0;}
 .nav-spacer{margin-inline:auto;}
 .nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  padding:9px 20px;border-radius:var(--r-lg);
-  font-family:var(--font);font-size:.875rem;font-weight:600;
+  padding:8px 18px;border-radius:var(--r-lg);
+  font-size:.82rem;font-weight:600;
   border:1px solid transparent;
-  transition:all .22s var(--bounce);
+  transition:all .2s var(--bounce);
   position:relative;overflow:hidden;white-space:nowrap;
 }
 .btn-primary{
   background:linear-gradient(135deg,var(--primary),var(--secondary));
   color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.28);
 }
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(138,43,226,.46);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(138,43,226,.46);}
 .btn-ghost{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text);}
 .btn-ghost:hover{background:rgba(255,255,255,.09);border-color:var(--border-h);}
-.btn-xl{padding:13px 30px;font-size:.95rem;border-radius:var(--r-xl);}
+.btn-xl{padding:11px 26px;font-size:.9rem;border-radius:var(--r-xl);}
 
 .main{
   grid-row:2;
   display:grid;
-  grid-template-columns:1.1fr 420px;
-  overflow:hidden;
+  grid-template-columns:1.1fr 0.9fr;
+  padding:20px 26px 10px;
+  gap:26px;
+  align-items:center;
 }
 
 .hero-panel{
-  display:flex;flex-direction:column;justify-content:center;
-  padding:32px 44px;overflow:hidden;
-  position:relative;
-}
-.hero-panel::after{
-  content:'';position:absolute;top:0;bottom:0;left:0;width:1px;
-  background:linear-gradient(180deg,transparent,rgba(138,43,226,.3) 30%,rgba(232,0,122,.2) 70%,transparent);
+  display:flex;flex-direction:column;gap:14px;
 }
 .eyebrow{
   display:inline-flex;align-items:center;gap:8px;
   color:var(--accent);border:1px solid rgba(0,212,255,.2);
   background:rgba(0,212,255,.05);border-radius:var(--r-full);
-  padding:5px 14px;margin-bottom:18px;font-size:.82rem;font-weight:500;
+  padding:4px 12px;font-size:.78rem;font-weight:500;
   width:fit-content;
 }
 .eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
 .hero-title{
-  font-size:clamp(1.8rem,3.2vw,3rem);
-  font-weight:700;line-height:1.15;margin-bottom:14px;
+  font-size:clamp(1.9rem,3vw,2.4rem);
+  font-weight:700;line-height:1.15;
 }
 .grad{
   background:linear-gradient(135deg,#c084fc,var(--secondary));
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
 }
-.hero-sub{font-size:.95rem;color:var(--muted);line-height:1.75;margin-bottom:24px;max-width:420px;}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
+.hero-sub{
+  font-size:.86rem;color:var(--muted);line-height:1.7;
+  max-width:420px;
+}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
 
-.hero-stats{display:flex;gap:22px;flex-wrap:wrap;}
-.stat-pill{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);}
-.stat-pill strong{color:var(--text);font-size:.95rem;}
-.stat-sep{width:1px;height:20px;background:var(--border);}
+.hero-meta{
+  display:flex;flex-direction:column;gap:6px;
+  margin-top:8px;font-size:.78rem;color:var(--muted);
+}
+.hero-meta-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.badge-soft{
+  padding:3px 9px;border-radius:var(--r-full);
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(15,23,42,.7);
+  font-size:.73rem;color:var(--muted);
+}
+.hero-link-sample{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 9px;border-radius:var(--r-full);
+  background:rgba(15,23,42,.9);
+  border:1px solid rgba(148,163,184,.3);
+  font-size:.75rem;color:var(--muted);
+}
+.hero-link-sample code{
+  font-family:monospace;font-size:.78rem;color:var(--accent);
+}
+.copy-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:var(--r-full);
+  border:1px solid rgba(148,163,184,.35);
+  background:rgba(15,23,42,.9);
+  font-size:.73rem;color:var(--muted);
+}
+.copy-pill svg{opacity:.8;}
 
 .side-panel{
-  display:flex;flex-direction:column;
-  padding:24px 24px 20px;
-  background:rgba(12,9,22,.86);
-  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:10px;
+  align-items:stretch;
 }
-.side-top{flex:1;display:flex;flex-direction:column;gap:18px;align-items:stretch;justify-content:flex-start;}
-
 .phone-wrap{
   display:flex;align-items:center;justify-content:center;
-  padding:6px 0 4px;position:relative;
 }
 .phone-glow{
-  position:absolute;inset:-30px;
+  position:absolute;inset:-24px;
   background:radial-gradient(circle,rgba(138,43,226,.2),transparent 60%);
   pointer-events:none;
 }
+.phone-shell{
+  position:relative;display:inline-flex;
+}
 .phone{
-  width:240px;border-radius:28px;padding:16px;
+  width:215px;border-radius:26px;padding:14px;
   background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
   border:1px solid var(--border);
-  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);
+  box-shadow:0 18px 40px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07);
   backdrop-filter:blur(12px);
-  animation:phoneFloat 6s ease-in-out infinite alternate;
 }
-@keyframes phoneFloat{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-.phone-notch{width:60px;height:5px;border-radius:5px;background:rgba(255,255,255,.12);margin:0 auto 18px;}
+.phone-notch{width:52px;height:5px;border-radius:5px;background:rgba(255,255,255,.12);margin:0 auto 14px;}
 .chat-bubble{
-  border-radius:14px 14px 4px 14px;padding:10px 12px;margin-bottom:8px;
-  font-size:.82rem;line-height:1.5;
+  border-radius:13px 13px 4px 13px;padding:8px 10px;margin-bottom:6px;
+  font-size:.78rem;line-height:1.4;
   background:rgba(255,255,255,.05);border:1px solid var(--border);
 }
 .chat-bubble.sent{
-  border-radius:14px 4px 14px 14px;
+  border-radius:13px 4px 13px 13px;
   background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(232,0,122,.1));
   border-color:rgba(138,43,226,.2);
 }
-.bubble-time{font-size:.68rem;color:var(--dim);margin-top:3px;display:block;}
+.bubble-time{font-size:.65rem;color:var(--dim);margin-top:3px;display:block;}
 .phone-bar{
-  margin-top:14px;display:flex;align-items:center;gap:7px;
-  background:rgba(0,0,0,.3);border:1px solid var(--border);
-  border-radius:var(--r-full);padding:8px 12px;color:var(--dim);font-size:.78rem;
+  margin-top:10px;display:flex;align-items:center;gap:6px;
+  background:rgba(0,0,0,.35);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:7px 10px;color:var(--dim);font-size:.72rem;
 }
 .bar-icon{color:var(--accent);display:flex;margin-right:auto;}
 
 .auth-card{
-  margin-top:6px;
   border-radius:var(--r-xl);
-  padding:18px 18px 14px;
+  padding:14px 14px 10px;
   background:var(--surface);
   border:1px solid var(--border);
-  box-shadow:0 18px 40px rgba(0,0,0,.7);
+  box-shadow:0 16px 35px rgba(0,0,0,.7);
 }
-.auth-title{font-size:1.02rem;font-weight:700;margin-bottom:8px;}
-.auth-sub{font-size:.8rem;color:var(--muted);margin-bottom:14px;line-height:1.6;}
-.field{margin-bottom:10px;}
-.field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px;}
-.field input{
-  width:100%;padding:8px 10px;border-radius:10px;
-  border:1px solid rgba(51,65,85,.9);
-  background:#020617;color:var(--text);
-  font-size:.82rem;font-family:var(--font);
-  outline:none;transition:border-color .16s var(--ease),box-shadow .16s var(--ease),background .16s var(--ease);
-}
-.field input:focus{
-  border-color:var(--primary);
-  box-shadow:0 0 0 1px rgba(29,155,240,.7);
-  background:#020617;
-}
-.auth-divider{display:flex;align-items:center;gap:8px;margin:10px 0 8px;font-size:.78rem;color:var(--muted-soft);}
-.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:rgba(51,65,85,.8);}
-.switcher{font-size:.78rem;color:var(--muted-soft);margin-top:8px;}
-.switcher a{color:var(--accent);}
-.hint{font-size:.75rem;color:var(--muted-soft);margin-top:8px;line-height:1.5;}
+.auth-title{font-size:.96rem;font-weight:700;margin-bottom:4px;}
+.auth-sub{font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.auth-actions{display:flex;flex-direction:column;gap:6px;}
+.auth-actions .btn{width:100%;}
+.auth-note{font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.5;}
+.privacy-line{font-size:.73rem;color:var(--muted);margin-top:4px;}
 
 .footer{
-  grid-column:1/-1;
-  padding:10px 24px 16px;
+  grid-row:3;
+  padding:0 26px 10px;
   font-size:.7rem;color:var(--muted);
-  display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
 }
 
 @media(max-width:960px){
-  .main{grid-template-columns:1fr;}
-  .side-panel{border-right:none;border-top:1px solid var(--border);padding:20px 20px 18px;}
-  .hero-panel{padding:28px 24px;justify-content:flex-start;padding-top:36px;}
-  .hero-panel::after{display:none;}
-  html,body{overflow:auto;}
-  .shell{height:auto;overflow:visible;}
-  .main{height:auto;}
-  .hero-panel{min-height:calc(100vh - var(--nav-h));}
+  .shell{grid-template-rows:var(--nav-h) 1fr 32px;}
+  .main{grid-template-columns:1.1fr 0.9fr;gap:14px;padding:14px 14px 6px;}
+  .hero-panel{gap:10px;}
+  .hero-sub{font-size:.8rem;}
+  .hero-actions{gap:8px;}
+  .phone{width:190px;padding:12px;}
 }
-@media(max-width:640px){
-  .navbar{padding:0 16px;}
-  .hero-panel{padding:24px 16px;}
-  .hero-title{font-size:clamp(1.7rem,7vw,2.6rem);}
-  .btn-xl{padding:12px 24px;font-size:.9rem;}
-  .hero-stats{gap:12px;}
-  .stat-sep{display:none;}
-  .side-panel{padding:18px 16px 16px;}
+@media(max-width:720px){
+  .main{grid-template-columns:1fr;grid-auto-rows:1fr;}
+  .hero-panel{order:1;align-items:flex-start;}
+  .side-panel{order:2;align-items:center;}
+  .phone-shell{transform:scale(.95);}
+}
+@media(max-width:520px){
+  .navbar{padding:0 14px;}
+  .main{padding:12px 14px 4px;gap:10px;}
+  .hero-title{font-size:1.6rem;}
+  .hero-sub{font-size:.78rem;}
+  .btn-xl{padding:10px 20px;font-size:.86rem;}
+  .auth-card{padding:12px 12px 8px;}
+  .auth-title{font-size:.9rem;}
 }
 
 .fade-in{animation:fadeIn .5s var(--ease) both;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .delay-1{animation-delay:.08s}.delay-2{animation-delay:.16s}
-.delay-3{animation-delay:.24s}.delay-4{animation-delay:.32s}
 </style>
 </head>
 <body>
@@ -260,43 +266,49 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     </a>
     <div class="nav-spacer"></div>
     <div class="nav-ctas">
-      <a href="#" class="btn btn-ghost" onclick="switchForm('login');return false;" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">دخول</a>
-      <a href="#" class="btn btn-primary" onclick="switchForm('register');return false;" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
+      <a href="index.html#login" class="btn btn-ghost" style="border-radius:var(--r-full);">دخول</a>
+      <a href="index.html#register" class="btn btn-primary" style="border-radius:var(--r-full);">ابدأ مجاناً</a>
     </div>
   </nav>
 
-  <div class="main">
-
-    <div class="hero-panel">
+  <main class="main" aria-label="صفحة الهبوط لـ Whispr">
+    <section class="hero-panel" aria-label="النص التسويقي">
       <div class="eyebrow fade-in">
         <span class="eyebrow-dot"></span>
-        رسائل مجهولة — آمنة وسريعة
+        صفحة واحدة لكل رسائلك المجهولة
       </div>
       <h1 class="hero-title fade-in delay-1">
-        ماذا يقولون<br>عنك <span class="grad">بصدق؟</span>
+        اكتشف ما لا يقال<br>لك <span class="grad">وجهاً لوجه.</span>
       </h1>
       <p class="hero-sub fade-in delay-2">
-        احصل على رابطك الخاص وشاركه مع أصدقائك. سيرسلون لك ما يريدون قوله دون أن تعرف هويتهم — صادقاً، وجريئاً، ومجاناً.
+        Whispr يمنحك رابطاً شخصياً واحداً يستقبل رسائل الناس عنك بهوية مخفية بالكامل، لتعرف رأيهم الحقيقي فيك بدون إحراج أو مجاملات.
       </p>
-      <div class="hero-actions fade-in delay-3">
-        <a href="#" class="btn btn-primary btn-xl" onclick="switchForm('register');return false;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          احصل على رابطك
-        </a>
-        <a href="#" class="btn btn-ghost btn-xl" onclick="switchForm('login');return false;">دخول</a>
+      <div class="hero-actions fade-in">
+        <a href="index.html#register" class="btn btn-primary btn-xl">احصل على رابطك الآن</a>
+        <a href="index.html#login" class="btn btn-ghost btn-xl">تسجيل دخول</a>
       </div>
-      <div class="hero-stats fade-in delay-4">
-        <div class="stat-pill"><strong>100%</strong> مجاني</div>
-        <div class="stat-sep"></div>
-        <div class="stat-pill"><strong>0</strong> تتبع للهوية</div>
-        <div class="stat-sep"></div>
-        <div class="stat-pill"><strong>فوري</strong> بدون تأخير</div>
+      <div class="hero-meta fade-in delay-2">
+        <div class="hero-meta-row">
+          <span class="badge-soft">سريع ومجاني ١٠٠٪</span>
+          <span class="badge-soft">لا نطلب هوية المرسِل</span>
+        </div>
+        <div class="hero-meta-row">
+          <span class="hero-link-sample">
+            رابطك سيكون:
+            <code>whispr/u/اسمك</code>
+          </span>
+          <span class="copy-pill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            نسخ الفكرة
+          </span>
+        </div>
+        <p class="privacy-line">الرسائل تصل لصندوقك فقط، يمكنك حذفها أو إيقاف استقبالها في أي وقت — بدون تعقيد.</p>
       </div>
-    </div>
+    </section>
 
-    <aside class="side-panel" aria-label="معاينة المنتج ونموذج التسجيل">
-      <div class="side-top">
-        <div class="phone-wrap" aria-hidden="true">
+    <aside class="side-panel" aria-label="معاينة سريعة وخيارات البدء">
+      <div class="phone-wrap" aria-hidden="true">
+        <div class="phone-shell">
           <div class="phone-glow"></div>
           <div class="phone">
             <div class="phone-notch"></div>
@@ -320,60 +332,23 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="auth-card" id="form-login" style="display:block;">
-          <h2 class="auth-title">تسجيل دخول</h2>
-          <p class="auth-sub">ادخل إلى حسابك لمتابعة رسائلك المجهولة والرد عليها.</p>
-          <form>
-            <div class="field">
-              <label for="login-email">البريد الإلكتروني</label>
-              <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" required>
-            </div>
-            <div class="field">
-              <label for="login-password">كلمة المرور</label>
-              <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px;">تسجيل دخول</button>
-          </form>
-          <div class="auth-divider">أو</div>
-          <button class="btn btn-ghost" style="width:100%;" onclick="switchForm('register');return false;">إنشاء حساب جديد</button>
-          <p class="switcher">ليس لديك حساب؟ <a href="#" onclick="switchForm('register');return false;">ابدأ الآن مجاناً</a></p>
+      <div class="auth-card" aria-label="خيارات البدء">
+        <h2 class="auth-title">ابدأ خلال ثوانٍ.</h2>
+        <p class="auth-sub">سجّل بحساب بسيط لتحصل على رابطك الشخصي، أو ادخل مباشرة إن كان لديك حساب.</p>
+        <div class="auth-actions">
+          <a href="index.html#register" class="btn btn-primary">إنشاء حساب جديد</a>
+          <a href="index.html#login" class="btn btn-ghost">تسجيل دخول</a>
         </div>
-
-        <div class="auth-card" id="form-register" style="display:none;">
-          <h2 class="auth-title">إنشاء حساب جديد</h2>
-          <p class="auth-sub">ابدأ خلال ثوانٍ واحصل على رابطك الشخصي لاستقبال الرسائل المجهولة.</p>
-          <form>
-            <div class="field">
-              <label for="reg-name">الاسم الظاهر</label>
-              <input id="reg-name" type="text" autocomplete="name" placeholder="الاسم الذي سيظهر في رابطك" required>
-            </div>
-            <div class="field">
-              <label for="reg-handle">اسم المستخدم</label>
-              <input id="reg-handle" type="text" autocomplete="username" placeholder="username" required>
-            </div>
-            <div class="field">
-              <label for="reg-email">البريد الإلكتروني</label>
-              <input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com" required>
-            </div>
-            <div class="field">
-              <label for="reg-password">كلمة المرور</label>
-              <input id="reg-password" type="password" autocomplete="new-password" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px;">إنشاء حساب</button>
-          </form>
-          <p class="switcher">لديك حساب بالفعل؟ <a href="#" onclick="switchForm('login');return false;">تسجيل دخول</a></p>
-        </div>
-
-        <p class="hint">لن نعرض بريدك أو اسمك للمرسلين، ويمكنك حذف حسابك أو إيقاف استقبال الرسائل في أي وقت.</p>
+        <p class="auth-note">يمكنك مشاركة رابطك على تويتر، سناب، واتساب أو أي مكان آخر، وتستقبل كل شيء في صندوق واحد منظم.</p>
       </div>
     </aside>
-
-  </div>
+  </main>
 
   <footer class="footer" aria-label="معلومات إضافية">
     <span>© 2026 Whispr</span>
-    <span>تجربة تسجيل مستوحاة من تويتر، لكن بهوية Whispr الكاملة.</span>
+    <span>صفحة واحدة بسيطة توضح الفكرة، الرابط، والخصوصية بدون أي تعقيد.</span>
   </footer>
 </div>
 
@@ -389,18 +364,6 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     c.appendChild(p);
   }
 })();
-
-function switchForm(target){
-  var login=document.getElementById('form-login');
-  var register=document.getElementById('form-register');
-  if(target==='register'){
-    login.style.display='none';
-    register.style.display='block';
-  }else{
-    login.style.display='block';
-    register.style.display='none';
-  }
-}
 </script>
 </body>
 </html>
