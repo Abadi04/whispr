@@ -1,336 +1,341 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Whispr — رسائل مجهولة بلا حدود</title>
-<meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني."/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#09070f;--surface:rgba(22,16,38,.78);--surface-2:rgba(28,20,46,.9);
-  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.16);
-  --primary:#8a2be2;--primary-h:#9d4edd;--secondary:#e8007a;--accent:#00d4ff;
-  --text:#f1f0f5;--muted:#8b8fa8;--dim:#5a5e75;
-  --r-xl:20px;--r-lg:16px;--r-md:10px;--r-sm:7px;--r-full:9999px;
-  --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
-  --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;}
-body{
-  font-family:var(--font);background:var(--bg);color:var(--text);
-  -webkit-font-smoothing:antialiased;
-}
-a{text-decoration:none;color:inherit;}
-button{font-family:var(--font);cursor:pointer;border:none;background:none;}
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Whispr — رسائل مجهولة بلا حدود</title>
+  <meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#09070f;--surface:rgba(22,16,38,.78);--surface-2:rgba(28,20,46,.9);
+      --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.16);
+      --primary:#8a2be2;--secondary:#e8007a;--accent:#00d4ff;
+      --text:#f1f0f5;--muted:#8b8fa8;
+      --r-xl:24px;--r-lg:18px;--r-md:12px;--r-full:999px;
+      --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
+      --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;overflow:hidden;}
+    body{
+      font-family:var(--font);background:var(--bg);color:var(--text);
+      -webkit-font-smoothing:antialiased;
+    }
+    a{text-decoration:none;color:inherit;}
+    button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
-.shell{
-  position:relative;z-index:1;
-  display:grid;grid-template-columns:40% 60%;
-  height:100vh;width:100vw;overflow:hidden;
-}
+    .bg-fx{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(circle at 15% 55%,rgba(138,43,226,.16),transparent 42%),
+        radial-gradient(circle at 85% 20%,rgba(232,0,122,.12),transparent 40%),
+        radial-gradient(circle at 50% 95%,rgba(0,212,255,.06),transparent 48%);
+      animation:bgFx 20s ease-in-out infinite alternate;
+    }
+    @keyframes bgFx{from{opacity:.8;transform:scale(1)}to{opacity:1;transform:scale(1.05)}}
+    .grid-fx{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+      background-size:56px 56px;
+    }
 
-.bg-fx{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(circle at 15% 55%,rgba(138,43,226,.16),transparent 42%),
-    radial-gradient(circle at 85% 20%,rgba(232,0,122,.12),transparent 40%),
-    radial-gradient(circle at 50% 95%,rgba(0,212,255,.06),transparent 48%);
-  animation:bgFx 20s ease-in-out infinite alternate;
-}
-@keyframes bgFx{from{opacity:.8;transform:scale(1)}to{opacity:1;transform:scale(1.05)}}
-.grid-fx{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
-  background-size:56px 56px;
-}
+    .navbar{
+      position:fixed;top:16px;inset-inline:24px;z-index:3;
+      height:46px;border-radius:var(--r-full);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 16px;
+      background:rgba(6,5,12,.95);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 12px 40px rgba(0,0,0,.9);
+    }
+    .logo{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.95rem;}
+    .logo-icon{color:#c084fc;display:flex;}
+    .nav-ctas{display:flex;align-items:center;gap:8px;}
 
-/* LEFT · Brand Identity */
-.panel{position:relative;}
-.panel-brand{
-  padding:32px 40px;
-  display:flex;flex-direction:column;justify-content:space-between;
-  background:radial-gradient(circle at top left,rgba(138,43,226,.18),transparent 55%),
-             radial-gradient(circle at bottom,rgba(0,0,0,.7),rgba(5,5,10,1));
-  border-inline-end:1px solid rgba(255,255,255,.05);
-}
-.brand-layer-glass{
-  position:absolute;inset:18px;
-  border-radius:32px;
-  border:1px solid rgba(255,255,255,.12);
-  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(5,5,10,.6));
-  opacity:.16;backdrop-filter:blur(26px);
-}
-.brand-header{
-  position:relative;z-index:1;
-  max-width:440px;
-}
-.brand-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 12px;border-radius:999px;
-  font-size:.8rem;font-weight:500;color:var(--accent);
-  border:1px solid rgba(0,212,255,.3);
-  background:rgba(0,212,255,.08);
-}
-.brand-title{
-  margin-top:18px;margin-bottom:10px;
-  font-size:clamp(1.9rem,3vw,2.6rem);
-  line-height:1.15;font-weight:700;
-}
-.brand-title-accent{
-  background:linear-gradient(135deg,#c084fc,var(--secondary));
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-.brand-sub{
-  font-size:.95rem;color:var(--muted);
-  line-height:1.8;margin-bottom:22px;
-}
-.brand-meta{
-  margin-top:16px;display:flex;flex-wrap:wrap;
-  gap:12px;font-size:.8rem;color:var(--muted);
-}
-.brand-meta span::before{
-  content:"• ";color:var(--accent);
-}
-.brand-visual{
-  position:relative;z-index:1;
-  height:220px;margin-top:24px;
-}
-.orb{position:absolute;border-radius:999px;filter:blur(0);}
-.orb-main{
-  width:190px;height:190px;left:12%;bottom:-20px;
-  background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.8),rgba(138,43,226,.3),transparent 70%);
-  box-shadow:0 0 40px rgba(138,43,226,.7);
-}
-.orb-sub{
-  width:120px;height:120px;right:10%;top:10%;
-  background:radial-gradient(circle at 30% 10%,rgba(255,255,255,.8),rgba(0,212,255,.35),transparent 70%);
-  box-shadow:0 0 32px rgba(0,212,255,.7);
-}
-.grid-orbit{
-  position:absolute;inset:auto 8% 6% 6%;height:110px;
-  border-radius:26px;border:1px solid rgba(255,255,255,.12);
-  background:linear-gradient(120deg,rgba(0,0,0,.7),rgba(12,10,24,.9));
-  box-shadow:0 20px 50px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.06);
-}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      padding:8px 14px;border-radius:var(--r-full);
+      font-size:.78rem;font-weight:600;
+      border:1px solid transparent;white-space:nowrap;
+      transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--bounce),box-shadow .18s var(--ease);
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.4);
+    }
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(138,43,226,.6);}
+    .btn-ghost{
+      background:rgba(255,255,255,.02);
+      border-color:rgba(255,255,255,.12);
+      color:var(--text);
+    }
+    .btn-ghost:hover{background:rgba(255,255,255,.06);}
 
-/* RIGHT · Decision Engine (Features of anonymous messaging) */
-.panel-options{
-  padding:30px 26px;
-  display:flex;flex-direction:column;justify-content:center;
-}
-.options-header{margin-bottom:14px;}
-.options-kicker{
-  font-size:.84rem;color:var(--muted);
-}
-.options-row{
-  display:flex;align-items:stretch;gap:14px;
-  overflow-x:auto;overflow-y:hidden;
-  padding-bottom:4px;
-}
-.options-row::-webkit-scrollbar{height:3px;}
-.options-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px;}
+    .btn-pulse{
+      position:relative;
+      box-shadow:0 0 0 0 rgba(138,43,226,.55);
+      animation:pulseGlow 2.4s ease-out infinite;
+    }
+    @keyframes pulseGlow{
+      0%{box-shadow:0 0 0 0 rgba(138,43,226,.55);transform:translateY(0)}
+      70%{box-shadow:0 0 0 14px rgba(138,43,226,0);transform:translateY(-1px)}
+      100%{box-shadow:0 0 0 0 rgba(138,43,226,0);transform:translateY(0)}
+    }
 
-.option-card{
-  flex:0 0 190px;
-  border-radius:16px;
-  padding:14px 14px 12px;
-  background:radial-gradient(circle at top,rgba(255,255,255,.04),rgba(0,0,0,.9));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 14px 32px rgba(0,0,0,.75);
-  display:flex;flex-direction:column;gap:8px;
-  transition:transform .18s var(--bounce),box-shadow .18s var(--bounce),border-color .16s var(--ease);
-}
-.option-card:hover{
-  transform:translateY(-3px);
-  box-shadow:0 22px 60px rgba(0,0,0,.95);
-  border-color:rgba(255,255,255,.18);
-}
-.option-card.primary{
-  flex-basis:210px;
-  background:radial-gradient(circle at top,rgba(138,43,226,.32),rgba(12,10,24,.95));
-  border-color:rgba(138,43,226,.7);
-  box-shadow:0 26px 80px rgba(138,43,226,.55);
-}
+    .shell{
+      position:relative;z-index:1;
+      height:100vh;width:100vw;
+      display:flex;
+      padding-inline:24px;padding-top:80px;padding-bottom:24px;
+      gap:20px;
+    }
 
-.option-icon{
-  width:32px;height:32px;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.08);
-  color:var(--accent);
-}
-.option-card.primary .option-icon{
-  background:rgba(0,0,0,.45);
-  border-color:rgba(0,0,0,.7);
-  color:#c4b5fd;
-}
+    .panel{
+      position:relative;
+      border-radius:var(--r-xl);
+      border:1px solid rgba(255,255,255,.06);
+      background:radial-gradient(circle at top left,rgba(138,43,226,.16),transparent 55%),
+                 radial-gradient(circle at bottom,rgba(0,0,0,.7),rgba(5,5,10,1));
+      box-shadow:0 24px 80px rgba(0,0,0,.9);
+      overflow:hidden;
+    }
 
-.option-title{font-size:.86rem;font-weight:600;}
-.option-text{font-size:.75rem;color:var(--muted);line-height:1.6;}
-.option-chip{
-  align-self:flex-start;
-  margin-top:2px;
-  padding:3px 8px;border-radius:999px;
-  font-size:.68rem;font-weight:500;color:var(--accent);
-  background:rgba(0,212,255,.07);
-  border:1px solid rgba(0,212,255,.18);
-}
-.option-card.primary .option-chip{
-  color:#f9fafb;
-  background:rgba(0,0,0,.35);
-  border-color:rgba(255,255,255,.16);
-}
+    .panel-left{
+      flex:1.1;
+      padding:26px 26px 22px;
+      display:flex;flex-direction:column;justify-content:space-between;
+    }
+    .panel-right{
+      flex:0.9;
+      padding:20px 20px 18px;
+      display:flex;flex-direction:column;justify-content:space-between;
+      background:radial-gradient(circle at top,rgba(16,16,32,.7),rgba(3,3,8,.98));
+    }
 
-/* Buttons */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:8px 14px;border-radius:999px;
-  font-size:.78rem;font-weight:600;
-  border:1px solid transparent;white-space:nowrap;
-  transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--bounce),box-shadow .18s var(--ease);
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.4);
-}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(138,43,226,.6);}
-.btn-ghost{
-  background:rgba(255,255,255,.02);
-  border-color:rgba(255,255,255,.12);
-  color:var(--text);
-}
-.btn-ghost:hover{background:rgba(255,255,255,.06);}
+    .brand-pill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 12px;border-radius:var(--r-full);
+      font-size:.78rem;font-weight:500;color:var(--accent);
+      border:1px solid rgba(0,212,255,.3);
+      background:rgba(0,212,255,.1);
+    }
+    .brand-title{
+      margin-top:16px;margin-bottom:8px;
+      font-size:clamp(1.7rem,3vw,2.3rem);
+      line-height:1.15;font-weight:700;
+    }
+    .brand-title-accent{
+      background:linear-gradient(135deg,#c084fc,var(--secondary));
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .brand-sub{
+      font-size:.9rem;color:var(--muted);
+      line-height:1.7;margin-bottom:18px;
+      max-width:32rem;
+    }
+    .brand-meta{
+      display:flex;flex-wrap:wrap;gap:10px;font-size:.78rem;color:var(--muted);
+    }
+    .brand-meta span::before{content:"• ";color:var(--accent);}
 
-/* Pulse / Glow */
-.btn-pulse{
-  position:relative;
-  box-shadow:0 0 0 0 rgba(138,43,226,.55);
-  animation:pulseGlow 2.4s ease-out infinite;
-}
-@keyframes pulseGlow{
-  0%{box-shadow:0 0 0 0 rgba(138,43,226,.55);transform:translateY(0)}
-  70%{box-shadow:0 0 0 14px rgba(138,43,226,0);transform:translateY(-1px)}
-  100%{box-shadow:0 0 0 0 rgba(138,43,226,0);transform:translateY(0)}
-}
+    .hero-footer{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:10px;font-size:.78rem;color:var(--muted);
+      margin-top:10px;
+    }
 
-/* Top nav */
-.navbar{
-  position:fixed;top:16px;inset-inline:24px;z-index:3;
-  height:46px;border-radius:999px;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 16px;
-  background:rgba(6,5,12,.95);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 12px 40px rgba(0,0,0,.9);
-}
-.logo{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.95rem;}
-.logo-icon{color:#c084fc;display:flex;}
-.nav-ctas{display:flex;align-items:center;gap:8px;}
+    .stat-pill{
+      padding:4px 10px;border-radius:var(--r-full);
+      border:1px solid rgba(255,255,255,.12);
+      font-size:.75rem;color:var(--muted);
+    }
 
-/* Mobile */
-@media(max-width:960px){
-  html,body{height:auto;min-height:100vh;overflow-y:auto;}
-  .shell{
-    grid-template-columns:1fr;
-    grid-template-rows:auto auto;
-    height:auto;min-height:100vh;
-  }
-  .panel-brand{padding:26px 20px 18px;}
-  .panel-options{padding:18px 12px 26px;}
-  .option-card{flex-basis:170px;padding:12px 10px 10px;}
-}
-@media(max-width:640px){
-  .navbar{inset-inline:14px;}
-  .brand-title{font-size:clamp(1.7rem,6vw,2.1rem);}
-}
-</style>
+    .phone-shell{
+      align-self:flex-end;
+      width:210px;height:380px;
+      border-radius:28px;
+      padding:10px 10px 14px;
+      background:linear-gradient(160deg,#111827,#020617);
+      border:1px solid rgba(148,163,184,.6);
+      box-shadow:0 18px 60px rgba(0,0,0,.9);
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .phone-header{
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:.68rem;color:var(--muted);
+    }
+    .phone-badge{
+      padding:2px 8px;border-radius:999px;
+      background:rgba(34,197,94,.12);
+      color:#bbf7d0;border:1px solid rgba(34,197,94,.5);
+    }
+    .phone-msg{
+      margin-top:8px;
+      padding:10px 10px;
+      border-radius:16px;
+      background:#020617;
+      border:1px solid rgba(148,163,184,.45);
+      font-size:.75rem;color:#e5e7eb;line-height:1.6;
+    }
+    .phone-meta{
+      margin-top:auto;font-size:.7rem;color:var(--muted);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+
+    .options-header-title{
+      font-size:.85rem;color:#e5e7eb;font-weight:600;margin-bottom:4px;
+    }
+    .options-header-sub{
+      font-size:.8rem;color:var(--muted);margin-bottom:14px;
+    }
+
+    .options-row{
+      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;align-items:stretch;
+    }
+    .option-card{
+      border-radius:var(--r-lg);
+      padding:12px 12px 10px;
+      background:rgba(15,23,42,.95);
+      border:1px solid rgba(148,163,184,.4);
+      box-shadow:0 12px 36px rgba(15,23,42,.9);
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .option-card.main{
+      background:radial-gradient(circle at top,rgba(138,43,226,.4),rgba(15,23,42,1));
+      border-color:rgba(168,85,247,.8);
+      box-shadow:0 22px 70px rgba(88,28,135,.85);
+    }
+    .option-icon{
+      width:26px;height:26px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(15,23,42,1);
+      border:1px solid rgba(148,163,184,.5);
+      color:var(--accent);
+      font-size:.7rem;
+    }
+    .option-card.main .option-icon{
+      background:rgba(15,23,42,.8);
+      border-color:rgba(233,213,255,.7);
+      color:#e9d5ff;
+    }
+    .option-title{font-size:.8rem;font-weight:600;}
+    .option-text{font-size:.74rem;color:var(--muted);line-height:1.5;}
+
+    @media (max-width:900px) {
+      .navbar{inset-inline:14px;}
+      .shell{
+        flex-direction:column;
+        padding-inline:16px;padding-top:74px;padding-bottom:16px;
+      }
+      .panel-left,.panel-right{border-radius:20px;}
+      .panel-left{flex:0 0 54%;padding:18px 18px 14px;}
+      .panel-right{flex:0 0 46%;padding:14px 14px 12px;}
+      .shell{height:100vh;}
+      .hero-footer{margin-top:6px;font-size:.74rem;}
+      .phone-shell{width:180px;height:300px;}
+      .brand-title{font-size:clamp(1.4rem,5vw,1.8rem);}
+      .brand-sub{font-size:.82rem;line-height:1.6;margin-bottom:12px;}
+      .options-row{gap:8px;}
+      .option-card{padding:10px 9px 8px;}
+      .option-title{font-size:.78rem;}
+      .option-text{font-size:.7rem;}
+    }
+  </style>
 </head>
 <body>
 
-<div class="bg-fx"></div>
-<div class="grid-fx"></div>
+  <div class="bg-fx"></div>
+  <div class="grid-fx"></div>
 
-<nav class="navbar">
-  <a href="index.html" class="logo">
-    <span class="logo-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-    </span>
-    Whispr
-  </a>
-  <div class="nav-ctas">
-    <a href="index.html#login" class="btn btn-ghost" style="padding-inline:14px;font-size:.78rem;">دخول</a>
-    <a href="index.html#register" class="btn btn-primary" style="padding-inline:16px;font-size:.78rem;">ابدأ مجاناً</a>
-  </div>
-</nav>
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </span>
+      Whispr
+    </a>
+    <div class="nav-ctas">
+      <a href="index.html#login" class="btn btn-ghost" style="padding-inline:14px;font-size:.78rem;">دخول</a>
+      <a href="index.html#register" class="btn btn-primary" style="padding-inline:16px;font-size:.78rem;">ابدأ مجاناً</a>
+    </div>
+  </nav>
 
-<div class="shell">
-  <section class="panel panel-brand">
-    <div class="brand-layer-glass"></div>
-    <header class="brand-header">
-      <span class="brand-pill">رسائل مجهولة، بخصوصية كاملة</span>
-      <h1 class="brand-title">
-        اسألهم بصدق،<br>
-        <span class="brand-title-accent">واسمع كل شيء.</span>
-      </h1>
-      <p class="brand-sub">
-        رابط واحد يكشف لك ما يفكر به الجميع عنك — دون أن تعرف هويتهم، وبأعلى معايير الخصوصية.
-      </p>
-      <button class="btn btn-primary btn-pulse">احصل على رابطك الآن</button>
-      <div class="brand-meta">
-        <span>مجاني 100%</span>
-        <span>دون طلب اسم أو حساب</span>
-        <span>لا نكشف هوية أي مُرسل</span>
+  <main class="shell" aria-label="صفحة الهبوط لـ Whispr">
+    <section class="panel panel-left">
+      <div>
+        <span class="brand-pill">رسائل مجهولة، بخصوصية كاملة</span>
+        <h1 class="brand-title">
+          اسأل بصراحة،<br>
+          <span class="brand-title-accent">واسمع ما لا يُقال وجهاً لوجه.</span>
+        </h1>
+        <p class="brand-sub">
+          رابط واحد تستقبل من خلاله رأي الجميع فيك بهوية مخفية دائماً، لتعرف حقيقتك بدون مجاملات ولا إحراج.
+        </p>
+        <button class="btn btn-primary btn-pulse">احصل على رابطك الآن</button>
       </div>
-    </header>
-    <div class="brand-visual">
-      <div class="orb orb-main"></div>
-      <div class="orb orb-sub"></div>
-      <div class="grid-orbit"></div>
-    </div>
-  </section>
+      <div class="hero-footer">
+        <span class="stat-pill">لا نطلب اسم أو حساب من المرسِل</span>
+        <span class="stat-pill">إمكانية إيقاف استقبال الرسائل في أي وقت</span>
+      </div>
+    </section>
 
-  <section class="panel panel-options" aria-label="مميزات الرسائل المجهولة في Whispr">
-    <header class="options-header">
-      <p class="options-kicker">ثلاث رسائل أساسية يضمنها لك Whispr من أول يوم.</p>
-    </header>
-    <div class="options-row">
-      <article class="option-card">
-        <div class="option-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l9-16H3z"/></svg>
+    <section class="panel panel-right" aria-label="كيف يساعدك Whispr">
+      <header>
+        <p class="options-header-title">كيف تبدو التجربة؟</p>
+        <p class="options-header-sub">ثلاث نقاط بسيطة تلخّص فكرة Whispr في أقل من دقيقة.</p>
+      </header>
+      <div style="display:flex;gap:14px;align-items:stretch;">
+        <div class="phone-shell" aria-label="معاينة لصندوق الرسائل">
+          <div class="phone-header">
+            <span>صندوق رسائلك</span>
+            <span class="phone-badge">هوية مجهولة</span>
+          </div>
+          <div class="phone-msg">
+            "رأيي فيك؟ صادق، لكن خفت أقولها لك مباشرة. هنا أقدر أتكلم بدون ما تعرف من أنا."
+          </div>
+          <div class="phone-meta">
+            <span>رسالة واردة</span>
+            <span>بدون اسم أو حساب</span>
+          </div>
         </div>
-        <h2 class="option-title">صدق مباشر</h2>
-        <p class="option-text">كل رسالة تُكتب بدون اسم، فتسمع رأيهم كما هو.</p>
-        <span class="option-chip">للصورة الحقيقية عنك</span>
-      </article>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
+          <div class="options-row">
+            <article class="option-card">
+              <div class="option-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l9-16H3z"/></svg>
+              </div>
+              <h2 class="option-title">صدق بلا مجاملة</h2>
+              <p class="option-text">تعليقات حقيقية بدون خوف من انكشاف الهوية.</p>
+            </article>
 
-      <article class="option-card primary" aria-label="وعد الخصوصية في Whispr">
-        <div class="option-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/></svg>
-        </div>
-        <h2 class="option-title">هوية مخفية دائماً</h2>
-        <p class="option-text">لا بريد، لا حساب، لا صورة — النص فقط يصل لصندوقك.</p>
-        <span class="option-chip">جوهر Whispr</span>
-      </article>
+            <article class="option-card main" aria-label="وعد الخصوصية في Whispr">
+              <div class="option-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/></svg>
+              </div>
+              <h2 class="option-title">هوية مخفية دائماً</h2>
+              <p class="option-text">لا بريد، لا صورة، لا @. النص فقط هو ما يصل لك.</p>
+            </article>
 
-      <article class="option-card">
-        <div class="option-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h13"/><path d="M12 5l7 7-7 7"/></svg>
+            <article class="option-card">
+              <div class="option-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h13"/><path d="M12 5l7 7-7 7"/></svg>
+              </div>
+              <h2 class="option-title">تحكم من مكانك</h2>
+              <p class="option-text">توقف استقبال الرسائل أو احذفها بضغطة واحدة فقط.</p>
+            </article>
+          </div>
         </div>
-        <h2 class="option-title">تحكم فوري</h2>
-        <p class="option-text">أوقف استقبال الرسائل أو احذفها في ثانية واحدة.</p>
-        <span class="option-chip">أنت من يحدد الحدود</span>
-      </article>
-    </div>
-  </section>
-</div>
+      </div>
+    </section>
+  </main>
 
 </body>
 </html>
