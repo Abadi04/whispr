@@ -30,16 +30,16 @@
     .bg-fx{
       position:fixed;inset:0;z-index:0;pointer-events:none;
       background:
-        radial-gradient(circle at 15% 55%,rgba(139,92,246,.22),transparent 45%),
-        radial-gradient(circle at 85% 15%,rgba(236,72,153,.16),transparent 42%),
-        radial-gradient(circle at 50% 95%,rgba(34,211,238,.08),transparent 50%);
-      opacity:.9;filter:saturate(1.1);
+        radial-gradient(circle at 15% 55%,rgba(30,64,175,.22),transparent 45%),
+        radial-gradient(circle at 85% 15%,rgba(79,70,229,.18),transparent 42%),
+        radial-gradient(circle at 50% 95%,rgba(34,211,238,.06),transparent 50%);
+      opacity:.85;filter:saturate(1.05);
     }
     .grid-fx{
       position:fixed;inset:0;z-index:0;pointer-events:none;
-      background-image:linear-gradient(rgba(15,23,42,.35) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(15,23,42,.35) 1px,transparent 1px);
-      background-size:64px 64px;mix-blend-mode:soft-light;opacity:.45;
+      background-image:linear-gradient(rgba(15,23,42,.3) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(15,23,42,.3) 1px,transparent 1px);
+      background-size:64px 64px;mix-blend-mode:soft-light;opacity:.4;
     }
 
     .navbar{
@@ -47,7 +47,7 @@
       height:46px;border-radius:var(--r-full);
       display:flex;align-items:center;justify-content:space-between;
       padding:0 16px;
-      background:rgba(15,23,42,.92);
+      background:rgba(15,23,42,.94);
       border:1px solid rgba(148,163,184,.55);
       box-shadow:0 16px 60px rgba(15,23,42,1);
       backdrop-filter:blur(18px);
@@ -65,9 +65,9 @@
     }
     .btn-primary{
       background:linear-gradient(135deg,var(--primary),var(--secondary));
-      color:#fff;box-shadow:0 4px 18px rgba(139,92,246,.65);
+      color:#fff;box-shadow:0 4px 18px rgba(79,70,229,.7);
     }
-    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(139,92,246,.85);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(79,70,229,.9);}
     .btn-ghost{
       background:rgba(15,23,42,.9);
       border-color:rgba(148,163,184,.6);
@@ -77,28 +77,28 @@
 
     .btn-pulse{
       position:relative;
-      box-shadow:0 0 0 0 rgba(139,92,246,.55);
-      animation:pulseGlow 2.6s ease-out infinite;
+      box-shadow:0 0 0 0 rgba(79,70,229,.45);
+      animation:pulseGlow 2.8s ease-out infinite;
     }
     @keyframes pulseGlow{
-      0%{box-shadow:0 0 0 0 rgba(139,92,246,.55);transform:translateY(0)}
-      70%{box-shadow:0 0 0 18px rgba(139,92,246,0);transform:translateY(-1px)}
-      100%{box-shadow:0 0 0 0 rgba(139,92,246,0);transform:translateY(0)}
+      0%{box-shadow:0 0 0 0 rgba(79,70,229,.45);transform:translateY(0)}
+      70%{box-shadow:0 0 0 16px rgba(79,70,229,0);transform:translateY(-1px)}
+      100%{box-shadow:0 0 0 0 rgba(79,70,229,0);transform:translateY(0)}
     }
 
     .page{
       position:relative;z-index:1;
       min-height:100vh;
-      padding:96px 20px 28px;
-      display:flex;flex-direction:column;gap:28px;
+      padding:96px 20px 32px;
+      display:flex;flex-direction:column;gap:32px;
       max-width:1120px;margin:0 auto;
     }
 
     .hero{
       display:flex;gap:32px;align-items:center;
     }
-    .hero-main{flex:1.15;}
-    .hero-side{flex:0.85;display:flex;flex-direction:column;gap:14px;}
+    .hero-main{flex:1.1;}
+    .hero-side{flex:0.9;display:flex;flex-direction:column;gap:14px;align-items:flex-end;}
 
     .pill{
       display:inline-flex;align-items:center;gap:6px;
@@ -109,11 +109,11 @@
     }
     .hero-title{
       margin-top:14px;margin-bottom:6px;
-      font-size:clamp(1.7rem,3vw,2.3rem);
+      font-size:clamp(1.8rem,3vw,2.4rem);
       line-height:1.15;font-weight:700;
     }
     .hero-title span{
-      background:linear-gradient(135deg,#e5e7eb,#f97316);
+      background:linear-gradient(135deg,#e5e7eb,#38bdf8);
       -webkit-background-clip:text;background-clip:text;
       -webkit-text-fill-color:transparent;
     }
@@ -127,7 +127,6 @@
     .hero-meta span::before{content:"• ";color:var(--accent);}
 
     .phone{
-      align-self:flex-end;
       width:220px;height:360px;
       border-radius:26px;
       padding:10px 10px 14px;
@@ -157,11 +156,11 @@
       display:flex;align-items:center;justify-content:space-between;
     }
 
-    .features{
+    .features,.how,.privacy{
       display:flex;flex-direction:column;gap:14px;
     }
-    .features-header-title{font-size:.86rem;font-weight:600;color:#e5e7eb;}
-    .features-header-sub{font-size:.8rem;color:var(--muted);}
+    .section-title{font-size:.86rem;font-weight:600;color:#e5e7eb;}
+    .section-sub{font-size:.8rem;color:var(--muted);}
 
     .features-row{
       display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
@@ -176,9 +175,9 @@
       display:flex;flex-direction:column;gap:6px;
     }
     .feature-card.main{
-      background:radial-gradient(circle at top,rgba(139,92,246,.4),rgba(15,23,42,1));
-      border-color:rgba(168,85,247,.85);
-      box-shadow:0 24px 70px rgba(88,28,135,.9);
+      background:radial-gradient(circle at top,rgba(79,70,229,.38),rgba(15,23,42,1));
+      border-color:rgba(129,140,248,.9);
+      box-shadow:0 24px 70px rgba(30,64,175,.9);
     }
     .feature-icon{
       width:26px;height:26px;border-radius:10px;
@@ -189,25 +188,55 @@
     }
     .feature-card.main .feature-icon{
       background:rgba(15,23,42,.85);
-      border-color:rgba(233,213,255,.75);
-      color:#e9d5ff;
+      border-color:rgba(191,219,254,.8);
+      color:#e0f2fe;
     }
     .feature-title{font-size:.8rem;font-weight:600;}
     .feature-text{font-size:.74rem;color:var(--muted);line-height:1.5;}
 
+    .how-steps{
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+    }
+    .step-card{
+      border-radius:var(--r-md);
+      padding:10px 10px 8px;
+      background:var(--surface-soft);
+      border:1px solid rgba(148,163,184,.45);
+      font-size:.75rem;color:var(--muted);
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .step-label{font-size:.72rem;color:var(--accent);font-weight:500;}
+    .step-title{font-size:.78rem;font-weight:600;color:#e5e7eb;}
+
+    .privacy-grid{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+    .privacy-item{
+      border-radius:var(--r-md);
+      padding:10px 10px 8px;
+      background:rgba(15,23,42,.96);
+      border:1px solid rgba(55,65,81,.9);
+      font-size:.75rem;color:var(--muted);
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .privacy-title{font-size:.78rem;font-weight:600;color:#e5e7eb;}
+
     @media (max-width:900px){
       .navbar{inset-inline:14px;}
-      .page{padding:82px 16px 20px;gap:22px;}
+      .page{padding:82px 16px 24px;gap:24px;}
       .hero{flex-direction:column-reverse;align-items:stretch;gap:18px;}
-      .hero-main{flex:none;}
-      .hero-side{flex:none;align-items:flex-start;}
+      .hero-side{align-items:flex-start;}
       .phone{width:190px;height:320px;}
-      .hero-title{font-size:clamp(1.4rem,5vw,1.8rem);}
+      .hero-title{font-size:clamp(1.5rem,5vw,1.9rem);}
       .hero-sub{font-size:.82rem;line-height:1.6;margin-bottom:12px;}
       .features-row{gap:8px;}
       .feature-card{padding:10px 9px 8px;}
       .feature-title{font-size:.78rem;}
       .feature-text{font-size:.7rem;}
+      .how-steps{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .privacy-grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -235,11 +264,11 @@
       <div class="hero-main">
         <span class="pill">رسائل مجهولة، بخصوصية كاملة</span>
         <h1 class="hero-title">
-          اسأل بصراحة،<br>
-          <span>واسمع رأيهم كما هو.</span>
+          استقبل رسائل مجهولة<br>
+          <span>برابطك الشخصي فقط.</span>
         </h1>
         <p class="hero-sub">
-          Whispr يعطيك رابطاً واحداً لتستقبل رسائل صادقة من أي شخص، بهوية مخفية دائماً وواجهة بسيطة تقرأ منها كل شيء بهدوء.
+          شارك رابطك مع من تريد، واستقبل رأي الناس فيك بهوية مخفية ١٠٠٪ داخل صندوق واحد بسيط وواضح.
         </p>
         <button class="btn btn-primary btn-pulse">احصل على رابطك الآن</button>
         <div class="hero-meta">
@@ -254,7 +283,7 @@
             <span class="phone-tag">هوية مجهولة</span>
           </div>
           <div class="phone-bubble">
-            "رأيي فيك؟ كنت متردد أقولها مباشرة. هنا أقدر أكتب لك بكل صراحة بدون ما تعرف من أنا."
+            "كنت متردد أقول رأيي مباشرة، لكن هنا أقدر أكتب لك بصراحة كاملة بدون ما تعرف من أنا."
           </div>
           <div class="phone-footer">
             <span>رسالة واردة</span>
@@ -266,8 +295,8 @@
 
     <section class="features" aria-label="مميزات Whispr">
       <header>
-        <p class="features-header-title">خلاصة الفكرة في ثلاث نقاط.</p>
-        <p class="features-header-sub">لا أوضاع معقدة ولا قوائم طويلة — فقط طريقة واحدة واضحة لاستخدام Whispr.</p>
+        <p class="section-title">خلاصة الفكرة في ثلاث نقاط.</p>
+        <p class="section-sub">لا أوضاع معقدة ولا قوائم طويلة — طريقة واحدة واضحة لاستقبال رسائل مجهولة بثقة.</p>
       </header>
       <div class="features-row">
         <article class="feature-card">
@@ -293,6 +322,60 @@
           <h2 class="feature-title">تحكم كامل</h2>
           <p class="feature-text">يمكنك إيقاف استقبال الرسائل أو حذفها في أي لحظة، بدون إعدادات معقدة أو خطوات كثيرة.</p>
         </article>
+      </div>
+    </section>
+
+    <section class="how" aria-label="كيف يعمل Whispr">
+      <header>
+        <p class="section-title">كيف يعمل Whispr؟</p>
+        <p class="section-sub">أربع خطوات بسيطة من إنشاء الحساب حتى التحكم في التجربة.</p>
+      </header>
+      <div class="how-steps">
+        <div class="step-card">
+          <span class="step-label">١</span>
+          <p class="step-title">أنشئ حسابك</p>
+          <p>سجّل خلال ثوانٍ لتحصل على ملفك ورابطك الشخصي.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-label">٢</span>
+          <p class="step-title">شارك رابطك</p>
+          <p>ضعه في البايو أو الحالات أو أي مكان يتواجد فيه متابعوك.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-label">٣</span>
+          <p class="step-title">استقبل الرسائل</p>
+          <p>تصل كل رسالة إلى صندوق وارد واحد بهوية مجهولة دائماً.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-label">٤</span>
+          <p class="step-title">تحكم بالتجربة</p>
+          <p>احذف، أو أوقف استقبال الرسائل، أو رد بشكل علني متى أردت.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="privacy" aria-label="الخصوصية والأمان">
+      <header>
+        <p class="section-title">الخصوصية والأمان.</p>
+        <p class="section-sub">تلخيص واضح لما يحدث خلف الكواليس عند استخدامك Whispr.</p>
+      </header>
+      <div class="privacy-grid">
+        <div class="privacy-item">
+          <p class="privacy-title">مجهولية تامة</p>
+          <p>لا نعرض أو نخزّن هوية المرسِل؛ لا اسم، لا بريد، لا موقع، فقط محتوى الرسالة.</p>
+        </div>
+        <div class="privacy-item">
+          <p class="privacy-title">حظر المزعجين</p>
+          <p>يمكنك حظر أي مرسِل مزعج حتى لا تصلك منه رسائل مستقبلية.</p>
+        </div>
+        <div class="privacy-item">
+          <p class="privacy-title">ردود علنية آمنة</p>
+          <p>ردّك العلني لا يكشف من كتب الرسالة الأصلية، فقط يعرض ردّك أنت.</p>
+        </div>
+        <div class="privacy-item">
+          <p class="privacy-title">الملف الشخصي والصور</p>
+          <p>صورتك وملفك لتعريف الآخرين بك أنت، ولا تُستخدم لمعرفة من أرسل الرسائل.</p>
+        </div>
       </div>
     </section>
   </main>
