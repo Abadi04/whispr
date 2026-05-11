@@ -1,56 +1,49 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whispr | رسائل مجهولة</title>
-    <meta name="description" content="استقبل رسائل مجهولة من أصدقائك ومتابعيك.">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Whispr | رسائل مجهولة</title>
+  <meta name="description" content="استقبل رسائل مجهولة من أصدقائك ومتابعيك.">
+  <meta name="theme-color" content="#09070f">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Background Elements -->
-    <div class="bg-gradient"></div>
-    <div class="particles" id="particles"></div>
 
-    <!-- Custom Cursor (Desktop Only) -->
-    <div class="cursor" id="cursor"></div>
-    <div class="cursor-follower" id="cursor-follower"></div>
+  <!-- Background -->
+  <div class="bg-gradient"></div>
+  <div class="particles" id="particles"></div>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo" onclick="app.navigate('home')">
-                <div class="logo-icon" style="background: transparent; box-shadow: none; width: auto; height: auto; display: flex; align-items: center; justify-content: center;">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e0aaff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 10h.01"></path>
-                        <path d="M15 10h.01"></path>
-                        <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"></path>
-                    </svg>
-                </div>
-                <span>Whispr</span>
-            </div>
-            
-            <div class="nav-actions">
-                <button id="theme-toggle" class="btn-icon theme-btn" aria-label="تبديل المظهر">
-                    <span class="nav-symbol" id="theme-icon">☀</span>
-                </button>
-                <button id="lang-toggle" class="btn-icon lang-btn" aria-label="لغة الواجهة">
-                    <span class="lang-text">عربي</span>
-                </button>
-                <div id="auth-nav-container">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-        </div>
-    </nav>
+  <!-- Custom Cursor (desktop) -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-follower" id="cursor-follower"></div>
 
-    <!-- Main Content Container (SPA) -->
-    <main id="app-root" class="page-container"></main>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo" onclick="app.navigate('home')" role="button" tabindex="0" aria-label="الصفحة الرئيسية">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
+        </svg>
+        <span>Whispr</span>
+      </div>
 
-    <!-- Toast Notifications -->
-    <div id="toast-container"></div>
-    <script src="app.js"></script>
+      <div class="nav-actions">
+        <button id="theme-toggle" class="btn btn-ghost theme-btn icon-only" aria-label="تبديل المظهر">
+          <span id="theme-icon"></span>
+        </button>
+        <div id="auth-nav-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- App Root -->
+  <main id="app-root" class="page-container"></main>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
 </body>
 </html>

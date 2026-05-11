@@ -1,1818 +1,1295 @@
 /**
- * Bawh - Anonymous Messaging App
- * Pure HTML/CSS/JS Implementation
+ * Whispr - Anonymous Messaging App
+ * Pure HTML/CSS/JS + Supabase
  */
 
-// --- Constants & Translations ---
+// --- Supabase Setup ---
 const supabaseUrl = 'https://hhbhmhyqgszvgkaacbvm.supabase.co';
 const supabaseKey = 'sb_publishable_H_ZX2gdYhq606lCTUqXPQA_KrnRefL_';
 const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
 window.supabaseClient = supabaseClient;
 
-// --- Backend Data Layer: Blocks ---
-const blocksAPI = {
-    async isBlocked(blockerId, blockedId) {
-        if (!supabaseClient) return false;
-        try {
-            const { data } = await supabaseClient
-                .from('blocks')
-                .select('id')
-                .eq('blocker_id', blockerId)
-                .eq('blocked_id', blockedId)
-                .single();
-            return !!data;
-        } catch (err) {
-            console.error("Error checking block:", err);
-            return false;
-        }
-    },
-    
-    async blockUser(blockerId, blockedId) {
-        if (!supabaseClient) return { error: 'No client' };
-        try {
-            return await supabaseClient
-                .from('blocks')
-                .insert({ blocker_id: blockerId, blocked_id: blockedId });
-        } catch (err) {
-            console.error("Error blocking user:", err);
-            return { error: err };
-        }
-    },
-    
-    async unblockUser(blockerId, blockedId) {
-        if (!supabaseClient) return { error: 'No client' };
-        try {
-            return await supabaseClient
-                .from('blocks')
-                .delete()
-                .match({ blocker_id: blockerId, blocked_id: blockedId });
-        } catch (err) {
-            console.error("Error unblocking user:", err);
-            return { error: err };
-        }
-    },
-    
-    async getBlockedUsers(blockerId) {
-        if (!supabaseClient) return [];
-        try {
-            const { data } = await supabaseClient.from('blocks').select('blocked_id').eq('blocker_id', blockerId);
-            return data ? data.map(r => r.blocked_id) : [];
-        } catch (e) {
-            return [];
-        }
-    }
+// --- SVG Icons (professional, no emojis) ---
+const icons = {
+  send:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+  lock:    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  reply:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
+  copy:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+  trash:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  inbox:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
+  logout:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  login:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>`,
+  register:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
+  link:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+  ban:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+  shield:  `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  ghost:   `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg>`,
+  chart:   `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
+  users:   `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  check:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  info:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+  warn:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  clock:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  camera:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  back:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+  forward: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+  arrow_down:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
+  x:       `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  instagram:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`,
+  twitter: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+  spin:    `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+  sun:     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+  moon:    `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  user:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  rocket:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+  slash:   `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>`,
+  msg_circle:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  eye:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
 };
 
+// --- Translations ---
 const TRANSLATIONS = {
-    ar: {
-        logo: "Whispr",
-        lang_toggle: "عربي",
-        nav_login: "دخول",
-        nav_register: "تسجيل جديد",
-        nav_inbox: "صندوق الوارد",
-        nav_logout: "خروج",
-        
-        hero_title: "استقبل رسائل مجهولة",
-        hero_subtitle: "آراء صريحة من أصدقائك بشكل مجهول تام",
-        btn_start: "ابدأ الآن",
-        btn_learn: "كيف يعمل؟",
-        
-        login_title: "تسجيل الدخول",
-        login_subtitle: "مرحباً بعودتك إلى Whispr",
-        username_label: "اسم المستخدم",
-        username_ph: "أدخل اسم المستخدم",
-        password_label: "كلمة المرور",
-        password_ph: "أدخل كلمة المرور",
-        btn_login_submit: "دخول",
-        no_account: "ليس لديك حساب؟",
-        create_account: "أنشئ حساباً",
-        
-        register_title: "حساب جديد",
-        register_subtitle: "انضم إلينا وابدأ باستقبال الرسائل من أصدقائك",
-        email_label: "البريد الإلكتروني",
-        email_ph: "أدخل بريدك الإلكتروني",
-        btn_register_submit: "تسجيل",
-        have_account: "لديك حساب بالفعل؟",
-        login_now: "سجل دخولك",
-        
-        profile_title: "أرسل رسالة مجهولة",
-        bio_default: "أنتظر رسائلكم 🤫",
-        msg_ph: "اكتب رسالتك هنا...",
-        btn_send: "إرسال الرسالة",
-        chars_left: "حرف متبقي",
-        
-        inbox_title: "صندوق الوارد",
-        msgs_count: "رسالة",
-        reply_ph: "اكتب ردك العلني هنا...",
-        btn_reply: "رد",
-        reply_label: "ردك:",
-        no_messages: "صندوق الوارد فارغ. شارك رابطك للحصول على رسائل!",
-        share_link: "انسخ رابطك وشاركه:",
-        btn_copy: "نسخ الرابط",
-        
-        err_user_exists: "اسم المستخدم موجود مسبقاً",
-        err_invalid_creds: "بيانات الدخول غير صحيحة",
-        err_user_not_found: "المستخدم غير موجود",
-        msg_sent: "تم إرسال الرسالة بنجاح!",
-        link_copied: "تم نسخ الرابط!",
-        reply_added: "تمت إضافة الرد بنجاح",
-        reg_success: "تم التسجيل بنجاح!"
-    },
-    en: {
-        logo: "Whispr",
-        lang_toggle: "AR",
-        nav_login: "Login",
-        nav_register: "Register",
-        nav_inbox: "Inbox",
-        nav_logout: "Logout",
-        
-        hero_title: "Receive Anonymous Messages",
-        hero_subtitle: "Honest feedback from your friends, completely anonymously.",
-        btn_start: "Start Now",
-        btn_learn: "How it works?",
-        
-        login_title: "Welcome Back",
-        login_subtitle: "Login to your Whispr account",
-        username_label: "Username",
-        username_ph: "Enter username",
-        password_label: "Password",
-        password_ph: "Enter password",
-        btn_login_submit: "Login",
-        no_account: "Don't have an account?",
-        create_account: "Create one",
-        
-        register_title: "Create Account",
-        register_subtitle: "Join us and start receiving messages from your friends",
-        email_label: "Email",
-        email_ph: "Enter your email",
-        btn_register_submit: "Register",
-        have_account: "Already have an account?",
-        login_now: "Login now",
-        
-        profile_title: "Send an anonymous message",
-        bio_default: "Waiting for your messages 🤫",
-        msg_ph: "Write your message here...",
-        btn_send: "Send Message",
-        chars_left: "chars left",
-        
-        inbox_title: "Your Inbox",
-        msgs_count: "Messages",
-        reply_ph: "Write your public reply here...",
-        btn_reply: "Reply",
-        reply_label: "Your reply:",
-        no_messages: "Inbox is empty. Share your link to get messages!",
-        share_link: "Copy & share your link:",
-        btn_copy: "Copy Link",
-        
-        err_user_exists: "Username already exists",
-        err_invalid_creds: "Invalid credentials",
-        err_user_not_found: "User not found",
-        msg_sent: "Message sent successfully!",
-        link_copied: "Link copied to clipboard!",
-        reply_added: "Reply added successfully",
-        reg_success: "Registered successfully!"
-    }
+  ar: {
+    logo: "Whispr",
+    nav_inbox: "صندوقي",
+    nav_logout: "خروج",
+    nav_login: "دخول",
+    nav_register: "تسجيل",
+    hero_title: "استقبل رسائل مجهولة",
+    hero_subtitle: "آراء صريحة من أصدقائك بشكل مجهول تام",
+    btn_start: "ابدأ الآن",
+    btn_login_submit: "دخول",
+    login_title: "تسجيل الدخول",
+    login_subtitle: "مرحباً بعودتك إلى Whispr",
+    username_label: "اسم المستخدم",
+    username_ph: "أدخل اسم المستخدم",
+    password_label: "كلمة المرور",
+    password_ph: "أدخل كلمة المرور",
+    no_account: "ليس لديك حساب؟",
+    create_account: "أنشئ حساباً",
+    register_title: "حساب جديد",
+    register_subtitle: "انضم وابدأ باستقبال الرسائل",
+    email_label: "البريد الإلكتروني",
+    email_ph: "أدخل بريدك الإلكتروني",
+    btn_register_submit: "تسجيل",
+    have_account: "لديك حساب؟",
+    login_now: "سجل دخولك",
+    profile_title: "أرسل رسالة مجهولة",
+    bio_default: "أنتظر رسائلكم",
+    msg_ph: "اكتب رسالتك هنا...",
+    btn_send: "إرسال",
+    chars_left: "حرف متبقي",
+    inbox_title: "صندوق الوارد",
+    msgs_count: "رسالة",
+    reply_ph: "اكتب ردك هنا...",
+    btn_reply: "رد",
+    reply_label: "الرد:",
+    share_link: "رابطك الخاص:",
+    btn_copy: "نسخ",
+    err_invalid_creds: "البريد أو كلمة المرور غير صحيحة",
+    err_user_not_found: "المستخدم غير موجود",
+    msg_sent: "تم إرسال الرسالة",
+    link_copied: "تم نسخ الرابط",
+    reply_added: "تم إضافة الرد",
+    reg_success: "تم التسجيل بنجاح",
+    err_user_exists: "اسم المستخدم موجود مسبقاً",
+  }
 };
 
 // --- App State ---
 const state = {
-    lang: 'ar',
-    theme: localStorage.getItem('whispr_theme') || 'dark',
-    largeText: localStorage.getItem('whispr_largetext') === 'true',
-    users: JSON.parse(localStorage.getItem('bawh_users')) || [],
-    messages: JSON.parse(localStorage.getItem('bawh_messages')) || [],
-    currentUser: JSON.parse(localStorage.getItem('bawh_current_user')) || null
-};
-
-// --- Utility Functions ---
-const saveState = () => {
-    localStorage.setItem('bawh_users', JSON.stringify(state.users));
-    localStorage.setItem('bawh_messages', JSON.stringify(state.messages));
-    localStorage.setItem('bawh_current_user', JSON.stringify(state.currentUser));
-    localStorage.setItem('bawh_lang', state.lang);
-    localStorage.setItem('whispr_theme', state.theme);
-    localStorage.setItem('whispr_largetext', state.largeText);
+  lang: 'ar',
+  theme: localStorage.getItem('whispr_theme') || 'dark',
+  largeText: localStorage.getItem('whispr_largetext') === 'true',
+  currentUser: JSON.parse(localStorage.getItem('whispr_current_user')) || null,
+  // local-only cache for messages (used offline / before Supabase loads)
+  _localMessages: JSON.parse(localStorage.getItem('bawh_messages')) || [],
+  _localUsers: JSON.parse(localStorage.getItem('bawh_users')) || [],
 };
 
 const t = (key) => TRANSLATIONS[state.lang][key] || key;
 
+const saveLocal = () => {
+  localStorage.setItem('whispr_current_user', JSON.stringify(state.currentUser));
+  localStorage.setItem('whispr_theme', state.theme);
+  localStorage.setItem('whispr_largetext', state.largeText);
+  localStorage.setItem('bawh_messages', JSON.stringify(state._localMessages));
+  localStorage.setItem('bawh_users', JSON.stringify(state._localUsers));
+};
+
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-const formatDate = (timestamp) => {
-    const d = new Date(timestamp);
-    return d.toLocaleDateString(state.lang === 'ar' ? 'ar-SA' : 'en-US', {
-        month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'
-    });
+const formatTime = (ts) => {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true });
 };
 
-const formatTime = (timestamp) => {
-    const d = new Date(timestamp);
-    return d.toLocaleTimeString(state.lang === 'ar' ? 'ar-EG' : 'en-US', { hour: 'numeric', minute:'2-digit', hour12: true });
-};
-
-const getDateLabel = (timestamp) => {
-    const d = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (d.toDateString() === today.toDateString()) {
-        return state.lang === 'ar' ? 'اليوم' : 'Today';
-    } else if (d.toDateString() === yesterday.toDateString()) {
-        return state.lang === 'ar' ? 'أمس' : 'Yesterday';
-    } else {
-        return d.toLocaleDateString(state.lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
-    }
+const getDateLabel = (ts) => {
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'اليوم';
+  if (d.toDateString() === yesterday.toDateString()) return 'أمس';
+  return d.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' });
 };
 
 const showToast = (message, type = 'info') => {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    let icon = 'fa-info-circle';
-    if (type === 'success') icon = 'fa-check-circle';
-    if (type === 'error') icon = 'fa-exclamation-circle';
-    
-    toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('hiding');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  const ico = type === 'success' ? icons.check : type === 'error' ? icons.warn : icons.info;
+  toast.innerHTML = `<span class="toast-icon">${ico}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('visible'));
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 350);
+  }, 3000);
 };
 
-// --- Core Application Logic ---
-const app = {
-    init() {
-        this.root = document.getElementById('app-root');
-        this.applyTheme();
-        this.applyLargeText();
-        this.setupEventListeners();
-        this.applyLanguage();
-        this.handleRoute();
-        this.initParticles();
-        this.initCursor();
-        
-        window.addEventListener('hashchange', () => this.handleRoute());
-        
-        // Add sample user if empty for demo purposes
-        if (state.users.length === 0) {
-            state.users.push({
-                id: generateId(),
-                username: 'demo',
-                password: '123',
-                email: 'demo@bawh.com',
-                bio: 'حساب تجريبي لاختبار التطبيق'
-            });
-            saveState();
-        }
-    },
-
-    setupEventListeners() {
-        document.getElementById('lang-toggle').addEventListener('click', () => {
-            state.lang = 'ar';
-            saveState();
-            this.applyLanguage();
-            this.renderCurrentView();
-            showToast('الواجهة العربية مفعلة', 'info');
-        });
-
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                state.theme = state.theme === 'dark' ? 'light' : 'dark';
-                saveState();
-                this.applyTheme();
-            });
-        }
-
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('.navbar');
-            if (window.scrollY > 20) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
-        });
-    },
-
-    applyTheme() {
-        document.body.setAttribute('data-theme', state.theme);
-        const icon = document.getElementById('theme-icon');
-        if (icon) {
-            icon.textContent = state.theme === 'light' ? '☾' : '☀';
-        }
-    },
-
-    applyLargeText() {
-        if (state.largeText) {
-            document.body.classList.add('large-text-enabled');
-        } else {
-            document.body.classList.remove('large-text-enabled');
-        }
-    },
-
-    toggleLargeText() {
-        state.largeText = !state.largeText;
-        saveState();
-        this.applyLargeText();
-        this.renderCurrentView();
-    },
-
-    applyLanguage() {
-        const html = document.documentElement;
-        html.lang = state.lang;
-        html.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
-        
-        document.querySelector('.lang-text').textContent = TRANSLATIONS[state.lang].lang_toggle;
-        
-        // Update static translations
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                el.placeholder = t(key);
-            } else {
-                el.textContent = t(key);
-            }
-        });
-        
-        this.updateNav();
-    },
-
-    navigate(route) {
-        window.location.hash = route;
-    },
-
-    async initAuth() {
-        if (this.authPromise) return this.authPromise;
-        
-        this.authPromise = (async () => {
-                        let authEmail;
-            this.root.innerHTML = `<div class="view active" style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; gap: 16px;"><i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><div style="color: var(--text-muted);">جاري التحميل...</div></div>`;
-            
-            
-            if (window.supabaseClient) {
-                try {
-                    const { data } = await window.supabaseClient.auth.getUser();
-                    if (data && data.user && data.user.email) {
-                        authEmail = data.user.email;
-                        app.authUser = data.user;
-                        
-                        // Fetch from public.profiles
-                        try {
-                            const { data: profile } = await window.supabaseClient
-                                .from('profiles')
-                                .select('*')
-                                .eq('id', data.user.id)
-                                .single();
-                                
-                            if (profile) {
-                                app.currentProfile = profile;
-                                const localIndex = state.users.findIndex(u => u.id === data.user.id);
-                                if (localIndex !== -1) {
-                                    state.users[localIndex] = {
-                                        ...state.users[localIndex],
-                                        email: profile.email || data.user.email,
-                                        username: profile.full_name || state.users[localIndex].username,
-                                        avatar_url: profile.avatar_url || state.users[localIndex].avatar_url
-                                    };
-                                    if (state.currentUser && state.currentUser.id === data.user.id) {
-                                        state.currentUser = {
-                                            ...state.currentUser,
-                                            username: state.users[localIndex].username,
-                                            avatar_url: state.users[localIndex].avatar_url
-                                        };
-                                    }
-                                    saveState();
-                                }
-                            }
-                        } catch (err) {}
-                    }
-                } catch (err) {}
-            }
-            
-            if (!authEmail && state.currentUser) {
-                const localU = state.users.find(u => u.id === state.currentUser.id);
-                if (localU) authEmail = localU.email;
-            }
-
-            app.authEmail = authEmail;
-        })();
-        
-        return this.authPromise;
-    },
-
-    async handleRoute() {
-        await this.initAuth();
-        
-        const hash = window.location.hash.slice(1) || 'home';
-        
-        if (!localStorage.getItem('whispr_onboarding_completed') && hash !== 'onboarding' && hash !== 'login' && hash !== 'register' && !hash.startsWith('u/')) {
-            window.location.hash = 'onboarding';
-            return;
-        }
-
-        if (this.currentRoute !== hash) {
-            app.chatLimit = 30; // Reset pagination on route change
-        }
-
-        this.currentRoute = hash;
-        await this.renderCurrentView();
-        this.updateNav();
-    },
-
-    finishOnboarding() {
-        localStorage.setItem('whispr_onboarding_completed', 'true');
-        if (state.currentUser) {
-            this.navigate('inbox');
-        } else {
-            this.navigate('home');
-        }
-    },
-
-    nextOnboardingStep() {
-        const step1 = document.getElementById('onboard-1');
-        const step2 = document.getElementById('onboard-2');
-        const step3 = document.getElementById('onboard-3');
-        
-        if (step1 && step1.style.display !== 'none') {
-            step1.style.display = 'none';
-            step2.style.display = 'block';
-        } else if (step2 && step2.style.display !== 'none') {
-            step2.style.display = 'none';
-            step3.style.display = 'block';
-        } else {
-            this.finishOnboarding();
-        }
-    },
-
-    async updateNav() {
-        const container = document.getElementById('auth-nav-container');
-        container.style.display = 'flex';
-        container.style.alignItems = 'center';
-        container.style.gap = '8px';
-        
-        let authEmail = (app.currentProfile && app.currentProfile.email) ? app.currentProfile.email : (app.authEmail || "غير مسجل الدخول");
-
-        const userIndicatorHtml = `
-            <div class="current-user-indicator" style="display: flex; align-items: center; font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 20px; border: 1px solid var(--glass-border); max-width: 120px; margin-left: 4px;" title="${authEmail}">
-                <i class="fa-regular fa-user" style="margin-left: 4px;"></i>
-                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; display: inline-block; width: 100%; text-align: left;">${authEmail}</span>
-            </div>
-        `;
-
-        if (state.currentUser) {
-            const unreadCount = state.messages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
-            container.innerHTML = `
-                ${userIndicatorHtml}
-                <button class="btn btn-outline nav-btn" style="position: relative;" onclick="app.navigate('inbox')" aria-label="${t('nav_inbox')}">
-                    <span class="nav-symbol" aria-hidden="true">✉</span> <span class="hide-mobile">${t('nav_inbox')}</span>
-                    ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
-                </button>
-                <button class="btn btn-outline nav-btn" onclick="app.logout()" aria-label="${t('nav_logout')}">
-                    <span class="nav-symbol" aria-hidden="true">↩</span>
-                </button>
-            `;
-        } else {
-            container.innerHTML = `
-                ${userIndicatorHtml}
-                <button class="btn btn-outline nav-btn" onclick="app.navigate('login')">
-                    <span class="nav-symbol" aria-hidden="true">↪</span> <span>${t('nav_login')}</span>
-                </button>
-                <button class="btn btn-primary nav-btn" onclick="app.navigate('register')">
-                    <span class="nav-symbol" aria-hidden="true">＋</span> <span>${t('nav_register')}</span>
-                </button>
-            `;
-        }
-    },
-
-    async renderCurrentView() {
-            if (!this.currentRoute) return;
-
-        const routeParts = this.currentRoute.split('/');
-        const mainRoute = routeParts[0];
-
-        // Fetch blocked users before rendering inbox or profile
-        if ((mainRoute === 'inbox' || mainRoute === 'u' || mainRoute === 'blocked') && state.currentUser) {
-            state.currentUser.blockedUsers = await blocksAPI.getBlockedUsers(state.currentUser.id);
-        }
-
-        let content = '';
-
-        try {
-            switch (mainRoute) {
-                case 'home':
-                    content = this.views.home();
-                    break;
-                case 'login':
-                    if (state.currentUser) return this.navigate('inbox');
-                    content = this.views.login();
-                    break;
-                case 'register':
-                    if (state.currentUser) return this.navigate('inbox');
-                    content = this.views.register();
-                    break;
-                case 'inbox':
-                    if (!state.currentUser) return this.navigate('login');
-                    content = this.views.inbox();
-                    break;
-                case 'blocked':
-                    if (!state.currentUser) return this.navigate('login');
-                    content = this.views.blocked();
-                    break;
-                case 'analytics': {
-                    if (!window.supabaseClient) return this.navigate('inbox');
-                    const { data } = await window.supabaseClient.auth.getUser();
-                    const email = data?.user?.email || '';
-                    if (email !== 'abadihdar@gmail.com') return this.navigate('inbox');
-                    content = this.views.analytics();
-                    break;
-                }
-                case 'onboarding':
-                    content = this.views.onboarding();
-                    break;
-                case 'u':
-                    if (routeParts[1]) {
-                        content = this.views.profile(routeParts[1]);
-                    } else {
-                        this.navigate('home');
-                    }
-                    break;
-                default:
-                    content = this.views.home();
-            }
-        } catch (error) {
-            console.error("Render error:", error);
-            content = `<div class="view active empty-state" style="padding: 40px; text-align: center;">
-                <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--danger); margin-bottom: 20px;"></i>
-                <h3>حدث خطأ غير متوقع</h3>
-                <p style="color: var(--text-muted); margin-top: 10px;">عذراً، حدثت مشكلة أثناء تحميل هذه الصفحة.</p>
-                <button class="btn btn-primary" style="margin-top: 20px; width: auto; padding: 10px 24px; border-radius: 20px;" onclick="app.navigate('home')">العودة للرئيسية</button>
-            </div>`;
-        }
-
-        this.root.innerHTML = content;
-        
-        // Execute post-render scripts
-        if (mainRoute === 'u' && routeParts[1]) {
-            this.setupProfileEvents(routeParts[1]);
-        } else if (mainRoute === 'inbox') {
-            this.setupInboxEvents();
-        } else if (mainRoute === 'login') {
-            this.setupLoginEvents();
-        } else if (mainRoute === 'register') {
-            this.setupRegisterEvents();
-        }
-    },
-
-    // --- Actions ---
-    async logout() {
-        if (window.supabaseClient) {
-            await window.supabaseClient.auth.signOut();
-        }
-        state.currentUser = null;
-        app.currentProfile = null;
-        app.authUser = null;
-        saveState();
-        app.authPromise = null;
-        await app.initAuth();
-        this.navigate('home');
-        showToast(t('nav_logout'), 'success');
-    },
-
-    copyLink(url) {
-        navigator.clipboard.writeText(url)
-            .then(() => showToast(t('link_copied'), 'success'))
-            .catch(() => showToast('تعذر نسخ الرابط، حاول مرة أخرى', 'error'));
-    },
-
-    shareTo(platform, url, text = 'اسألني بسرية على Whispr') {
-        try {
-            const encodedUrl = encodeURIComponent(url);
-            const encodedText = encodeURIComponent(text);
-            if (platform === 'instagram') {
-                navigator.clipboard.writeText(`${text} ${url}`)
-                    .then(() => showToast('تم نسخ الرابط، افتح إنستغرام والصقه في قصتك', 'success'))
-                    .catch(() => showToast('افتح إنستغرام وانسخ الرابط من صندوقك', 'info'));
-                window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
-                return;
-            }
-            const shareUrl = `https://x.com/intent/post?text=${encodedText}&url=${encodedUrl}`;
-            window.open(shareUrl, '_blank', 'noopener,noreferrer');
-        } catch (err) {
-            showToast('تعذر فتح المشاركة الآن', 'error');
-        }
-    },
-
-    insertPrompt(text) {
-        const ta = document.getElementById('msg-content');
-        if (!ta) return;
-        ta.value = text;
-        ta.focus();
-        ta.dispatchEvent(new Event('input'));
-    },
-
-    async uploadAvatar(file) {
-        if (!supabaseClient || !state.currentUser) return showToast("تعذر الاتصال بالخدمة الآن", "error");
-        if (!file) return;
-
-        try {
-            if (!file.type.startsWith('image/')) {
-                showToast("اختر ملف صورة فقط", "error");
-                return;
-            }
-            if (file.size > 3 * 1024 * 1024) {
-                showToast("حجم الصورة يجب أن يكون أقل من ٣ ميجابايت", "error");
-                return;
-            }
-
-            const { data: authData, error: authError } = await window.supabaseClient.auth.getUser();
-            if (authError || !authData?.user) {
-                showToast("سجل الدخول أولاً لتحديث الصورة", "error");
-                return;
-            }
-
-            const userId = authData.user.id;
-            const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-            const filePath = `${userId}/avatar.${fileExt}`;
-
-            showToast("جاري رفع الصورة...", "info");
-
-            const { error: uploadError } = await supabaseClient.storage
-                .from('avatars')
-                .upload(filePath, file, {
-                    cacheControl: '60',
-                    upsert: true
-                });
-
-            if (uploadError) {
-                console.error("Avatar upload storage error:", uploadError);
-                return showToast("فشل في رفع الصورة", "error");
-            }
-
-            const { data } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
-            const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
-
-            const { data: updatedProfile, error: profileUpdateError } = await supabaseClient
-                .from('profiles')
-                .update({ avatar_url: publicUrl })
-                .eq('id', userId)
-                .select('id')
-                .maybeSingle();
-
-            if (profileUpdateError || !updatedProfile) {
-                console.warn("Profile avatar update failed, trying upsert:", profileUpdateError);
-                const { error: profileUpsertError } = await supabaseClient
-                    .from('profiles')
-                    .upsert({
-                        id: userId,
-                        email: authData.user.email,
-                        full_name: state.currentUser.username,
-                        avatar_url: publicUrl
-                    });
-
-                if (profileUpsertError) {
-                    console.error("Profile avatar upsert error:", profileUpsertError);
-                    return showToast("تم رفع الصورة لكن تعذر حفظها في الحساب", "error");
-                }
-            }
-            
-            const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
-            if (userIndex !== -1) {
-                state.users[userIndex].avatar_url = publicUrl;
-            }
-            state.currentUser.avatar_url = publicUrl;
-            app.currentProfile = {
-                ...(app.currentProfile || {}),
-                id: userId,
-                email: authData.user.email,
-                avatar_url: publicUrl
-            };
-            saveState();
-            showToast("تم تحديث الصورة بنجاح", "success");
-            this.renderCurrentView();
-        } catch (err) {
-            console.error("Avatar upload error:", err);
-            showToast("حدث خطأ أثناء تحديث الصورة", "error");
-        }
-    },
-
-    copyProfileLink() {
-        navigator.clipboard.writeText(window.location.href)
-            .then(() => showToast("تم نسخ الرابط", "success"))
-            .catch(() => showToast("حدث خطأ في النسخ", "error"));
-    },
-
-    async unblockFromList(targetId) {
-        if (!state.currentUser) return;
-        await blocksAPI.unblockUser(state.currentUser.id, targetId);
-        showToast('تم إلغاء الحظر', 'success');
-        this.renderCurrentView();
-    },
-
-    async toggleBlockUser(targetId) {
-        if (!state.currentUser) return;
-        const btn = document.getElementById(`block-btn-${targetId}`);
-        const txt = document.getElementById(`block-text-${targetId}`);
-        if (!btn || !txt) return;
-
-        const currentlyBlocked = btn.dataset.blocked === 'true';
-        btn.disabled = true;
-
-        if (currentlyBlocked) {
-            await blocksAPI.unblockUser(state.currentUser.id, targetId);
-            btn.dataset.blocked = 'false';
-            txt.textContent = 'حظر هذا المرسل';
-            showToast('تم إلغاء الحظر', 'success');
-        } else {
-            await blocksAPI.blockUser(state.currentUser.id, targetId);
-            btn.dataset.blocked = 'true';
-            txt.textContent = 'إلغاء الحظر';
-            showToast('تم حظر هذا المستخدم', 'success');
-        }
-        
-        btn.disabled = false;
-    },
-
-    toggleReactions(id) {
-        document.getElementById(`reactions-popup-${id}`).classList.toggle('active');
-    },
-
-    addReaction(msgId, emoji) {
-        const msg = state.messages.find(m => m.id === msgId);
-        if (msg) {
-            if (!msg.reactions) msg.reactions = [];
-            msg.reactions.push(emoji);
-            saveState();
-            this.renderCurrentView();
-        }
-    },
-
-    renderReactions(msg) {
-        const emojis = ['❤️', '😂', '😮', '😢', '🔥'];
-        return `
-            <div style="position: relative; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--glass-border);">
-                <button class="reaction-toggle-btn" onclick="app.toggleReactions('${msg.id}')" title="أضف تفاعل">
-                    😀
-                </button>
-                <div class="reactions-popup" id="reactions-popup-${msg.id}">
-                    ${emojis.map(e => `<button class="reaction-emoji-btn" onclick="app.addReaction('${msg.id}', '${e}')">${e}</button>`).join('')}
-                </div>
-                ${msg.reactions && msg.reactions.length > 0 ? `
-                    <div class="reactions-row">
-                        ${msg.reactions.join(' ')}
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    },
-
-    // --- Views ---
-    views: {
-        onboarding: () => `
-            <div class="view active auth-wrapper" style="text-align: center; padding: 20px;">
-                <div class="glass-card auth-card" id="onboard-1" style="display: block; max-width: 400px; margin: 0 auto; width: 100%;">
-                    <i class="fa-solid fa-ghost" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px;"></i>
-                    <h2 class="auth-title text-gradient">مرحباً بك في Whispr</h2>
-                    <p class="auth-subtitle" style="margin-bottom: 30px;">استقبل رسائل سرية من أصدقائك أو متابعينك بدون أن تعرف هويتهم، مساحة آمنة للصراحة.</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-outline" style="flex: 1;" onclick="app.finishOnboarding()">تخطي</button>
-                        <button class="btn btn-primary" style="flex: 1;" onclick="app.nextOnboardingStep()">التالي</button>
-                    </div>
-                </div>
-                
-                <div class="glass-card auth-card" id="onboard-2" style="display: none; max-width: 400px; margin: 0 auto; width: 100%;">
-                    <i class="fa-solid fa-link" style="font-size: 4rem; color: #10b981; margin-bottom: 20px;"></i>
-                    <h2 class="auth-title text-gradient">شارك رابطك الخاص</h2>
-                    <p class="auth-subtitle" style="margin-bottom: 30px;">بمجرد إنشاء حسابك، انسخ رابطك الخاص وشاركه في إنستغرام أو X لتبدأ بتلقي الرسائل.</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-outline" style="flex: 1;" onclick="app.finishOnboarding()">تخطي</button>
-                        <button class="btn btn-primary" style="flex: 1;" onclick="app.nextOnboardingStep()">التالي</button>
-                    </div>
-                </div>
-
-                <div class="glass-card auth-card" id="onboard-3" style="display: none; max-width: 400px; margin: 0 auto; width: 100%;">
-                    <i class="fa-solid fa-shield-halved" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px;"></i>
-                    <h2 class="auth-title text-gradient">تحكم كامل بخصوصيتك</h2>
-                    <p class="auth-subtitle" style="margin-bottom: 30px;">هل أزعجتك رسالة؟ يمكنك بضغطة زر واحدة حظر أي مرسل مزعج لمنعه من مراسلتك مجدداً.</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" style="width: 100%;" onclick="app.finishOnboarding()">ابدأ الآن!</button>
-                    </div>
-                </div>
-            </div>
-        `,
-
-        home: () => `
-            <div class="view active hero">
-                <div class="hero-shell">
-                    <div class="hero-copy">
-                        <div class="eyebrow"><i class="fa-solid fa-shield-heart"></i> مساحة صريحة وآمنة</div>
-                        <h1 class="hero-title text-gradient">${t('hero_title')}</h1>
-                        <p class="hero-subtitle">${t('hero_subtitle')}، مع رابط خاص ومظهر أنيق يناسب المشاركة في كل مكان.</p>
-                        <div class="hero-actions">
-                            <button class="btn btn-primary" onclick="app.navigate('register')">
-                                <i class="fa-solid fa-rocket"></i> ${t('btn_start')}
-                            </button>
-                            <button class="btn btn-outline" onclick="app.navigate('login')">
-                                <i class="fa-solid fa-right-to-bracket"></i> ${t('btn_login_submit')}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="hero-preview" aria-hidden="true">
-                        <div class="floating-note note-a">
-                            <span>رسالة جديدة</span>
-                            <strong>كلامك اليوم كان ملهمًا جدًا</strong>
-                        </div>
-                        <div class="phone-frame">
-                            <div class="phone-top"></div>
-                            <div class="preview-bubble">ما أكثر شيء تحب الناس يعرفونه عنك؟</div>
-                            <div class="preview-bubble alt">رد جميل ومختصر يظهر للكل بدون كشف المرسل.</div>
-                            <div class="preview-composer">
-                                <span>اكتب بسرية...</span>
-                                <i class="fa-solid fa-paper-plane"></i>
-                            </div>
-                        </div>
-                        <div class="floating-note note-b">
-                            <span>خصوصية</span>
-                            <strong>حظر، ردود، وتنبيهات مرئية</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="feature-strip">
-                    <div><i class="fa-solid fa-link"></i><span>رابط شخصي جاهز</span></div>
-                    <div><i class="fa-solid fa-user-secret"></i><span>إرسال مجهول</span></div>
-                    <div><i class="fa-solid fa-ban"></i><span>تحكم بالحظر</span></div>
-                </div>
-
-                <div class="how-it-works">
-                    <div class="mini-card">
-                        <span class="step-number">١</span>
-                        <h3>أنشئ حسابك</h3>
-                        <p>اختر اسمًا قصيرًا واحصل على رابطك خلال ثوان.</p>
-                    </div>
-                    <div class="mini-card">
-                        <span class="step-number">٢</span>
-                        <h3>شارك الرابط</h3>
-                        <p>ضعه في حساباتك أو أرسله لمن تريد سماع رأيه.</p>
-                    </div>
-                    <div class="mini-card">
-                        <span class="step-number">٣</span>
-                        <h3>اقرأ ورد</h3>
-                        <p>استقبل الرسائل ورد عليها بشكل عام بدون كشف الهوية.</p>
-                    </div>
-                </div>
-            </div>
-        `,
-
-        login: () => `
-            <div class="view active auth-wrapper">
-                <div class="glass-card auth-card">
-                    <div class="auth-header">
-                        <h2 class="auth-title text-gradient">${t('login_title')}</h2>
-                        <p class="auth-subtitle">${t('login_subtitle')}</p>
-                    </div>
-                    <form id="login-form">
-                        <div class="form-group">
-                            <label class="form-label">البريد الإلكتروني</label>
-                            <input type="email" id="login-email" class="form-control" placeholder="أدخل بريدك الإلكتروني" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">${t('password_label')}</label>
-                            <input type="password" id="login-password" class="form-control" placeholder="${t('password_ph')}" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%">${t('btn_login_submit')}</button>
-                    </form>
-                    <div class="auth-footer">
-                        ${t('no_account')} <a onclick="app.navigate('register')" class="auth-link">${t('create_account')}</a>
-                    </div>
-                </div>
-            </div>
-        `,
-
-        register: () => `
-            <div class="view active auth-wrapper">
-                <div class="glass-card auth-card">
-                    <div class="auth-header">
-                        <h2 class="auth-title text-gradient">${t('register_title')}</h2>
-                        <p class="auth-subtitle">${t('register_subtitle')}</p>
-                    </div>
-                    <form id="register-form">
-                        <div class="form-group">
-                            <label class="form-label">${t('username_label')}</label>
-                            <input type="text" id="reg-username" class="form-control" placeholder="${t('username_ph')}" required pattern="[A-Za-z0-9_]+" title="استخدم حروفاً إنجليزية أو أرقاماً أو شرطة سفلية فقط">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">${t('email_label')}</label>
-                            <input type="email" id="reg-email" class="form-control" placeholder="${t('email_ph')}" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">${t('password_label')}</label>
-                            <input type="password" id="reg-password" class="form-control" placeholder="${t('password_ph')}" required minlength="6">
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%">${t('btn_register_submit')}</button>
-                    </form>
-                    <div class="auth-footer">
-                        ${t('have_account')} <a onclick="app.navigate('login')" class="auth-link">${t('login_now')}</a>
-                    </div>
-                </div>
-            </div>
-        `,
-
-        profile: (username) => {
-            const user = state.users.find(u => u.username === username);
-            if (!user) {
-                return `<div class="view active empty-state"><h2>${t('err_user_not_found')}</h2></div>`;
-            }
-
-            const blockedIds = (state.currentUser && state.currentUser.blockedUsers) ? state.currentUser.blockedUsers : [];
-            const publicReplies = state.messages.filter(m => 
-                m.recipientId === user.id && 
-                m.reply && 
-                (!m.expiresAt || m.expiresAt > Date.now()) &&
-                (!m.senderId || !blockedIds.includes(m.senderId))
-            );
-            
-            app.chatTotalCount = publicReplies.length;
-            const limit = app.chatLimit || 30;
-            const visibleReplies = publicReplies.slice(Math.max(publicReplies.length - limit, 0));
-            const hasMore = publicReplies.length > limit;
-
-            return `
-                <div class="view active">
-                    <div class="profile-header">
-                        <div class="avatar-container">
-                            ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: var(--glass-shadow); border: 2px solid var(--primary);" />` : `<div class="avatar-placeholder" style="width: 80px; height: 80px; font-size: 2rem;">${username.charAt(0).toUpperCase()}</div>`}
-                        </div>
-                        <h2 class="profile-name" dir="ltr">@${username}</h2>
-                        <p class="text-muted">${user.bio || t('bio_default')}</p>
-                        <div style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 15px; flex-wrap: wrap;">
-                            <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.9rem;" onclick="app.copyProfileLink()">
-                                <i class="fa-solid fa-link"></i> نسخ الرابط
-                            </button>
-                            ${state.currentUser && state.currentUser.id !== user.id ? `
-                                <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.9rem; color: var(--danger); border-color: rgba(255,51,102,0.3);" id="block-btn-${user.id}" onclick="app.toggleBlockUser('${user.id}')">
-                                    <i class="fa-solid fa-ban"></i> <span id="block-text-${user.id}">...</span>
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="glass-card send-message-card">
-                        <div class="msg-header">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            <h3>${t('profile_title')}</h3>
-                        </div>
-                        <div class="prompt-row">
-                            <button type="button" class="prompt-chip" onclick="app.insertPrompt('ما الشيء الذي تتمنى أن أخبرك به بصراحة؟')">سؤال صريح</button>
-                            <button type="button" class="prompt-chip" onclick="app.insertPrompt('رسالة لطيفة وصلتني منك وأحببتها...')">رسالة لطيفة</button>
-                            <button type="button" class="prompt-chip" onclick="app.insertPrompt('نصيحة قصيرة لي بدون مجاملة:')">نصيحة</button>
-                        </div>
-                        <form id="send-msg-form" class="mobile-composer-form">
-                            <div class="form-group composer-row">
-                                <textarea id="msg-content" class="form-control auto-expand" placeholder="اكتب رسالتك هنا..." required maxlength="300" rows="1"></textarea>
-                                <button type="submit" class="btn btn-primary send-btn">
-                                    <i class="fa-solid fa-paper-plane mobile-only-icon"></i> 
-                                    <span class="desktop-only-text"><i class="fa-solid fa-lock"></i> ${t('btn_send')}</span>
-                                </button>
-                            </div>
-                            <div id="block-error-msg" style="color: var(--danger); font-size: 0.85rem; margin-top: -10px; margin-bottom: 10px; display: none;">لا يمكنك إرسال رسائل لهذا المستخدم.</div>
-                            <div class="msg-footer">
-                                <span class="char-count" id="char-counter">300 ${t('chars_left')}</span>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    ${publicReplies.length > 0 ? (() => {
-                        let lastDateLabelProfile = null;
-                        return `
-                        <div class="inbox-container">
-                            <h3 style="margin-bottom:20px;text-align:center;">الردود السابقة</h3>
-                            <div class="messages-grid">
-                                ${hasMore ? `
-                                    <div id="chat-loader" style="text-align: center; padding: 15px; color: var(--primary); display: flex; justify-content: center; align-items: center; gap: 8px; opacity: 0.7; transition: opacity 0.3s ease;">
-                                        <i class="fa-solid fa-circle-notch fa-spin"></i> جاري تحميل الرسائل القديمة...
-                                    </div>
-                                ` : ''}
-                                ${visibleReplies.map(msg => {
-                                    const dateLabel = getDateLabel(msg.timestamp);
-                                    let separatorHtml = '';
-                                    if (dateLabel !== lastDateLabelProfile) {
-                                        separatorHtml = `<div class="date-separator" style="text-align: center; margin: 24px 0 16px;"><span style="background: var(--surface); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); box-shadow: var(--glass-shadow);">${dateLabel}</span></div>`;
-                                        lastDateLabelProfile = dateLabel;
-                                    }
-                                    return `
-                                    ${separatorHtml}
-                                    <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
-                                        <div class="swipe-actions" style="position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; gap: 8px; z-index: 1;">
-                                            <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('${window.location.origin}${window.location.pathname}#u/${username}')"><i class="fa-solid fa-copy"></i></button>
-                                            ${state.currentUser && state.currentUser.id === user.id ? `<button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('${msg.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
-                                        </div>
-                                        <div class="glass-card message-card message-swipe-front" id="swipe-front-${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
-                                            <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                                                <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> ${formatTime(msg.timestamp)}</span>
-                                                <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
-                                            </div>
-                                            <div class="msg-content">"${msg.content}"</div>
-                                            <div class="reply-content">
-                                                <div class="reply-label">${t('reply_label')}</div>
-                                                <div>${msg.reply}</div>
-                                            </div>
-                                            ${app.renderReactions(msg)}
-                                        </div>
-                                    </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                        `;
-                    })() : ''}
-                </div>
-            `;
-        },
-
-        analytics: () => {
-            const totalUsers = state.users.length;
-            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-            
-            const recentMessages = state.messages.filter(m => m.timestamp >= sevenDaysAgo);
-            const totalRecentMessages = recentMessages.length;
-            
-            const activeUserIds = new Set();
-            recentMessages.forEach(m => {
-                if (m.senderId) activeUserIds.add(m.senderId);
-                if (m.recipientId) activeUserIds.add(m.recipientId);
-            });
-            const activeUsersCount = activeUserIds.size;
-            const avgMessages = activeUsersCount === 0 ? 0 : (totalRecentMessages / activeUsersCount).toFixed(1);
-
-            const senders = new Set();
-            for (let i = 0; i < state.messages.length; i++) {
-                if (state.messages[i].senderId) senders.add(state.messages[i].senderId);
-            }
-            const activatedUsersCount = senders.size;
-            const activationRate = totalUsers === 0 ? 0 : Math.round((activatedUsersCount / totalUsers) * 100);
-
-            const dailyStats = [];
-            let maxDailyMsgs = 0;
-            const now = new Date();
-            now.setHours(23, 59, 59, 999);
-            
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-                date.setHours(0, 0, 0, 0);
-                const endOfDay = date.getTime() + 24 * 60 * 60 * 1000;
-                
-                const count = state.messages.filter(m => m.timestamp >= date.getTime() && m.timestamp < endOfDay).length;
-                if (count > maxDailyMsgs) maxDailyMsgs = count;
-                
-                const dayLabel = date.toLocaleDateString('ar-EG', { weekday: 'short' });
-                dailyStats.push({ label: dayLabel, count: count });
-            }
-            
-            const chartMax = maxDailyMsgs === 0 ? 1 : maxDailyMsgs;
-
-            return `
-                <div class="view active inbox-container">
-                    <div class="inbox-header">
-                        <h2>لوحة الإحصائيات</h2>
-                        <button class="btn btn-outline" onclick="app.navigate('inbox')" style="padding: 6px 12px; font-size: 0.9rem;">
-                            <i class="fa-solid fa-arrow-right"></i> رجوع
-                        </button>
-                    </div>
-                    
-                    <div class="messages-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-                        <div class="glass-card" style="text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-users" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></i>
-                            <h3 style="font-size: 1.8rem; margin: 0;">${totalUsers}</h3>
-                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">إجمالي المستخدمين</p>
-                        </div>
-                        
-                        <div class="glass-card" style="text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-user-check" style="font-size: 2rem; color: #10b981; margin-bottom: 10px;"></i>
-                            <h3 style="font-size: 1.8rem; margin: 0;">${activeUsersCount}</h3>
-                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">نشطون آخر 7 أيام</p>
-                        </div>
-                        
-                        <div class="glass-card" style="text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-envelope" style="font-size: 2rem; color: #f59e0b; margin-bottom: 10px;"></i>
-                            <h3 style="font-size: 1.8rem; margin: 0;">${totalRecentMessages}</h3>
-                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">رسائل آخر 7 أيام</p>
-                        </div>
-                        
-                        <div class="glass-card" style="text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-chart-pie" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 10px;"></i>
-                            <h3 style="font-size: 1.8rem; margin: 0;">${avgMessages}</h3>
-                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">متوسط الرسائل/مستخدم</p>
-                        </div>
-                        
-                        <div class="glass-card" style="text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-rocket" style="font-size: 2rem; color: #ef4444; margin-bottom: 10px;"></i>
-                            <h3 style="font-size: 1.8rem; margin: 0;">${activatedUsersCount}</h3>
-                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">مستخدمون مفعلون</p>
-                        </div>
-                        
-                        <div class="glass-card" style="text-align: center; padding: 20px;">
-                            <i class="fa-solid fa-percent" style="font-size: 2rem; color: #3b82f6; margin-bottom: 10px;"></i>
-                            <h3 style="font-size: 1.8rem; margin: 0;">${activationRate}%</h3>
-                            <p class="text-muted" style="margin: 5px 0 0; font-size: 0.9rem;">معدل التفعيل</p>
-                        </div>
-                    </div>
-                    
-                    <div class="glass-card" style="margin-top: 24px; padding: 20px;">
-                        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.2rem; text-align: center;">الرسائل المرسلة في آخر 7 أيام</h3>
-                        <div style="display: flex; align-items: flex-end; justify-content: space-around; height: 150px; padding-top: 20px; border-bottom: 1px solid var(--glass-border);">
-                            ${dailyStats.map(stat => {
-                                const heightPercentage = (stat.count / chartMax) * 100;
-                                return `
-                                    <div style="display: flex; flex-direction: column; align-items: center; width: 10%; height: 100%;">
-                                        <div style="flex-grow: 1; display: flex; align-items: flex-end; width: 100%; justify-content: center;">
-                                            <div style="width: 100%; max-width: 30px; height: ${heightPercentage}%; min-height: 4px; background: var(--primary); border-radius: 4px 4px 0 0; transition: height 0.3s ease; position: relative;">
-                                                <span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: var(--text-muted);">${stat.count}</span>
-                                            </div>
-                                        </div>
-                                        <span style="font-size: 0.75rem; margin-top: 8px; color: var(--text-muted);">${stat.label}</span>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        },
-
-        blocked: () => {
-            const user = state.currentUser;
-            const blockedIds = user.blockedUsers || [];
-            
-            const blockedUsers = blockedIds.map(id => state.users.find(u => u.id === id)).filter(Boolean);
-
-            return `
-                <div class="view active inbox-container">
-                    <div class="inbox-header">
-                        <h2>المستخدمون المحظورون</h2>
-                        <button class="btn btn-outline" onclick="app.navigate('inbox')" style="padding: 6px 12px; font-size: 0.9rem;">
-                            <i class="fa-solid fa-arrow-right"></i> رجوع
-                        </button>
-                    </div>
-                    <div class="messages-grid">
-                        ${blockedUsers.length === 0 ? `
-                            <div class="glass-card empty-state">
-                                <i class="fa-solid fa-user-slash empty-icon"></i>
-                                <p>لا يوجد مستخدمون محظورون</p>
-                            </div>
-                        ` : blockedUsers.map(bu => `
-                            <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; margin-bottom: 12px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    ${bu.avatar_url ? `<img src="${bu.avatar_url}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;" />` : `<div class="avatar-placeholder" style="width: 48px; height: 48px; font-size: 1.2rem;">${bu.username.charAt(0).toUpperCase()}</div>`}
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 1.1rem;">@${bu.username}</div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-outline" style="border-radius: 20px; font-size: 0.85rem; color: var(--danger); border-color: rgba(255,51,102,0.3);" onclick="app.unblockFromList('${bu.id}')">
-                                    إلغاء الحظر
-                                </button>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        },
-
-        inbox: () => {
-            const user = state.currentUser;
-            const fullUser = state.users.find(u => u.id === user.id);
-            const displayUser = { ...(fullUser || {}), ...user };
-            const blockedIds = user.blockedUsers || [];
-            const myMessages = state.messages.filter(m => 
-                m.recipientId === user.id && 
-                (!m.expiresAt || m.expiresAt > Date.now()) &&
-                (!m.senderId || !blockedIds.includes(m.senderId))
-            ).sort((a,b) => b.timestamp - a.timestamp);
-            const shareUrl = window.location.origin + window.location.pathname + '#u/' + user.username;
-            const unreadCount = myMessages.filter(m => !m.isRead).length;
-            const repliedCount = myMessages.filter(m => m.reply).length;
-            const shareText = `أرسل لي رسالة مجهولة على Whispr`;
-
-            return `
-                <div class="view active inbox-container">
-                    <div class="profile-header inbox-hero">
-                        <div class="avatar-container inbox-avatar-wrap">
-                            ${displayUser.avatar_url ? `<img src="${displayUser.avatar_url}" class="avatar-img" alt="صورة الحساب" />` : `<div class="avatar-placeholder avatar-img">${displayUser.username.charAt(0).toUpperCase()}</div>`}
-                            <label class="btn-icon avatar-upload-btn" title="تغيير الصورة" aria-label="تغيير الصورة">
-                                <i class="fa-solid fa-camera"></i>
-                                <input type="file" accept="image/*" style="display: none;" onchange="app.uploadAvatar(this.files[0])">
-                            </label>
-                        </div>
-                        <h2 class="profile-name" dir="ltr">@${displayUser.username}</h2>
-                        <div class="inbox-stats-row">
-                            <div><strong>${myMessages.length}</strong><span>رسالة</span></div>
-                            <div><strong>${unreadCount}</strong><span>غير مقروءة</span></div>
-                            <div><strong>${repliedCount}</strong><span>تم الرد</span></div>
-                        </div>
-                        <div class="share-link-container">
-                            <span style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap;">${t('share_link')}</span>
-                            <div class="share-url" dir="ltr">${shareUrl}</div>
-                            <button class="btn-icon" onclick="app.copyLink('${shareUrl}')" title="${t('btn_copy')}">
-                                <i class="fa-regular fa-copy"></i>
-                            </button>
-                        </div>
-                        <div class="quick-share-row">
-                            <button class="btn btn-outline" onclick="app.shareTo('instagram', '${shareUrl}', '${shareText}')">
-                                <i class="fa-brands fa-instagram"></i> إنستغرام
-                            </button>
-                            <button class="btn btn-outline" onclick="app.shareTo('x', '${shareUrl}', '${shareText}')">
-                                <i class="fa-brands fa-x-twitter"></i> X
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="inbox-header">
-                        <h2>${t('inbox_title')}</h2>
-                        <div class="stats-pill">
-                            <i class="fa-solid fa-envelope-open-text"></i> ${myMessages.length} ${t('msgs_count')}
-                        </div>
-                    </div>
-                    
-                    <div class="glass-card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('blocked')">
-                        <div style="font-weight: 600;">المستخدمون المحظورون</div>
-                        <i class="fa-solid fa-chevron-left" style="color: var(--text-muted);"></i>
-                    </div>
-                    
-                    <div id="analytics-nav-link" class="glass-card" style="display: none; margin-bottom: 12px; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer;" onclick="app.navigate('analytics')">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <i class="fa-solid fa-chart-line" style="color: var(--primary); font-size: 1.2rem;"></i>
-                            <span style="font-weight: bold; color: var(--text-main);">لوحة التحليلات</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-left" style="color: var(--text-muted); font-size: 0.9rem;"></i>
-                    </div>
-
-                    <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
-                        <div>
-                            <span style="font-weight: 600;">تكبير حجم الخط في المحادثات</span>
-                        </div>
-                        <div>
-                            <input type="checkbox" ${state.largeText ? 'checked' : ''} onchange="app.toggleLargeText()" style="width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer;">
-                        </div>
-                    </div>
-                    
-                    <div class="messages-grid">
-                        ${myMessages.length === 0 ? `
-                            <div class="glass-card empty-state" style="text-align: center; padding: 40px 20px;">
-                                <i class="fa-solid fa-ghost empty-icon" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px; opacity: 0.8;"></i>
-                                <h3 style="margin-bottom: 10px; font-size: 1.3rem;">صندوق الوارد فارغ</h3>
-                                <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">لم تصلك أي رسائل حتى الآن. انشر رابطك الخاص في حساباتك مثل إنستغرام أو X ليستطيع الناس إرسال رسائل لك بسرية تامة.</p>
-                                <button class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem; border-radius: 30px;" onclick="app.copyLink('${shareUrl}')">
-                                    <i class="fa-solid fa-link"></i> نسخ رابط الحساب
-                                </button>
-                            </div>
-                        ` : (() => {
-                            let lastDateLabelInbox = null;
-                            return myMessages.map(msg => {
-                                const dateLabel = getDateLabel(msg.timestamp);
-                                let separatorHtml = '';
-                                if (dateLabel !== lastDateLabelInbox) {
-                                    separatorHtml = `<div class="date-separator" style="text-align: center; margin: 24px 0 16px;"><span style="background: var(--surface); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); box-shadow: var(--glass-shadow);">${dateLabel}</span></div>`;
-                                    lastDateLabelInbox = dateLabel;
-                                }
-                                return `
-                                ${separatorHtml}
-                                <div class="message-swipe-container" style="position: relative; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px;">
-                                    <div class="swipe-actions" style="position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; gap: 8px; z-index: 1;">
-                                        ${!msg.reply ? `<button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active'); document.querySelector('#swipe-front-${msg.id}').style.transform='translateX(0)';"><i class="fa-solid fa-reply"></i></button>` : ''}
-                                        <button class="btn-icon swipe-btn" style="width:36px;height:36px;background:var(--surface);" onclick="app.copyLink('${msg.content}')"><i class="fa-solid fa-copy"></i></button>
-                                        <button class="btn-icon swipe-btn" style="width:36px;height:36px;color:var(--danger);background:var(--surface);" onclick="app.deleteMessage('${msg.id}')"><i class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                    <div class="glass-card message-card message-swipe-front" id="swipe-front-${msg.id}" style="position: relative; z-index: 2; transition: transform 0.3s ease; margin-bottom: 0;">
-                                        <div class="msg-time" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                                            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> ${formatTime(msg.timestamp)}</span>
-                                            <span style="font-size: 0.7rem; color: var(--danger); background: rgba(255,51,102,0.1); padding: 2px 6px; border-radius: 10px;">يحذف بعد ٢٤ ساعة</span>
-                                        </div>
-                                        <div class="msg-content">"${msg.content}"</div>
-                                        
-                                        ${msg.reply ? `
-                                            <div class="reply-content">
-                                                <div class="reply-label">${t('reply_label')}</div>
-                                                <div>${msg.reply}</div>
-                                            </div>
-                                        ` : `
-                                            <div class="msg-actions">
-                                                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="document.getElementById('reply-area-${msg.id}').classList.toggle('active')">
-                                                    <i class="fa-solid fa-reply"></i> ${t('btn_reply')}
-                                                </button>
-                                            </div>
-                                            <div class="msg-reply-area" id="reply-area-${msg.id}">
-                                                <form onsubmit="app.submitReply(event, '${msg.id}')">
-                                                    <textarea class="form-control" placeholder="${t('reply_ph')}" required style="min-height: 80px; margin-bottom: 10px;"></textarea>
-                                                    <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">${t('btn_reply')}</button>
-                                                </form>
-                                            </div>
-                                        `}
-                                        ${app.renderReactions(msg)}
-                                    </div>
-                                </div>
-                                `;
-                            }).join('');
-                        })()}
-                    </div>
-                </div>
-            `;
-        }
-    },
-
-    // --- Form Handlers ---
-    setupLoginEvents() {
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const em = document.getElementById('login-email').value;
-            const pw = document.getElementById('login-password').value;
-            const btn = document.querySelector('#login-form button[type="submit"]');
-            
-            btn.disabled = true;
-            const originalBtnText = btn.textContent;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري الدخول...';
-            
-            if (window.supabaseClient) {
-                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-                    email: em,
-                    password: pw
-                });
-                
-                if (error) {
-                    showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error');
-                } else {
-                    app.authPromise = null;
-                    await app.initAuth();
-                    
-                    let localU = state.users.find(u => u.email === em);
-                    if (!localU) {
-                        localU = { id: data.user.id, username: em.split('@')[0], email: em, password: pw, bio: '' };
-                        state.users.push(localU);
-                    }
-                    state.currentUser = { id: localU.id, username: localU.username };
-                    saveState();
-                    
-                    app.navigate('inbox');
-                    showToast('تم تسجيل الدخول بنجاح', 'success');
-                }
-            } else {
-                const user = state.users.find(u => u.email === em && u.password === pw);
-                if (user) {
-                    state.currentUser = { id: user.id, username: user.username };
-                    saveState();
-                    app.authPromise = null;
-                    await app.initAuth();
-                    app.navigate('inbox');
-                    showToast(`أهلاً بك @${user.username}`, 'success');
-                } else {
-                    showToast(t('err_invalid_creds'), 'error');
-                }
-            }
-            
-            btn.disabled = false;
-            btn.textContent = originalBtnText;
-        });
-    },
-
-    setupRegisterEvents() {
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const un = document.getElementById('reg-username').value;
-            const em = document.getElementById('reg-email').value;
-            const pw = document.getElementById('reg-password').value;
-            const btn = document.querySelector('#register-form button[type="submit"]');
-            
-            btn.disabled = true;
-            const originalBtnText = btn.textContent;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري التسجيل...';
-            
-            if (state.users.some(u => u.username === un)) {
-                showToast(t('err_user_exists'), 'error');
-                btn.disabled = false;
-                btn.textContent = originalBtnText;
-                return;
-            }
-            
-            if (window.supabaseClient) {
-                const { data, error } = await window.supabaseClient.auth.signUp({
-                    email: em,
-                    password: pw,
-                    options: {
-                        data: {
-                            full_name: un
-                        }
-                    }
-                });
-                
-                if (error) {
-                    showToast(error.message.includes('already registered') ? 'البريد الإلكتروني مسجل مسبقاً' : 'حدث خطأ أثناء التسجيل', 'error');
-                    btn.disabled = false;
-                    btn.textContent = originalBtnText;
-                    return;
-                }
-                
-                const newUser = {
-                    id: data.user?.id || generateId(),
-                    username: un,
-                    email: em,
-                    password: pw,
-                    bio: ''
-                };
-                state.users.push(newUser);
-                state.currentUser = { id: newUser.id, username: newUser.username };
-                saveState();
-                
-                app.authPromise = null;
-                await app.initAuth();
-                app.navigate('inbox');
-                showToast(t('reg_success'), 'success');
-            } else {
-                const newUser = {
-                    id: generateId(),
-                    username: un,
-                    email: em,
-                    password: pw,
-                    bio: ''
-                };
-                
-                state.users.push(newUser);
-                state.currentUser = { id: newUser.id, username: newUser.username };
-                saveState();
-                app.authPromise = null;
-                await app.initAuth();
-                app.navigate('inbox');
-                showToast(t('reg_success'), 'success');
-            }
-            
-            btn.disabled = false;
-            btn.textContent = originalBtnText;
-        });
-    },
-
-    setupProfileEvents(username) {
-        const user = state.users.find(u => u.username === username);
-        if (!user) return;
-
-        const ta = document.getElementById('msg-content');
-        const counter = document.getElementById('char-counter');
-        
-        ta.addEventListener('input', () => {
-            const left = 300 - ta.value.length;
-            counter.textContent = `${left} ${t('chars_left')}`;
-            
-            ta.style.height = 'auto';
-            ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
-        });
-
-        if (state.currentUser && state.currentUser.id !== user.id) {
-            blocksAPI.isBlocked(state.currentUser.id, user.id).then(isBlocked => {
-                const btn = document.getElementById(`block-btn-${user.id}`);
-                const txt = document.getElementById(`block-text-${user.id}`);
-                if (btn && txt) {
-                    btn.dataset.blocked = isBlocked ? 'true' : 'false';
-                    txt.textContent = isBlocked ? 'إلغاء الحظر' : 'حظر هذا المرسل';
-                }
-            });
-        }
-
-        document.getElementById('send-msg-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = ta.value.trim();
-            if (!content) return;
-            
-            const errorMsg = document.getElementById('block-error-msg');
-            if (errorMsg) errorMsg.style.display = 'none';
-            
-            if (state.currentUser) {
-                const isBlocked = await blocksAPI.isBlocked(user.id, state.currentUser.id);
-                if (isBlocked) {
-                    if (errorMsg) errorMsg.style.display = 'block';
-                    return;
-                }
-            }
-            
-            state.messages.push({
-                id: generateId(),
-                recipientId: user.id,
-                senderId: state.currentUser ? state.currentUser.id : null,
-                content: content,
-                timestamp: Date.now(),
-                expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-                reply: null,
-                isRead: false
-            });
-            saveState();
-            
-            if (state.currentUser && state.currentUser.id === user.id) {
-                app.updateNav();
-            }
-            
-            ta.value = '';
-            ta.style.height = 'auto';
-            counter.textContent = `300 ${t('chars_left')}`;
-            showToast(t('msg_sent'), 'success');
-            
-            // Add a little celebration effect
-            this.celebrateSend(e.target.querySelector('button'));
-            
-            // Smooth scroll to latest on send
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
-        
-        // Smart scrolling logic
-        const oldBtn = document.getElementById('scroll-to-bottom-btn');
-        if (oldBtn) oldBtn.remove();
-
-        const scrollBtn = document.createElement('button');
-        scrollBtn.id = 'scroll-to-bottom-btn';
-        scrollBtn.className = 'btn btn-primary';
-        scrollBtn.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 1000; border-radius: 30px; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: opacity 0.3s ease, transform 0.3s ease; padding: 10px 20px; font-size: 0.95rem; opacity: 0; transform: translate(-50%, 20px); pointer-events: none;';
-        scrollBtn.innerHTML = '<i class="fa-solid fa-arrow-down" style="margin-left: 8px;"></i> الانتقال لآخر رسالة';
-        document.body.appendChild(scrollBtn);
-        
-        const scrollToBottom = () => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        };
-        
-        scrollBtn.addEventListener('click', scrollToBottom);
-
-        // Scroll smoothly on open ONLY if it's a fresh load (not pagination)
-        if (!app.isPaginating) {
-            setTimeout(() => {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }, 150);
-        } else {
-            app.isPaginating = false;
-        }
-
-        let scrollTimeout;
-        let isFetchingMore = false;
-        const handleScroll = () => {
-            if (app.currentRoute !== 'u') {
-                window.removeEventListener('scroll', handleScroll);
-                if (scrollBtn) scrollBtn.remove();
-                return;
-            }
-            
-            // Calculate if user is near bottom (within 200px)
-            const scrollPosition = window.innerHeight + window.scrollY;
-            const threshold = document.body.scrollHeight - 200;
-            
-            if (scrollPosition < threshold) {
-                scrollBtn.style.display = 'block';
-                // Trigger reflow for animation
-                void scrollBtn.offsetWidth;
-                scrollBtn.style.opacity = '1';
-                scrollBtn.style.transform = 'translate(-50%, 0)';
-                scrollBtn.style.pointerEvents = 'auto';
-            } else {
-                scrollBtn.style.opacity = '0';
-                scrollBtn.style.transform = 'translate(-50%, 20px)';
-                scrollBtn.style.pointerEvents = 'none';
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    if (scrollBtn.style.opacity === '0') {
-                        scrollBtn.style.display = 'none';
-                    }
-                }, 300);
-            }
-            
-            // Pagination logic
-            if (window.scrollY < 50 && !isFetchingMore && app.chatLimit < app.chatTotalCount) {
-                isFetchingMore = true;
-                const loader = document.getElementById('chat-loader');
-                if (loader) {
-                    loader.style.opacity = '1';
-                }
-                
-                setTimeout(async () => {
-                    const oldScrollHeight = document.body.scrollHeight;
-                    const oldScrollY = window.scrollY;
-                    
-                    app.chatLimit += 30;
-                    app.isPaginating = true;
-                    await app.renderCurrentView();
-                    
-                    const newScrollHeight = document.body.scrollHeight;
-                    window.scrollTo(0, oldScrollY + (newScrollHeight - oldScrollHeight));
-                    isFetchingMore = false;
-                }, 600); // Artificial delay to show loader
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        
-        // Mock incoming message detection for smart scroll demo
-        const originalPush = state.messages.push;
-        state.messages.push = function() {
-            const res = originalPush.apply(this, arguments);
-            if (app.currentRoute === 'u') {
-                const scrollPosition = window.innerHeight + window.scrollY;
-                const threshold = document.body.scrollHeight - 200;
-                if (scrollPosition >= threshold) {
-                    setTimeout(scrollToBottom, 50);
-                }
-            }
-            return res;
-        };
-
-        this.initSwipeActions();
-    },
-
-    setupInboxEvents() {
-        if (!state.currentUser) return;
-        
-        if (window.supabaseClient) {
-            window.supabaseClient.auth.getUser().then(({ data }) => {
-                const email = data?.user?.email || '';
-                const link = document.getElementById('analytics-nav-link');
-                if (link) link.style.display = email === 'abadihdar@gmail.com' ? 'flex' : 'none';
-            });
-        }
-        
-        let modified = false;
-        state.messages.forEach(m => {
-            if (m.recipientId === state.currentUser.id && !m.isRead) {
-                m.isRead = true;
-                modified = true;
-            }
-        });
-        if (modified) {
-            saveState();
-            this.updateNav();
-        }
-        this.initSwipeActions();
-    },
-
-    deleteMessage(msgId) {
-        if(confirm('هل أنت متأكد من الحذف؟')) {
-            state.messages = state.messages.filter(m => m.id !== msgId);
-            saveState();
-            this.renderCurrentView();
-        }
-    },
-
-    initSwipeActions() {
-        if (window.innerWidth > 768) return; 
-        
-        const fronts = document.querySelectorAll('.message-swipe-front');
-        fronts.forEach(front => {
-            let startX = 0, startY = 0;
-            let isSwiping = false;
-            let isVertical = false;
-
-            front.addEventListener('touchstart', e => {
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                isSwiping = true;
-                isVertical = false;
-                front.style.transition = 'none';
-            }, {passive: true});
-
-            front.addEventListener('touchmove', e => {
-                if (!isSwiping) return;
-                const touchX = e.touches[0].clientX;
-                const touchY = e.touches[0].clientY;
-                const diffX = touchX - startX;
-                const diffY = touchY - startY;
-
-                if (!isVertical && Math.abs(diffY) > Math.abs(diffX)) {
-                    isVertical = true;
-                }
-
-                if (isVertical) return; 
-
-                if (diffX < 0 && diffX > -160) {
-                    front.style.transform = `translateX(${diffX}px)`;
-                }
-            }, {passive: true});
-
-            front.addEventListener('touchend', e => {
-                if (!isSwiping || isVertical) return;
-                isSwiping = false;
-                front.style.transition = 'transform 0.3s ease';
-                
-                const transform = window.getComputedStyle(front).transform;
-                let currentX = 0;
-                if (transform !== 'none') {
-                    const matrix = new DOMMatrixReadOnly(transform);
-                    currentX = matrix.m41;
-                }
-
-                if (currentX < -60) {
-                    front.style.transform = `translateX(-140px)`;
-                } else {
-                    front.style.transform = `translateX(0)`;
-                }
-            });
-        });
-    },
-
-    submitReply(e, msgId) {
-        e.preventDefault();
-        const textarea = e.target.querySelector('textarea');
-        const replyText = textarea.value.trim();
-        
-        const msgIndex = state.messages.findIndex(m => m.id === msgId);
-        if (msgIndex !== -1 && replyText) {
-            state.messages[msgIndex].reply = replyText;
-            saveState();
-            showToast(t('reply_added'), 'success');
-            this.renderCurrentView(); // re-render to show the reply
-        }
-    },
-
-    // --- Visual Effects ---
-    celebrateSend(button) {
-        const rect = button.getBoundingClientRect();
-        for(let i=0; i<10; i++) {
-            const p = document.createElement('div');
-            p.style.position = 'fixed';
-            p.style.left = (rect.left + rect.width/2) + 'px';
-            p.style.top = (rect.top + rect.height/2) + 'px';
-            p.style.width = '10px';
-            p.style.height = '10px';
-            p.style.backgroundColor = i%2===0 ? 'var(--primary)' : 'var(--secondary)';
-            p.style.borderRadius = '50%';
-            p.style.zIndex = 9999;
-            p.style.pointerEvents = 'none';
-            document.body.appendChild(p);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const velocity = 2 + Math.random() * 5;
-            let tx = Math.cos(angle) * velocity * 20;
-            let ty = Math.sin(angle) * velocity * 20;
-            
-            p.animate([
-                { transform: 'translate(0,0) scale(1)', opacity: 1 },
-                { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-            ], {
-                duration: 600 + Math.random() * 400,
-                easing: 'cubic-bezier(0.25, 0.8, 0.25, 1)'
-            }).onfinish = () => p.remove();
-        }
-    },
-
-    initParticles() {
-        const container = document.getElementById('particles');
-        const colors = ['#8a2be2', '#ff007f', '#00f0ff'];
-        
-        for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            // Random properties
-            const size = Math.random() * 4 + 2;
-            const left = Math.random() * 100;
-            const delay = Math.random() * 20;
-            const duration = Math.random() * 10 + 10;
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.left = `${left}%`;
-            particle.style.bottom = `-10px`;
-            particle.style.backgroundColor = color;
-            particle.style.animationDelay = `${delay}s`;
-            particle.style.animationDuration = `${duration}s`;
-            
-            container.appendChild(particle);
-        }
-    },
-
-    initCursor() {
-        const cursor = document.getElementById('cursor');
-        const follower = document.getElementById('cursor-follower');
-        
-        if (!cursor || !follower) return;
-
-        let mouseX = 0, mouseY = 0;
-        let cursorX = 0, cursorY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            
-            // Immediate cursor
-            cursor.style.left = mouseX + 'px';
-            cursor.style.top = mouseY + 'px';
-        });
-
-        // Smooth follower
-        const render = () => {
-            cursorX += (mouseX - cursorX) * 0.2;
-            cursorY += (mouseY - cursorY) * 0.2;
-            
-            follower.style.left = cursorX + 'px';
-            follower.style.top = cursorY + 'px';
-            
-            requestAnimationFrame(render);
-        };
-        requestAnimationFrame(render);
+// --- Blocks API ---
+const blocksAPI = {
+  async isBlocked(blockerId, blockedId) {
+    if (!supabaseClient) return false;
+    try {
+      const { data } = await supabaseClient.from('blocks').select('id')
+        .eq('blocker_id', blockerId).eq('blocked_id', blockedId).maybeSingle();
+      return !!data;
+    } catch { return false; }
+  },
+  async blockUser(blockerId, blockedId) {
+    if (!supabaseClient) return;
+    try { await supabaseClient.from('blocks').insert({ blocker_id: blockerId, blocked_id: blockedId }); } catch {}
+  },
+  async unblockUser(blockerId, blockedId) {
+    if (!supabaseClient) return;
+    try { await supabaseClient.from('blocks').delete().match({ blocker_id: blockerId, blocked_id: blockedId }); } catch {}
+  },
+  async getBlockedIds(blockerId) {
+    if (!supabaseClient) return [];
+    try {
+      const { data } = await supabaseClient.from('blocks').select('blocked_id').eq('blocker_id', blockerId);
+      return data ? data.map(r => r.blocked_id) : [];
+    } catch { return []; }
+  }
+};
+
+// --- Supabase Messages API ---
+const messagesAPI = {
+  // Fetch messages where I am receiver, join with Supabase for replies
+  async getInbox(userId) {
+    if (!supabaseClient) {
+      // Fallback to local
+      return state._localMessages
+        .filter(m => m.recipientId === userId)
+        .sort((a,b) => b.timestamp - a.timestamp)
+        .map(m => ({
+          id: m.id, content: m.content,
+          timestamp: m.timestamp, reply: m.reply || null,
+          isRead: m.isRead, senderId: m.senderId || null
+        }));
     }
+    try {
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .select('id, content, created_at, is_read, sender_id')
+        .eq('receiver_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      // Also get local messages (sent via local form) merged with Supabase ones
+      const supaIds = new Set((data || []).map(m => m.id));
+      const localOnly = state._localMessages.filter(m => m.recipientId === userId && !supaIds.has(m.id));
+      const supaRows = (data || []).map(m => ({
+        id: m.id, content: m.content,
+        timestamp: new Date(m.created_at).getTime(),
+        reply: m.reply || null, isRead: m.is_read, senderId: m.sender_id
+      }));
+      const localRows = localOnly.map(m => ({
+        id: m.id, content: m.content,
+        timestamp: m.timestamp, reply: m.reply || null,
+        isRead: m.isRead, senderId: m.senderId || null
+      }));
+      return [...supaRows, ...localRows].sort((a,b) => b.timestamp - a.timestamp);
+    } catch(e) {
+      console.error('inbox fetch error', e);
+      return state._localMessages.filter(m => m.recipientId === userId)
+        .sort((a,b) => b.timestamp - a.timestamp)
+        .map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply||null, isRead: m.isRead, senderId: m.senderId||null }));
+    }
+  },
+
+  async send(receiverId, content, senderId = null) {
+    if (supabaseClient) {
+      try {
+        const payload = { receiver_id: receiverId, content: content };
+        if (senderId) payload.sender_id = senderId;
+        const { error } = await supabaseClient.from('messages').insert(payload);
+        if (error) throw error;
+        return { ok: true };
+      } catch(e) {
+        console.error('send error', e);
+      }
+    }
+    // Fallback to local
+    const msg = { id: generateId(), recipientId: receiverId, senderId, content, timestamp: Date.now(), reply: null, isRead: false };
+    state._localMessages.push(msg);
+    saveLocal();
+    return { ok: true };
+  },
+
+  async reply(msgId, replyText) {
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient.from('messages').update({ reply: replyText }).eq('id', msgId);
+        if (error) throw error;
+        return { ok: true };
+      } catch(e) { console.error('reply error', e); }
+    }
+    // Local fallback
+    const idx = state._localMessages.findIndex(m => m.id === msgId);
+    if (idx !== -1) { state._localMessages[idx].reply = replyText; saveLocal(); }
+    return { ok: true };
+  },
+
+  async markRead(userId) {
+    if (supabaseClient) {
+      try {
+        await supabaseClient.from('messages').update({ is_read: true })
+          .eq('receiver_id', userId).eq('is_read', false);
+      } catch {}
+    }
+    state._localMessages.forEach(m => { if (m.recipientId === userId) m.isRead = true; });
+    saveLocal();
+  },
+
+  async delete(msgId) {
+    if (supabaseClient) {
+      try { await supabaseClient.from('messages').delete().eq('id', msgId); } catch {}
+    }
+    state._localMessages = state._localMessages.filter(m => m.id !== msgId);
+    saveLocal();
+  },
+
+  async getPublicReplies(userId) {
+    // Returns messages that have been replied to (visible on public profile)
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient.from('messages')
+          .select('id, content, created_at, reply')
+          .eq('receiver_id', userId)
+          .not('reply', 'is', null)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return (data || []).map(m => ({
+          id: m.id, content: m.content,
+          timestamp: new Date(m.created_at).getTime(), reply: m.reply
+        }));
+      } catch(e) { console.error('public replies error', e); }
+    }
+    return state._localMessages.filter(m => m.recipientId === userId && m.reply)
+      .map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply }))
+      .sort((a,b) => b.timestamp - a.timestamp);
+  }
 };
 
-// Start app
+// --- Profiles API ---
+const profilesAPI = {
+  async getByUsername(username) {
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient.from('profiles')
+          .select('id, email, full_name, avatar_url')
+          .eq('full_name', username).maybeSingle();
+        if (data) return { id: data.id, username: data.full_name || username, email: data.email, avatar_url: data.avatar_url };
+      } catch {}
+    }
+    // local fallback
+    const u = state._localUsers.find(u => u.username === username);
+    return u || null;
+  },
+  async getById(userId) {
+    if (supabaseClient) {
+      try {
+        const { data } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+        if (data) return { id: data.id, username: data.full_name || data.email?.split('@')[0], email: data.email, avatar_url: data.avatar_url };
+      } catch {}
+    }
+    return state._localUsers.find(u => u.id === userId) || null;
+  }
+};
+
+// --- Main App ---
+const app = {
+  root: null,
+  currentRoute: null,
+  authUser: null,
+  authPromise: null,
+
+  init() {
+    this.root = document.getElementById('app-root');
+    this.applyTheme();
+    this.applyLargeText();
+    this.setupNavListeners();
+    window.addEventListener('hashchange', () => this.handleRoute());
+    this.handleRoute();
+    this.initParticles();
+    this.initCursor();
+  },
+
+  setupNavListeners() {
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) themeBtn.addEventListener('click', () => {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      saveLocal();
+      this.applyTheme();
+    });
+
+    window.addEventListener('scroll', () => {
+      document.querySelector('.navbar')?.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+  },
+
+  applyTheme() {
+    document.body.setAttribute('data-theme', state.theme);
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.innerHTML = state.theme === 'light' ? icons.moon : icons.sun;
+  },
+
+  applyLargeText() {
+    document.body.classList.toggle('large-text-enabled', state.largeText);
+  },
+
+  toggleLargeText() {
+    state.largeText = !state.largeText;
+    saveLocal();
+    this.applyLargeText();
+    this.renderCurrentView();
+  },
+
+  navigate(route) { window.location.hash = route; },
+
+  // Auth init — runs once per session
+  async initAuth() {
+    if (this.authPromise) return this.authPromise;
+    this.authPromise = (async () => {
+      if (!supabaseClient) return;
+      try {
+        const { data } = await supabaseClient.auth.getUser();
+        if (data?.user) {
+          this.authUser = data.user;
+          if (!state.currentUser || state.currentUser.supaId !== data.user.id) {
+            // Try to load profile from Supabase
+            try {
+              const { data: profile } = await supabaseClient.from('profiles')
+                .select('id, full_name, email, avatar_url').eq('id', data.user.id).maybeSingle();
+              if (profile) {
+                const username = profile.full_name || data.user.email.split('@')[0];
+                state.currentUser = { id: data.user.id, supaId: data.user.id, username, email: profile.email || data.user.email, avatar_url: profile.avatar_url };
+                saveLocal();
+              }
+            } catch {}
+          }
+        } else {
+          // No session
+          if (state.currentUser) {
+            state.currentUser = null;
+            saveLocal();
+          }
+        }
+      } catch(e) { console.error('initAuth error', e); }
+    })();
+    return this.authPromise;
+  },
+
+  async handleRoute() {
+    // Show loading only on first load
+    if (!this.currentRoute) {
+      this.root.innerHTML = `<div class="loading-screen"><span class="loading-spin">${icons.spin}</span><span>جاري التحميل...</span></div>`;
+    }
+    await this.initAuth();
+
+    const hash = window.location.hash.slice(1) || 'home';
+
+    // Onboarding gate
+    if (!localStorage.getItem('whispr_onboarding_done') && !['onboarding','login','register'].includes(hash) && !hash.startsWith('u/')) {
+      window.location.hash = 'onboarding';
+      return;
+    }
+
+    if (this.currentRoute !== hash) app.chatLimit = 30;
+    this.currentRoute = hash;
+    await this.renderCurrentView();
+    this.updateNav();
+  },
+
+  async updateNav() {
+    const container = document.getElementById('auth-nav-container');
+    if (!container) return;
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.gap = '8px';
+
+    if (state.currentUser) {
+      const unread = state._localMessages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
+      container.innerHTML = `
+        <button class="btn btn-ghost nav-btn" onclick="app.navigate('inbox')" aria-label="${t('nav_inbox')}">
+          <span class="btn-icon-wrap">${icons.inbox}</span>
+          <span class="hide-mobile">${t('nav_inbox')}</span>
+          ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+        </button>
+        <button class="btn btn-ghost nav-btn icon-only" onclick="app.logout()" aria-label="${t('nav_logout')}">
+          <span class="btn-icon-wrap">${icons.logout}</span>
+        </button>
+      `;
+    } else {
+      container.innerHTML = `
+        <button class="btn btn-ghost nav-btn" onclick="app.navigate('login')">
+          <span class="btn-icon-wrap">${icons.login}</span>
+          <span>${t('nav_login')}</span>
+        </button>
+        <button class="btn btn-primary nav-btn" onclick="app.navigate('register')">
+          <span class="btn-icon-wrap">${icons.register}</span>
+          <span>${t('nav_register')}</span>
+        </button>
+      `;
+    }
+  },
+
+  async renderCurrentView() {
+    if (!this.currentRoute) return;
+    const parts = this.currentRoute.split('/');
+    const route = parts[0];
+    let html = '';
+
+    try {
+      switch (route) {
+        case 'home':      html = this.views.home(); break;
+        case 'onboarding': html = this.views.onboarding(); break;
+        case 'login':
+          if (state.currentUser) return this.navigate('inbox');
+          html = this.views.login(); break;
+        case 'register':
+          if (state.currentUser) return this.navigate('inbox');
+          html = this.views.register(); break;
+        case 'inbox':
+          if (!state.currentUser) return this.navigate('login');
+          html = await this.views.inbox(); break;
+        case 'blocked':
+          if (!state.currentUser) return this.navigate('login');
+          html = await this.views.blocked(); break;
+        case 'analytics': {
+          if (!supabaseClient) return this.navigate('inbox');
+          const { data } = await supabaseClient.auth.getUser();
+          if (data?.user?.email !== 'abadihdar@gmail.com') return this.navigate('inbox');
+          html = this.views.analytics(); break;
+        }
+        case 'u':
+          if (parts[1]) { html = await this.views.profile(parts[1]); }
+          else this.navigate('home');
+          break;
+        default: html = this.views.home();
+      }
+    } catch(err) {
+      console.error('Render error:', err);
+      html = `<div class="view active empty-state">
+        <div class="empty-icon danger-icon">${icons.warn}</div>
+        <h3>حدث خطأ غير متوقع</h3>
+        <p>عذراً، حدثت مشكلة أثناء تحميل الصفحة.</p>
+        <button class="btn btn-primary mt-24" onclick="app.navigate('home')">العودة للرئيسية</button>
+      </div>`;
+    }
+
+    this.root.innerHTML = html;
+
+    // Post-render hooks
+    if (route === 'u' && parts[1]) this.setupProfileEvents(parts[1]);
+    else if (route === 'inbox') this.setupInboxEvents();
+    else if (route === 'login') this.setupLoginEvents();
+    else if (route === 'register') this.setupRegisterEvents();
+    else if (route === 'onboarding') this.setupOnboardingEvents();
+  },
+
+  // --- Actions ---
+  async logout() {
+    if (supabaseClient) await supabaseClient.auth.signOut();
+    state.currentUser = null;
+    this.authUser = null;
+    this.authPromise = null;
+    saveLocal();
+    this.navigate('home');
+    showToast('تم تسجيل الخروج', 'info');
+  },
+
+  copyLink(url) {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast(t('link_copied'), 'success'))
+      .catch(() => showToast('تعذر النسخ، حاول مرة أخرى', 'error'));
+  },
+
+  copyProfileLink() {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => showToast(t('link_copied'), 'success'))
+      .catch(() => showToast('حدث خطأ في النسخ', 'error'));
+  },
+
+  shareTo(platform, url, text) {
+    if (platform === 'instagram') {
+      navigator.clipboard.writeText(`${text} ${url}`)
+        .then(() => showToast('تم نسخ الرابط — افتح إنستغرام والصقه في قصتك', 'success'))
+        .catch(() => {});
+      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+    } else {
+      window.open(`https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+    }
+  },
+
+  insertPrompt(text) {
+    const ta = document.getElementById('msg-content');
+    if (!ta) return;
+    ta.value = text;
+    ta.focus();
+    ta.dispatchEvent(new Event('input'));
+  },
+
+  async uploadAvatar(file) {
+    if (!supabaseClient || !state.currentUser || !file) return;
+    if (!file.type.startsWith('image/')) return showToast('اختر ملف صورة فقط', 'error');
+    if (file.size > 3 * 1024 * 1024) return showToast('حجم الصورة أكبر من 3 ميجابايت', 'error');
+
+    try {
+      const { data: authData } = await supabaseClient.auth.getUser();
+      if (!authData?.user) return showToast('سجل الدخول أولاً', 'error');
+
+      showToast('جاري رفع الصورة...', 'info');
+      const ext = (file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
+      const path = `${authData.user.id}/avatar.${ext}`;
+
+      const { error: upErr } = await supabaseClient.storage.from('avatars').upload(path, file, { cacheControl: '60', upsert: true });
+      if (upErr) return showToast('فشل رفع الصورة', 'error');
+
+      const { data } = supabaseClient.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+
+      await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', authData.user.id);
+      state.currentUser.avatar_url = publicUrl;
+      saveLocal();
+      showToast('تم تحديث الصورة', 'success');
+      this.renderCurrentView();
+    } catch(e) { showToast('خطأ أثناء رفع الصورة', 'error'); }
+  },
+
+  async toggleBlockUser(targetId) {
+    if (!state.currentUser) return;
+    const btn = document.getElementById(`block-btn-${targetId}`);
+    if (!btn) return;
+    const isBlocked = btn.dataset.blocked === 'true';
+    btn.disabled = true;
+    btn.classList.add('loading');
+    if (isBlocked) {
+      await blocksAPI.unblockUser(state.currentUser.id, targetId);
+      btn.dataset.blocked = 'false';
+      btn.querySelector('.block-btn-text').textContent = 'حظر هذا المرسل';
+      showToast('تم إلغاء الحظر', 'success');
+    } else {
+      await blocksAPI.blockUser(state.currentUser.id, targetId);
+      btn.dataset.blocked = 'true';
+      btn.querySelector('.block-btn-text').textContent = 'إلغاء الحظر';
+      showToast('تم حظر هذا المستخدم', 'success');
+    }
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  },
+
+  async unblockFromList(targetId) {
+    if (!state.currentUser) return;
+    await blocksAPI.unblockUser(state.currentUser.id, targetId);
+    showToast('تم إلغاء الحظر', 'success');
+    this.renderCurrentView();
+  },
+
+  async deleteMessage(msgId) {
+    if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+    await messagesAPI.delete(msgId);
+    showToast('تم حذف الرسالة', 'success');
+    this.renderCurrentView();
+  },
+
+  finishOnboarding() {
+    localStorage.setItem('whispr_onboarding_done', '1');
+    this.navigate(state.currentUser ? 'inbox' : 'home');
+  },
+
+  // --- Views ---
+  views: {
+    onboarding() {
+      return `<div class="view active auth-wrapper onboarding-wrapper">
+        <div class="onboarding-card glass-card" id="onboard-1">
+          <div class="onboard-icon primary-color">${icons.ghost}</div>
+          <h2 class="auth-title text-gradient">مرحباً بك في Whispr</h2>
+          <p class="auth-subtitle">استقبل رسائل سرية من أصدقائك أو متابعيك بدون معرفة هويتهم.</p>
+          <div class="onboard-actions">
+            <button class="btn btn-ghost" onclick="app.finishOnboarding()">تخطي</button>
+            <button class="btn btn-primary" onclick="app.nextOnboard(1)">التالي</button>
+          </div>
+        </div>
+        <div class="onboarding-card glass-card hidden" id="onboard-2">
+          <div class="onboard-icon accent-color">${icons.link}</div>
+          <h2 class="auth-title text-gradient">شارك رابطك الخاص</h2>
+          <p class="auth-subtitle">بعد إنشاء حسابك، انسخ رابطك وشاركه في حساباتك لتبدأ بتلقي الرسائل.</p>
+          <div class="onboard-actions">
+            <button class="btn btn-ghost" onclick="app.finishOnboarding()">تخطي</button>
+            <button class="btn btn-primary" onclick="app.nextOnboard(2)">التالي</button>
+          </div>
+        </div>
+        <div class="onboarding-card glass-card hidden" id="onboard-3">
+          <div class="onboard-icon danger-color">${icons.shield}</div>
+          <h2 class="auth-title text-gradient">تحكم بخصوصيتك</h2>
+          <p class="auth-subtitle">يمكنك بضغطة واحدة حظر أي مرسل مزعج لمنعه من مراسلتك مجدداً.</p>
+          <div class="onboard-actions">
+            <button class="btn btn-primary full-width" onclick="app.finishOnboarding()">ابدأ الآن</button>
+          </div>
+        </div>
+      </div>`;
+    },
+
+    home() {
+      return `<div class="view active hero">
+        <div class="hero-shell">
+          <div class="hero-copy">
+            <div class="eyebrow">${icons.shield} <span>مساحة صريحة وآمنة</span></div>
+            <h1 class="hero-title text-gradient">${t('hero_title')}</h1>
+            <p class="hero-subtitle">${t('hero_subtitle')}، مع رابط خاص ومظهر أنيق يناسب المشاركة في كل مكان.</p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" onclick="app.navigate('register')">
+                ${icons.rocket} ${t('btn_start')}
+              </button>
+              <button class="btn btn-outline" onclick="app.navigate('login')">
+                ${icons.login} ${t('btn_login_submit')}
+              </button>
+            </div>
+          </div>
+          <div class="hero-preview" aria-hidden="true">
+            <div class="floating-note note-a">
+              <span class="note-label">رسالة جديدة</span>
+              <strong>كلامك اليوم كان ملهمًا جدًا</strong>
+            </div>
+            <div class="phone-frame">
+              <div class="phone-top"></div>
+              <div class="preview-bubble">ما أكثر شيء تحب الناس يعرفونه عنك؟</div>
+              <div class="preview-bubble alt">رد جميل ومختصر يظهر للكل بدون كشف المرسل.</div>
+              <div class="preview-composer">
+                <span>اكتب بسرية...</span>
+                <span class="composer-icon">${icons.send}</span>
+              </div>
+            </div>
+            <div class="floating-note note-b">
+              <span class="note-label">خصوصية</span>
+              <strong>حظر، ردود، وتنبيهات مرئية</strong>
+            </div>
+          </div>
+        </div>
+        <div class="feature-strip">
+          <div>${icons.link} <span>رابط شخصي جاهز</span></div>
+          <div>${icons.user} <span>إرسال مجهول</span></div>
+          <div>${icons.ban} <span>تحكم بالحظر</span></div>
+        </div>
+        <div class="how-it-works">
+          <div class="mini-card">
+            <span class="step-number">١</span>
+            <h3>أنشئ حسابك</h3>
+            <p>اختر اسمًا قصيرًا واحصل على رابطك خلال ثوان.</p>
+          </div>
+          <div class="mini-card">
+            <span class="step-number">٢</span>
+            <h3>شارك الرابط</h3>
+            <p>ضعه في حساباتك لتبدأ باستقبال الرسائل.</p>
+          </div>
+          <div class="mini-card">
+            <span class="step-number">٣</span>
+            <h3>اقرأ ورد</h3>
+            <p>استقبل الرسائل ورد عليها بشكل عام دون كشف الهوية.</p>
+          </div>
+        </div>
+      </div>`;
+    },
+
+    login() {
+      return `<div class="view active auth-wrapper">
+        <div class="glass-card auth-card">
+          <div class="auth-header">
+            <h2 class="auth-title text-gradient">${t('login_title')}</h2>
+            <p class="auth-subtitle">${t('login_subtitle')}</p>
+          </div>
+          <form id="login-form" autocomplete="on">
+            <div class="form-group">
+              <label class="form-label">${t('email_label')}</label>
+              <input type="email" id="login-email" class="form-control" placeholder="${t('email_ph')}" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">${t('password_label')}</label>
+              <input type="password" id="login-password" class="form-control" placeholder="${t('password_ph')}" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary full-width" id="login-submit-btn">
+              ${icons.login} ${t('btn_login_submit')}
+            </button>
+          </form>
+          <div class="auth-footer">
+            ${t('no_account')} <a class="auth-link" onclick="app.navigate('register')">${t('create_account')}</a>
+          </div>
+        </div>
+      </div>`;
+    },
+
+    register() {
+      return `<div class="view active auth-wrapper">
+        <div class="glass-card auth-card">
+          <div class="auth-header">
+            <h2 class="auth-title text-gradient">${t('register_title')}</h2>
+            <p class="auth-subtitle">${t('register_subtitle')}</p>
+          </div>
+          <form id="register-form" autocomplete="on">
+            <div class="form-group">
+              <label class="form-label">${t('username_label')}</label>
+              <input type="text" id="reg-username" class="form-control" placeholder="${t('username_ph')}" autocomplete="username" required pattern="[A-Za-z0-9_]+" title="استخدم حروفاً إنجليزية أو أرقاماً أو شرطة سفلية">
+            </div>
+            <div class="form-group">
+              <label class="form-label">${t('email_label')}</label>
+              <input type="email" id="reg-email" class="form-control" placeholder="${t('email_ph')}" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">${t('password_label')}</label>
+              <input type="password" id="reg-password" class="form-control" placeholder="${t('password_ph')}" autocomplete="new-password" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary full-width" id="reg-submit-btn">
+              ${icons.register} ${t('btn_register_submit')}
+            </button>
+          </form>
+          <div class="auth-footer">
+            ${t('have_account')} <a class="auth-link" onclick="app.navigate('login')">${t('login_now')}</a>
+          </div>
+        </div>
+      </div>`;
+    },
+
+    async profile(username) {
+      // Find user
+      let user = await profilesAPI.getByUsername(username);
+      if (!user) {
+        return `<div class="view active empty-state">
+          <div class="empty-icon danger-icon">${icons.warn}</div>
+          <h3>${t('err_user_not_found')}</h3>
+        </div>`;
+      }
+
+      // Get public replies
+      const replies = await messagesAPI.getPublicReplies(user.id);
+      const limit = app.chatLimit || 30;
+      const visible = replies.slice(0, limit);
+      const hasMore = replies.length > limit;
+
+      let lastDateLabel = null;
+      const repliesHtml = visible.map(msg => {
+        const dl = getDateLabel(msg.timestamp);
+        let sep = '';
+        if (dl !== lastDateLabel) {
+          sep = `<div class="date-sep"><span>${dl}</span></div>`;
+          lastDateLabel = dl;
+        }
+        return `${sep}<div class="msg-thread-item glass-card">
+          <div class="msg-bubble incoming">${escHtml(msg.content)}</div>
+          <div class="msg-bubble reply">${icons.reply} <span>${escHtml(msg.reply)}</span></div>
+          <div class="msg-meta">${icons.clock} ${formatTime(msg.timestamp)}</div>
+        </div>`;
+      }).join('');
+
+      return `<div class="view active">
+        <div class="profile-header">
+          <div class="avatar-wrap">
+            ${user.avatar_url
+              ? `<img src="${user.avatar_url}" class="avatar-img" alt="صورة ${username}">`
+              : `<div class="avatar-placeholder">${username.charAt(0).toUpperCase()}</div>`}
+          </div>
+          <h2 class="profile-name" dir="ltr">@${escHtml(username)}</h2>
+          <p class="text-muted bio-text">${escHtml(user.bio || t('bio_default'))}</p>
+          <div class="profile-actions">
+            <button class="btn btn-outline" onclick="app.copyProfileLink()">${icons.link} نسخ الرابط</button>
+            ${state.currentUser && state.currentUser.id !== user.id ? `
+              <button class="btn btn-outline btn-danger-outline" id="block-btn-${user.id}" data-blocked="false" onclick="app.toggleBlockUser('${user.id}')">
+                ${icons.ban} <span class="block-btn-text">حظر هذا المرسل</span>
+              </button>` : ''}
+          </div>
+        </div>
+
+        <div class="glass-card send-card">
+          <div class="send-card-header">
+            ${icons.send}
+            <h3>${t('profile_title')}</h3>
+          </div>
+          <div class="prompt-row" id="prompt-row">
+            <button class="prompt-chip" onclick="app.insertPrompt('ما الشيء الذي تتمنى أن أخبرك به بصراحة؟')">سؤال صريح</button>
+            <button class="prompt-chip" onclick="app.insertPrompt('رسالة لطيفة وصلتني منك وأحببتها...')">رسالة لطيفة</button>
+            <button class="prompt-chip" onclick="app.insertPrompt('نصيحة قصيرة بدون مجاملة:')">نصيحة</button>
+          </div>
+          <form id="send-msg-form" class="composer-form">
+            <div class="composer-row">
+              <textarea id="msg-content" class="form-control composer-textarea" placeholder="${t('msg_ph')}" required maxlength="300" rows="1"></textarea>
+              <button type="submit" class="btn btn-primary send-btn" aria-label="إرسال">
+                <span class="send-icon-mobile">${icons.send}</span>
+                <span class="send-text-desktop">${icons.lock} ${t('btn_send')}</span>
+              </button>
+            </div>
+            <div id="send-block-error" class="send-error hidden">لا يمكنك إرسال رسائل لهذا المستخدم.</div>
+            <div class="composer-footer">
+              <span class="char-counter" id="char-counter">300 ${t('chars_left')}</span>
+            </div>
+          </form>
+        </div>
+
+        ${replies.length > 0 ? `
+          <div class="inbox-container">
+            <div class="section-header"><h3>الردود السابقة</h3></div>
+            ${hasMore ? `<div class="load-more-hint">${icons.arrow_down} مرر لأعلى لتحميل المزيد</div>` : ''}
+            <div class="messages-list" id="msg-list">${repliesHtml}</div>
+          </div>` : ''}
+      </div>`;
+    },
+
+    async inbox() {
+      const user = state.currentUser;
+      const shareUrl = `${location.origin}${location.pathname}#u/${user.username}`;
+      const shareText = 'أرسل لي رسالة مجهولة على Whispr';
+
+      // Load messages from Supabase
+      const messages = await messagesAPI.getInbox(user.id);
+      const unread = messages.filter(m => !m.isRead).length;
+      const replied = messages.filter(m => m.reply).length;
+
+      // Get blocked ids
+      const blockedIds = await blocksAPI.getBlockedIds(user.id);
+      const filtered = messages.filter(m => !m.senderId || !blockedIds.includes(m.senderId));
+
+      let lastDateLabel = null;
+      const msgsHtml = filtered.map(msg => {
+        const dl = getDateLabel(msg.timestamp);
+        let sep = '';
+        if (dl !== lastDateLabel) {
+          sep = `<div class="date-sep"><span>${dl}</span></div>`;
+          lastDateLabel = dl;
+        }
+        return `${sep}
+        <div class="msg-card glass-card ${!msg.isRead ? 'unread' : ''}" id="msg-${msg.id}">
+          <div class="msg-card-header">
+            <span class="msg-time">${icons.clock} ${formatTime(msg.timestamp)}</span>
+            <div class="msg-card-actions">
+              ${!msg.reply ? `<button class="icon-btn" onclick="app.toggleReplyArea('${msg.id}')" title="${t('btn_reply')}">${icons.reply}</button>` : ''}
+              <button class="icon-btn danger-btn" onclick="app.deleteMessage('${msg.id}')" title="حذف">${icons.trash}</button>
+            </div>
+          </div>
+          <div class="msg-bubble incoming">${escHtml(msg.content)}</div>
+          ${msg.reply ? `
+            <div class="msg-bubble reply">${icons.reply} <span>${escHtml(msg.reply)}</span></div>` : `
+            <div class="reply-area hidden" id="reply-area-${msg.id}">
+              <form class="reply-form" onsubmit="app.submitReply(event,'${msg.id}')">
+                <textarea class="form-control reply-textarea" placeholder="${t('reply_ph')}" required></textarea>
+                <button type="submit" class="btn btn-primary btn-sm">${icons.reply} ${t('btn_reply')}</button>
+              </form>
+            </div>`}
+        </div>`;
+      }).join('');
+
+      // Check if owner
+      let isOwner = false;
+      if (supabaseClient) {
+        try {
+          const { data } = await supabaseClient.auth.getUser();
+          isOwner = data?.user?.email === 'abadihdar@gmail.com';
+        } catch {}
+      }
+
+      return `<div class="view active inbox-container">
+        <div class="inbox-hero glass-card">
+          <div class="avatar-wrap-inbox">
+            ${user.avatar_url
+              ? `<img src="${user.avatar_url}" class="avatar-img" alt="صورة الحساب">`
+              : `<div class="avatar-placeholder">${user.username.charAt(0).toUpperCase()}</div>`}
+            <label class="avatar-upload-btn" title="تغيير الصورة">
+              <span>${icons.camera}</span>
+              <input type="file" accept="image/*" class="sr-only" onchange="app.uploadAvatar(this.files[0])">
+            </label>
+          </div>
+          <h2 class="profile-name" dir="ltr">@${escHtml(user.username)}</h2>
+          <div class="inbox-stats">
+            <div class="stat-item"><strong>${filtered.length}</strong><span>رسالة</span></div>
+            <div class="stat-item"><strong>${unread}</strong><span>غير مقروءة</span></div>
+            <div class="stat-item"><strong>${replied}</strong><span>مُجاب عليها</span></div>
+          </div>
+          <div class="share-row">
+            <div class="share-link-box">
+              <span class="share-label">${t('share_link')}</span>
+              <span class="share-url" dir="ltr">${shareUrl}</span>
+              <button class="icon-btn" onclick="app.copyLink('${shareUrl}')" title="${t('btn_copy')}">${icons.copy}</button>
+            </div>
+          </div>
+          <div class="quick-share">
+            <button class="btn btn-outline btn-sm" onclick="app.shareTo('instagram','${shareUrl}','${shareText}')">
+              ${icons.instagram} إنستغرام
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="app.shareTo('x','${shareUrl}','${shareText}')">
+              ${icons.twitter} X
+            </button>
+          </div>
+        </div>
+
+        <div class="inbox-toolbar">
+          <h2>${t('inbox_title')}</h2>
+          <span class="pill">${filtered.length} ${t('msgs_count')}</span>
+        </div>
+
+        <div class="settings-list">
+          <button class="settings-item glass-card" onclick="app.navigate('blocked')">
+            <div class="settings-item-label">${icons.ban} <span>المستخدمون المحظورون</span></div>
+            <span class="settings-item-arrow">${icons.forward}</span>
+          </button>
+          ${isOwner ? `<button class="settings-item glass-card" onclick="app.navigate('analytics')">
+            <div class="settings-item-label">${icons.chart} <span>لوحة التحليلات</span></div>
+            <span class="settings-item-arrow">${icons.forward}</span>
+          </button>` : ''}
+          <div class="settings-item glass-card">
+            <div class="settings-item-label">${icons.eye} <span>تكبير الخط في المحادثات</span></div>
+            <label class="toggle-switch">
+              <input type="checkbox" ${state.largeText ? 'checked' : ''} onchange="app.toggleLargeText()">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="messages-list">
+          ${filtered.length === 0
+            ? `<div class="empty-state glass-card">
+                <div class="empty-icon">${icons.msg_circle}</div>
+                <h3>صندوق الوارد فارغ</h3>
+                <p>انشر رابطك الخاص ليرسل لك الناس رسائل بسرية تامة.</p>
+                <button class="btn btn-primary mt-24" onclick="app.copyLink('${shareUrl}')">${icons.link} نسخ رابط الحساب</button>
+              </div>`
+            : msgsHtml}
+        </div>
+      </div>`;
+    },
+
+    async blocked() {
+      const blockedIds = await blocksAPI.getBlockedIds(state.currentUser.id);
+      const blockedUsers = await Promise.all(blockedIds.map(id => profilesAPI.getById(id)));
+      const valid = blockedUsers.filter(Boolean);
+
+      return `<div class="view active inbox-container">
+        <div class="page-header">
+          <button class="btn btn-ghost icon-only" onclick="app.navigate('inbox')">${icons.back}</button>
+          <h2>المحظورون</h2>
+        </div>
+        <div class="messages-list">
+          ${valid.length === 0
+            ? `<div class="empty-state glass-card">
+                <div class="empty-icon">${icons.slash}</div>
+                <p>لا يوجد مستخدمون محظورون</p>
+              </div>`
+            : valid.map(u => `
+              <div class="glass-card blocked-item">
+                <div class="blocked-user">
+                  ${u.avatar_url ? `<img src="${u.avatar_url}" class="avatar-sm" alt="">` : `<div class="avatar-sm placeholder-sm">${(u.username||'?').charAt(0).toUpperCase()}</div>`}
+                  <span class="blocked-name" dir="ltr">@${escHtml(u.username || u.id)}</span>
+                </div>
+                <button class="btn btn-outline btn-sm btn-danger-outline" onclick="app.unblockFromList('${u.id}')">
+                  ${icons.x} إلغاء الحظر
+                </button>
+              </div>`).join('')}
+        </div>
+      </div>`;
+    },
+
+    analytics() {
+      return `<div class="view active inbox-container">
+        <div class="page-header">
+          <button class="btn btn-ghost icon-only" onclick="app.navigate('inbox')">${icons.back}</button>
+          <h2>لوحة التحليلات</h2>
+        </div>
+        <div class="analytics-grid">
+          <div class="glass-card stat-card">
+            ${icons.users}
+            <h3>${state._localUsers.length}</h3>
+            <p>إجمالي المستخدمين</p>
+          </div>
+          <div class="glass-card stat-card">
+            ${icons.inbox}
+            <h3>${state._localMessages.length}</h3>
+            <p>إجمالي الرسائل</p>
+          </div>
+        </div>
+        <p class="text-muted" style="text-align:center;padding:20px;font-size:0.9rem;">البيانات التفصيلية تتطلب استعلامات مباشرة على Supabase.</p>
+      </div>`;
+    }
+  },
+
+  // --- Form Handlers ---
+  setupOnboardingEvents() {
+    // nextOnboard is called inline
+  },
+
+  nextOnboard(step) {
+    document.getElementById(`onboard-${step}`)?.classList.add('hidden');
+    document.getElementById(`onboard-${step + 1}`)?.classList.remove('hidden');
+  },
+
+  setupLoginEvents() {
+    const form = document.getElementById('login-form');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-submit-btn');
+      const em = document.getElementById('login-email').value.trim();
+      const pw = document.getElementById('login-password').value;
+      setLoading(btn, true, `${icons.spin} جاري الدخول...`);
+
+      if (supabaseClient) {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email: em, password: pw });
+        if (error) {
+          showToast(t('err_invalid_creds'), 'error');
+        } else {
+          this.authPromise = null;
+          await this.initAuth();
+          if (state.currentUser) {
+            this.navigate('inbox');
+            showToast(`أهلاً بك @${state.currentUser.username}`, 'success');
+          }
+        }
+      } else {
+        const u = state._localUsers.find(u => u.email === em && u.password === pw);
+        if (u) {
+          state.currentUser = { id: u.id, username: u.username, email: u.email };
+          saveLocal();
+          this.navigate('inbox');
+          showToast(`أهلاً بك @${u.username}`, 'success');
+        } else {
+          showToast(t('err_invalid_creds'), 'error');
+        }
+      }
+      setLoading(btn, false, `${icons.login} ${t('btn_login_submit')}`);
+    });
+  },
+
+  setupRegisterEvents() {
+    const form = document.getElementById('register-form');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('reg-submit-btn');
+      const un = document.getElementById('reg-username').value.trim();
+      const em = document.getElementById('reg-email').value.trim();
+      const pw = document.getElementById('reg-password').value;
+      setLoading(btn, true, `${icons.spin} جاري التسجيل...`);
+
+      if (state._localUsers.some(u => u.username === un)) {
+        showToast(t('err_user_exists'), 'error');
+        setLoading(btn, false, `${icons.register} ${t('btn_register_submit')}`);
+        return;
+      }
+
+      if (supabaseClient) {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: em, password: pw, options: { data: { full_name: un } }
+        });
+        if (error) {
+          showToast(error.message.includes('already') ? 'البريد مسجل مسبقاً' : 'خطأ في التسجيل', 'error');
+        } else {
+          const newUser = { id: data.user?.id || generateId(), username: un, email: em, password: pw };
+          state._localUsers.push(newUser);
+          state.currentUser = { id: newUser.id, username: un, email: em };
+          saveLocal();
+          this.authPromise = null;
+          await this.initAuth();
+          this.navigate('inbox');
+          showToast(t('reg_success'), 'success');
+        }
+      } else {
+        const newUser = { id: generateId(), username: un, email: em, password: pw };
+        state._localUsers.push(newUser);
+        state.currentUser = { id: newUser.id, username: un, email: em };
+        saveLocal();
+        this.navigate('inbox');
+        showToast(t('reg_success'), 'success');
+      }
+      setLoading(btn, false, `${icons.register} ${t('btn_register_submit')}`);
+    });
+  },
+
+  async setupProfileEvents(username) {
+    const user = await profilesAPI.getByUsername(username);
+    if (!user) return;
+
+    // Setup block state
+    if (state.currentUser && state.currentUser.id !== user.id) {
+      const isBlocked = await blocksAPI.isBlocked(state.currentUser.id, user.id);
+      const btn = document.getElementById(`block-btn-${user.id}`);
+      if (btn) {
+        btn.dataset.blocked = isBlocked ? 'true' : 'false';
+        btn.querySelector('.block-btn-text').textContent = isBlocked ? 'إلغاء الحظر' : 'حظر هذا المرسل';
+      }
+    }
+
+    // Textarea auto-expand + char counter
+    const ta = document.getElementById('msg-content');
+    const counter = document.getElementById('char-counter');
+    if (ta && counter) {
+      ta.addEventListener('input', () => {
+        const left = 300 - ta.value.length;
+        counter.textContent = `${left} ${t('chars_left')}`;
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+      });
+    }
+
+    // Send form
+    const form = document.getElementById('send-msg-form');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const content = ta?.value?.trim();
+      if (!content) return;
+
+      const errEl = document.getElementById('send-block-error');
+      if (errEl) errEl.classList.add('hidden');
+
+      // Check if blocked
+      if (state.currentUser) {
+        const isBlocked = await blocksAPI.isBlocked(user.id, state.currentUser.id);
+        if (isBlocked) {
+          if (errEl) errEl.classList.remove('hidden');
+          return;
+        }
+      }
+
+      const btn = form.querySelector('.send-btn');
+      setLoading(btn, true);
+
+      const { ok } = await messagesAPI.send(user.id, content, state.currentUser?.id || null);
+      if (ok) {
+        if (ta) { ta.value = ''; ta.style.height = 'auto'; }
+        if (counter) counter.textContent = `300 ${t('chars_left')}`;
+        showToast(t('msg_sent'), 'success');
+        this.celebrateSend(btn);
+      } else {
+        showToast('تعذر الإرسال، حاول مجدداً', 'error');
+      }
+      setLoading(btn, false);
+    });
+  },
+
+  setupInboxEvents() {
+    if (!state.currentUser) return;
+    // Mark as read
+    messagesAPI.markRead(state.currentUser.id);
+  },
+
+  toggleReplyArea(msgId) {
+    const area = document.getElementById(`reply-area-${msgId}`);
+    if (!area) return;
+    area.classList.toggle('hidden');
+    if (!area.classList.contains('hidden')) {
+      area.querySelector('textarea')?.focus();
+    }
+  },
+
+  async submitReply(e, msgId) {
+    e.preventDefault();
+    const textarea = e.target.querySelector('textarea');
+    const replyText = textarea?.value?.trim();
+    if (!replyText) return;
+    const btn = e.target.querySelector('button[type="submit"]');
+    setLoading(btn, true);
+    const { ok } = await messagesAPI.reply(msgId, replyText);
+    if (ok) {
+      showToast(t('reply_added'), 'success');
+      this.renderCurrentView();
+    } else {
+      showToast('تعذر إضافة الرد', 'error');
+      setLoading(btn, false);
+    }
+  },
+
+  // --- Visual Effects ---
+  celebrateSend(button) {
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    for (let i = 0; i < 10; i++) {
+      const p = document.createElement('div');
+      Object.assign(p.style, {
+        position: 'fixed', left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px`,
+        width: '8px', height: '8px', borderRadius: '50%', zIndex: '9999', pointerEvents: 'none',
+        backgroundColor: i % 2 === 0 ? 'var(--primary)' : 'var(--secondary)'
+      });
+      document.body.appendChild(p);
+      const angle = Math.random() * Math.PI * 2;
+      const vel = 2 + Math.random() * 5;
+      p.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+        { transform: `translate(${Math.cos(angle) * vel * 20}px, ${Math.sin(angle) * vel * 20}px) scale(0)`, opacity: 0 }
+      ], { duration: 600 + Math.random() * 400, easing: 'ease-out' }).onfinish = () => p.remove();
+    }
+  },
+
+  initParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    const colors = ['#8a2be2', '#ff007f', '#00f0ff'];
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      Object.assign(p.style, {
+        width: `${Math.random() * 4 + 2}px`, height: `${Math.random() * 4 + 2}px`,
+        left: `${Math.random() * 100}%`, bottom: '-10px',
+        backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+        animationDelay: `${Math.random() * 20}s`,
+        animationDuration: `${Math.random() * 10 + 10}s`
+      });
+      container.appendChild(p);
+    }
+  },
+
+  initCursor() {
+    const cursor = document.getElementById('cursor');
+    const follower = document.getElementById('cursor-follower');
+    if (!cursor || !follower) return;
+    let mx = 0, my = 0, cx = 0, cy = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+    });
+    const render = () => {
+      cx += (mx - cx) * 0.2; cy += (my - cy) * 0.2;
+      follower.style.left = cx + 'px'; follower.style.top = cy + 'px';
+      requestAnimationFrame(render);
+    };
+    requestAnimationFrame(render);
+  }
+};
+
+// --- Helpers ---
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setLoading(btn, isLoading, originalHtml) {
+  if (!btn) return;
+  if (isLoading) {
+    btn._originalHtml = originalHtml || btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="btn-spin">${icons.spin}</span>`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn._originalHtml || originalHtml || btn.innerHTML;
+  }
+}
+
+// Make nextOnboard globally accessible
+window.app = app;
 document.addEventListener('DOMContentLoaded', () => app.init());
