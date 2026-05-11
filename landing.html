@@ -17,7 +17,6 @@
   --r-xl:20px;--r-lg:14px;--r-md:10px;--r-sm:7px;--r-full:9999px;
   --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
   --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
-  --nav-h:58px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
@@ -27,6 +26,12 @@ body{
 }
 a{text-decoration:none;color:inherit;}
 button{font-family:var(--font);cursor:pointer;border:none;background:none;}
+
+.shell{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:40% 60%;
+  height:100vh;width:100vw;overflow:hidden;
+}
 
 .bg-fx{
   position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -43,430 +48,292 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
   background-size:56px 56px;
 }
-.particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
-.particle{position:absolute;border-radius:50%;opacity:0;animation:floatUp linear infinite;}
-@keyframes floatUp{0%{transform:translateY(0) scale(1);opacity:0}10%{opacity:.35}90%{opacity:.35}100%{transform:translateY(-100vh) scale(0);opacity:0}}
 
-.shell{
+/* LEFT · Brand Identity */
+.panel{position:relative;}
+.panel-brand{
+  padding:32px 40px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:radial-gradient(circle at top left,rgba(138,43,226,.18),transparent 55%),
+             radial-gradient(circle at bottom,rgba(0,0,0,.7),rgba(5,5,10,1));
+  border-inline-end:1px solid rgba(255,255,255,.05);
+}
+.brand-layer-glass{
+  position:absolute;inset:18px;
+  border-radius:32px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(5,5,10,.6));
+  opacity:.16;backdrop-filter:blur(26px);
+}
+.brand-header{
   position:relative;z-index:1;
-  display:grid;grid-template-rows:var(--nav-h) 1fr;
-  height:100vh;width:100vw;overflow:hidden;
+  max-width:440px;
+}
+.brand-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;
+  font-size:.8rem;font-weight:500;color:var(--accent);
+  border:1px solid rgba(0,212,255,.3);
+  background:rgba(0,212,255,.08);
+}
+.brand-title{
+  margin-top:18px;margin-bottom:10px;
+  font-size:clamp(1.9rem,3vw,2.6rem);
+  line-height:1.15;font-weight:700;
+}
+.brand-title-accent{
+  background:linear-gradient(135deg,#c084fc,var(--secondary));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.brand-sub{
+  font-size:.95rem;color:var(--muted);
+  line-height:1.8;margin-bottom:22px;
+}
+.brand-meta{
+  margin-top:16px;display:flex;flex-wrap:wrap;
+  gap:12px;font-size:.8rem;color:var(--muted);
+}
+.brand-meta span::before{
+  content:"• ";color:var(--accent);
+}
+.brand-visual{
+  position:relative;z-index:1;
+  height:220px;margin-top:24px;
+}
+.orb{position:absolute;border-radius:999px;filter:blur(0);}
+.orb-main{
+  width:190px;height:190px;left:12%;bottom:-20px;
+  background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.8),rgba(138,43,226,.3),transparent 70%);
+  box-shadow:0 0 40px rgba(138,43,226,.7);
+}
+.orb-sub{
+  width:120px;height:120px;right:10%;top:10%;
+  background:radial-gradient(circle at 30% 10%,rgba(255,255,255,.8),rgba(0,212,255,.35),transparent 70%);
+  box-shadow:0 0 32px rgba(0,212,255,.7);
+}
+.grid-orbit{
+  position:absolute;inset:auto 8% 6% 6%;height:110px;
+  border-radius:26px;border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(120deg,rgba(0,0,0,.7),rgba(12,10,24,.9));
+  box-shadow:0 20px 50px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-.navbar{
-  grid-row:1;display:flex;align-items:center;
-  padding:0 28px;background:rgba(9,7,15,.75);
-  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
-  border-bottom:1px solid var(--border);
-  box-shadow:0 1px 0 rgba(255,255,255,.04);gap:16px;
+/* RIGHT · Decision Engine */
+.panel-options{
+  padding:30px 34px;
+  display:flex;flex-direction:column;justify-content:center;
 }
-.logo{display:flex;align-items:center;gap:9px;font-size:1.2rem;font-weight:700;letter-spacing:-.3px;}
-.logo-icon{color:#c084fc;display:flex;flex-shrink:0;}
-.nav-tabs{
-  display:flex;gap:4px;margin:0 auto;
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:var(--r-full);padding:4px;
+.options-header{margin-bottom:12px;}
+.options-kicker{
+  font-size:.85rem;color:var(--muted);
 }
-.nav-tab{
-  padding:6px 18px;border-radius:var(--r-full);
-  font-size:.83rem;font-weight:500;color:var(--muted);
-  transition:all .22s var(--ease);cursor:pointer;white-space:nowrap;
+.options-row{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
 }
-.nav-tab.active{background:rgba(138,43,226,.22);color:var(--text);border:1px solid rgba(138,43,226,.3);}
-.nav-tab:hover:not(.active){background:rgba(255,255,255,.06);color:var(--text);}
-.nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.option-card{
+  position:relative;
+  border-radius:22px;
+  padding:18px 16px 16px;
+  background:radial-gradient(circle at top,rgba(255,255,255,.05),rgba(0,0,0,.85));
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 18px 40px rgba(0,0,0,.7);
+  display:flex;flex-direction:column;gap:10px;
+  transition:transform .22s var(--bounce),box-shadow .22s var(--bounce),border-color .18s var(--ease);
+}
+.option-card:hover{
+  transform:translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 26px 70px rgba(0,0,0,.9);
+  border-color:rgba(255,255,255,.18);
+}
+.option-head{display:flex;flex-direction:column;gap:4px;}
+.option-title{font-size:.95rem;font-weight:600;}
+.option-tag{font-size:.78rem;color:var(--muted);}
+.option-list{
+  list-style:none;font-size:.78rem;color:var(--muted);
+  display:flex;flex-direction:column;gap:4px;padding:0;margin:0;
+}
+.option-list li::before{
+  content:"•";margin-left:4px;color:var(--accent);
+}
 
+/* Featured B */
+.is-featured{
+  transform:scale(1.05);
+  border-color:rgba(138,43,226,.7);
+  box-shadow:
+    0 0 0 1px rgba(138,43,226,.7),
+    0 32px 90px rgba(138,43,226,.55);
+}
+.option-ribbon{
+  position:absolute;top:10px;left:14px;
+  padding:3px 10px;border-radius:999px;
+  font-size:.7rem;font-weight:600;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.7);
+}
+
+/* Buttons */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  padding:9px 20px;border-radius:var(--r-lg);
-  font-family:var(--font);font-size:.875rem;font-weight:600;
-  border:1px solid transparent;
-  transition:all .22s var(--bounce);
-  position:relative;overflow:hidden;white-space:nowrap;
+  padding:9px 18px;border-radius:999px;
+  font-size:.82rem;font-weight:600;
+  border:1px solid transparent;white-space:nowrap;
+  transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--bounce),box-shadow .18s var(--ease);
 }
 .btn-primary{
   background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.28);
+  color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.4);
 }
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(138,43,226,.46);}
-.btn-ghost{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text);}
-.btn-ghost:hover{background:rgba(255,255,255,.09);border-color:var(--border-h);}
-.btn-xl{padding:13px 30px;font-size:.95rem;border-radius:var(--r-xl);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(138,43,226,.6);}
+.btn-ghost{
+  background:rgba(255,255,255,.02);
+  border-color:rgba(255,255,255,.12);
+  color:var(--text);
+}
+.btn-ghost:hover{background:rgba(255,255,255,.06);}
 
-.main{
-  grid-row:2;display:grid;grid-template-columns:1fr 1px 420px;overflow:hidden;
+/* Pulse / Glow */
+.btn-pulse{
+  position:relative;
+  box-shadow:0 0 0 0 rgba(138,43,226,.55);
+  animation:pulseGlow 2.4s ease-out infinite;
 }
-.hero-panel{
-  display:flex;flex-direction:column;justify-content:center;
-  padding:32px 44px;overflow:hidden;position:relative;
-}
-.hero-panel::after{
-  content:'';position:absolute;top:0;bottom:0;left:0;width:1px;
-  background:linear-gradient(180deg,transparent,rgba(138,43,226,.3) 30%,rgba(232,0,122,.2) 70%,transparent);
-}
-.eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  color:var(--accent);border:1px solid rgba(0,212,255,.2);
-  background:rgba(0,212,255,.05);border-radius:var(--r-full);
-  padding:5px 14px;margin-bottom:18px;font-size:.82rem;font-weight:500;
-  width:fit-content;
-}
-.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-.hero-title{font-size:clamp(1.8rem,3.2vw,3rem);font-weight:700;line-height:1.15;margin-bottom:14px;}
-.grad{background:linear-gradient(135deg,#c084fc,var(--secondary));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-.hero-sub{font-size:.95rem;color:var(--muted);line-height:1.75;margin-bottom:24px;max-width:420px;}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
-.hero-stats{display:flex;gap:22px;flex-wrap:wrap;}
-.stat-pill{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);}
-.stat-pill strong{color:var(--text);font-size:.95rem;}
-.stat-sep{width:1px;height:20px;background:var(--border);}
-
-.gutter{background:linear-gradient(180deg,transparent,rgba(138,43,226,.15) 40%,rgba(232,0,122,.1) 60%,transparent);width:1px;}
-
-.side-panel{
-  display:flex;flex-direction:column;overflow:hidden;
-  background:rgba(12,9,22,.6);border-right:1px solid var(--border);
-}
-.panel-header{padding:16px 20px 0;flex-shrink:0;}
-.panel-tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);padding-bottom:0;}
-.ptab{
-  padding:9px 16px;font-size:.8rem;font-weight:500;color:var(--muted);
-  cursor:pointer;border-bottom:2px solid transparent;
-  transition:all .2s var(--ease);white-space:nowrap;margin-bottom:-1px;
-}
-.ptab.active{color:var(--text);border-bottom-color:var(--primary);}
-.ptab:hover:not(.active){color:var(--text);}
-.panel-body{flex:1;overflow:hidden;position:relative;min-height:0;}
-.panel-view{
-  position:absolute;inset:0;padding:20px;overflow-y:auto;
-  opacity:0;transform:translateX(12px);pointer-events:none;
-  transition:opacity .26s var(--ease),transform .26s var(--ease);
-}
-.panel-view.active{opacity:1;transform:translateX(0);pointer-events:auto;}
-.panel-view::-webkit-scrollbar{width:3px;}
-.panel-view::-webkit-scrollbar-thumb{background:rgba(138,43,226,.3);border-radius:3px;}
-
-.phone-wrap{display:flex;align-items:center;justify-content:center;padding:10px 0;position:relative;}
-.phone-glow{position:absolute;inset:-30px;background:radial-gradient(circle,rgba(138,43,226,.2),transparent 60%);pointer-events:none;}
-.phone{
-  width:240px;border-radius:28px;padding:16px;
-  background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
-  border:1px solid var(--border);
-  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);
-  backdrop-filter:blur(12px);
-  animation:phoneFloat 6s ease-in-out infinite alternate;
-}
-@keyframes phoneFloat{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-.phone-notch{width:60px;height:5px;border-radius:5px;background:rgba(255,255,255,.12);margin:0 auto 18px;}
-.chat-bubble{
-  border-radius:14px 14px 4px 14px;padding:10px 12px;margin-bottom:8px;
-  font-size:.82rem;line-height:1.5;
-  background:rgba(255,255,255,.05);border:1px solid var(--border);
-}
-.chat-bubble.sent{
-  border-radius:14px 4px 14px 14px;
-  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(232,0,122,.1));
-  border-color:rgba(138,43,226,.2);
-}
-.bubble-time{font-size:.68rem;color:var(--dim);margin-top:3px;display:block;}
-.phone-bar{
-  margin-top:14px;display:flex;align-items:center;gap:7px;
-  background:rgba(0,0,0,.3);border:1px solid var(--border);
-  border-radius:var(--r-full);padding:8px 12px;color:var(--dim);font-size:.78rem;
-}
-.bar-icon{color:var(--accent);display:flex;margin-right:auto;}
-
-.feat-list{display:flex;flex-direction:column;gap:12px;}
-.feat-row{
-  display:flex;align-items:flex-start;gap:12px;
-  padding:14px;border-radius:var(--r-lg);
-  background:var(--surface);border:1px solid var(--border);
-  transition:border-color .2s var(--ease),transform .2s var(--ease);
-}
-.feat-row:hover{border-color:rgba(138,43,226,.3);transform:translateX(-3px);}
-.feat-ico{
-  width:38px;height:38px;flex-shrink:0;border-radius:var(--r-md);
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(0,212,255,.09));
-  border:1px solid rgba(138,43,226,.18);color:#c084fc;
-}
-.feat-info h4{font-size:.88rem;font-weight:600;margin-bottom:4px;}
-.feat-info p{font-size:.78rem;color:var(--muted);line-height:1.55;}
-
-.steps-list{display:flex;flex-direction:column;gap:0;}
-.step-row{display:flex;gap:14px;align-items:flex-start;padding:16px 14px;position:relative;}
-.step-row:not(:last-child)::after{
-  content:'';position:absolute;right:27px;top:52px;bottom:0;
-  width:1px;background:linear-gradient(180deg,rgba(138,43,226,.35),transparent);
-}
-.step-num{
-  width:42px;height:42px;flex-shrink:0;border-radius:50%;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:#fff;font-size:1.05rem;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 14px rgba(138,43,226,.32);position:relative;z-index:1;
-}
-.step-body h4{font-size:.9rem;font-weight:600;margin-bottom:5px;}
-.step-body p{font-size:.8rem;color:var(--muted);line-height:1.6;}
-
-.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
-.kpi{
-  padding:14px;border-radius:var(--r-lg);
-  background:var(--surface);border:1px solid var(--border);
-  text-align:center;
-}
-.kpi-val{font-size:1.4rem;font-weight:700;color:#c084fc;display:block;}
-.kpi-label{font-size:.73rem;color:var(--muted);margin-top:3px;display:block;}
-
-.panel-cta{
-  padding:14px 20px;flex-shrink:0;
-  border-top:1px solid var(--border);
-  background:rgba(0,0,0,.25);
-  display:flex;align-items:center;gap:10px;
-}
-.panel-cta a{flex:1;text-align:center;}
-.panel-cta-text{font-size:.75rem;color:var(--muted);flex-shrink:0;}
-
-.badge{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 10px;border-radius:var(--r-full);
-  font-size:.72rem;font-weight:500;
-  background:rgba(0,212,255,.08);color:var(--accent);
-  border:1px solid rgba(0,212,255,.18);
+@keyframes pulseGlow{
+  0%{box-shadow:0 0 0 0 rgba(138,43,226,.55);transform:translateY(0)}
+  70%{box-shadow:0 0 0 14px rgba(138,43,226,0);transform:translateY(-1px)}
+  100%{box-shadow:0 0 0 0 rgba(138,43,226,0);transform:translateY(0)}
 }
 
+/* Top navigation (minimal) */
+.navbar{
+  position:fixed;top:16px;inset-inline:24px;z-index:3;
+  height:46px;border-radius:999px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+  background:rgba(6,5,12,.95);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 12px 40px rgba(0,0,0,.9);
+}
+.logo{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.95rem;}
+.logo-icon{color:#c084fc;display:flex;}
+.nav-ctas{display:flex;align-items:center;gap:8px;}
+
+/* Mobile: still single-view without vertical scroll (split rows) */
 @media(max-width:960px){
-  .navbar{padding:0 16px;}
-  .shell{height:100vh;}
-  .main{display:flex;flex-direction:column;height:100%;overflow:hidden;}
-  .gutter{display:none;}
-  .hero-panel{flex:0 0 52%;padding:24px 18px 16px;justify-content:flex-start;}
-  .hero-panel::after{display:none;}
-  .side-panel{flex:1 1 0;min-height:0;border-right:none;border-top:1px solid var(--border);}
-  .nav-tabs{display:none;}
+  .shell{
+    grid-template-columns:1fr;
+    grid-template-rows:52% 48%;
+  }
+  .panel-brand{padding:26px 20px 18px;}
+  .panel-options{padding:20px 16px 18px;}
+  .options-row{grid-template-columns:1fr;gap:10px;}
+  .is-featured{transform:scale(1.01);}  
 }
 @media(max-width:640px){
-  .hero-panel{padding:20px 16px 14px;}
-  .hero-title{font-size:clamp(1.7rem,7vw,2.4rem);}
-  .btn-xl{padding:12px 24px;font-size:.9rem;}
-  .hero-stats{gap:12px;}
-  .stat-sep{display:none;}
+  .navbar{inset-inline:14px;}
+  .brand-title{font-size:clamp(1.7rem,6vw,2.1rem);}
 }
-
-.fade-in{animation:fadeIn .5s var(--ease) both;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.delay-1{animation-delay:.08s}.delay-2{animation-delay:.16s}
-.delay-3{animation-delay:.24s}.delay-4{animation-delay:.32s}
 </style>
 </head>
 <body>
 
 <div class="bg-fx"></div>
 <div class="grid-fx"></div>
-<div class="particles" id="particles"></div>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">
+    <span class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </span>
+    Whispr
+  </a>
+  <div class="nav-ctas">
+    <a href="index.html#login" class="btn btn-ghost" style="padding-inline:14px;font-size:.78rem;">دخول</a>
+    <a href="index.html#register" class="btn btn-primary" style="padding-inline:16px;font-size:.78rem;">ابدأ مجاناً</a>
+  </div>
+</nav>
 
 <div class="shell">
-
-  <nav class="navbar">
-    <a href="index.html" class="logo">
-      <span class="logo-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-      </span>
-      Whispr
-    </a>
-    <div class="nav-tabs" role="tablist">
-      <button class="nav-tab active" data-panel="preview" role="tab">معاينة</button>
-      <button class="nav-tab" data-panel="features" role="tab">المميزات</button>
-      <button class="nav-tab" data-panel="howto" role="tab">كيف يعمل</button>
-    </div>
-    <div class="nav-ctas">
-      <a href="index.html#login" class="btn btn-ghost" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">دخول</a>
-      <a href="index.html#register" class="btn btn-primary" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
-    </div>
-  </nav>
-
-  <div class="main">
-
-    <div class="hero-panel">
-      <div class="eyebrow fade-in">
-        <span class="eyebrow-dot"></span>
-        رسائل مجهولة — آمنة وسريعة
-      </div>
-      <h1 class="hero-title fade-in delay-1">
-        ماذا يقولون<br>عنك <span class="grad">بصدق؟</span>
+  <section class="panel panel-brand">
+    <div class="brand-layer-glass"></div>
+    <header class="brand-header">
+      <span class="brand-pill">منصة رسائل مجهولة</span>
+      <h1 class="brand-title">
+        اسألهم بصدق،<br>
+        <span class="brand-title-accent">واسمع كل شيء.</span>
       </h1>
-      <p class="hero-sub fade-in delay-2">
-        احصل على رابطك الخاص وشاركه مع أصدقائك. سيرسلون لك ما يريدون قوله دون أن تعرف هويتهم — صادقاً، وجريئاً، ومجاناً.
+      <p class="brand-sub">
+        رابط واحد يكشف لك ما يفكر به الجميع عنك — دون أن تعرف هويتهم، وبأعلى معايير الخصوصية.
       </p>
-      <div class="hero-actions fade-in delay-3">
-        <a href="index.html#register" class="btn btn-primary btn-xl">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          احصل على رابطك
-        </a>
-        <a href="index.html#login" class="btn btn-ghost btn-xl">دخول</a>
+      <button class="btn btn-primary btn-pulse">احصل على رابطك الآن</button>
+      <div class="brand-meta">
+        <span>مجاني 100%</span>
+        <span>بدون تتبع</span>
+        <span>يعمل على كل المنصات</span>
       </div>
-      <div class="hero-stats fade-in delay-4">
-        <div class="stat-pill"><strong>100%</strong> مجاني</div>
-        <div class="stat-sep"></div>
-        <div class="stat-pill"><strong>0</strong> تتبع للهوية</div>
-        <div class="stat-sep"></div>
-        <div class="stat-pill"><strong>فوري</strong> بدون تأخير</div>
-      </div>
+    </header>
+    <div class="brand-visual">
+      <div class="orb orb-main"></div>
+      <div class="orb orb-sub"></div>
+      <div class="grid-orbit"></div>
     </div>
+  </section>
 
-    <div class="gutter"></div>
+  <section class="panel panel-options" aria-label="خيارات الاستخدام">
+    <header class="options-header">
+      <p class="options-kicker">اختر كيف تريد استخدام Whispr</p>
+    </header>
+    <div class="options-row">
+      <article class="option-card option-a">
+        <header class="option-head">
+          <h2 class="option-title">وضع الأصدقاء</h2>
+          <p class="option-tag">تجربة اجتماعية مرحة</p>
+        </header>
+        <ul class="option-list">
+          <li>شارك رابطك مع الأصدقاء فقط.</li>
+          <li>احصل على رسائل خفيفة ومواقف مضحكة.</li>
+          <li>تحكم كامل في الحظر والردود.</li>
+        </ul>
+        <button class="btn btn-ghost">جرّبه مع الأصدقاء</button>
+      </article>
 
-    <div class="side-panel">
-      <div class="panel-header">
-        <div class="panel-tabs" role="tablist">
-          <button class="ptab active" data-view="preview" role="tab">معاينة المنتج</button>
-          <button class="ptab" data-view="features" role="tab">المميزات</button>
-          <button class="ptab" data-view="howto" role="tab">خطوات البدء</button>
-        </div>
-      </div>
+      <article class="option-card option-b is-featured" aria-label="الخيار الموصى به">
+        <div class="option-ribbon">الأكثر شعبية</div>
+        <header class="option-head">
+          <h2 class="option-title">وضع المحتوى</h2>
+          <p class="option-tag">لصنّاع المحتوى والمؤثرين</p>
+        </header>
+        <ul class="option-list">
+          <li>رابط ثابت في البايو لجميع منصاتك.</li>
+          <li>صندوق وارد منظم برسائل مجهولة عالية الجودة.</li>
+          <li>فلترة تلقائية للرسائل المزعجة أو المتكررة.</li>
+        </ul>
+        <button class="btn btn-primary btn-pulse">ابدأ بوضع المحتوى</button>
+      </article>
 
-      <div class="panel-body">
-
-        <div class="panel-view active" id="view-preview">
-          <div class="phone-wrap">
-            <div class="phone-glow"></div>
-            <div class="phone">
-              <div class="phone-notch"></div>
-              <div class="chat-bubble">
-                😂 أنت الشخص الوحيد اللي يضحكني بجد
-                <span class="bubble-time">الآن</span>
-              </div>
-              <div class="chat-bubble sent">
-                جداً، عندك شجاعة نادرة 🔥
-                <span class="bubble-time">منذ ثانيتين</span>
-              </div>
-              <div class="chat-bubble" style="opacity:.6">
-                كيف تجعلني أشعر بالتميز دائماً؟
-                <span class="bubble-time">منذ دقيقة</span>
-              </div>
-              <div class="phone-bar">
-                <span>اكتب رسالتك...</span>
-                <span class="bar-icon">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="kpi-row">
-            <div class="kpi"><span class="kpi-val">+12</span><span class="kpi-label">رسائل اليوم ✨</span></div>
-            <div class="kpi"><span class="kpi-val" style="color:var(--accent);">0</span><span class="kpi-label">هويات مكشوفة 🔒</span></div>
-            <div class="kpi"><span class="kpi-val" style="color:var(--secondary);">فوري</span><span class="kpi-label">وصول الرسائل ⚡</span></div>
-            <div class="kpi"><span class="kpi-val" style="color:#6ee7b7;">مجاني</span><span class="kpi-label">100% بدون رسوم 🎉</span></div>
-          </div>
-        </div>
-
-        <div class="panel-view" id="view-features">
-          <div class="feat-list">
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-              <div class="feat-info"><h4>رابط شخصي فوري</h4><p>احصل على <span style="color:var(--accent);font-family:monospace;font-size:.75rem;">whispr/u/اسمك</span> فور التسجيل وشاركه أينما تريد.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-              <div class="feat-info"><h4>مجهولية تامة</h4><p>لا تعرف هوية المُرسل إطلاقاً، فيحكي الناس آراءهم الحقيقية بكل حرية.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-              <div class="feat-info"><h4>ردود مجهولة</h4><p>يمكنك الرد على الرسائل بشكل مجهول دون كشف هويتك.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-              <div class="feat-info"><h4>حماية من الإزعاج</h4><p>حظر أي مُرسل مزعج بضغطة واحدة — بدون رسائل غير مرغوبة.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div class="feat-info"><h4>وصول فوري</h4><p>لا تأكيد بريد، لا إعداد معقد — سجّل وابدأ خلال ثوانٍ.</p></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel-view" id="view-howto">
-          <div class="steps-list">
-            <div class="step-row">
-              <div class="step-num">١</div>
-              <div class="step-body"><h4>سجّل حسابك</h4><p>أنشئ حسابك بالبريد الإلكتروني وكلمة مرور — مباشرة بدون تأكيد.</p></div>
-            </div>
-            <div class="step-row">
-              <div class="step-num">٢</div>
-              <div class="step-body"><h4>شارك رابطك</h4><p>انسخ رابطك الشخصي وشاركه على تويتر، سناب، واتساب — أينما تريد.</p></div>
-            </div>
-            <div class="step-row">
-              <div class="step-num">٣</div>
-              <div class="step-body"><h4>استقبل الرسائل</h4><p>اقرأ ما يقوله الناس عنك بصدق، ورد عليهم إن أردت — كل ذلك بشكل مجهول.</p></div>
-            </div>
-          </div>
-          <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid rgba(138,43,226,.2);border-radius:var(--r-lg);">
-            <div class="badge" style="margin-bottom:10px;">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              ابدأ الآن
-            </div>
-            <p style="font-size:.82rem;color:var(--muted);line-height:1.6;">جاهز تعرف رأيهم الحقيقي؟ انضم الآن واحصل على رابطك المجاني في ثوانٍ.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="panel-cta">
-        <span class="panel-cta-text">مجاني 100%</span>
-        <a href="index.html#register" class="btn btn-primary" style="flex:1;justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          احصل على رابطك الآن
-        </a>
-      </div>
-
+      <article class="option-card option-c">
+        <header class="option-head">
+          <h2 class="option-title">وضع الأسئلة العميقة</h2>
+          <p class="option-tag">للتقييم الذاتي والتغذية الراجعة</p>
+        </header>
+        <ul class="option-list">
+          <li>أرسل أسئلة مخصصة لجمهورك.</li>
+          <li>استقبل إجابات طويلة مجهولة الهوية.</li>
+          <li>صدّر الردود للتحليل لاحقاً.</li>
+        </ul>
+        <button class="btn btn-ghost">اكتشف الأسئلة العميقة</button>
+      </article>
     </div>
-
-  </div>
-
+  </section>
 </div>
 
-<script>
-(function(){
-  var c=document.getElementById('particles');
-  if(!c) return;
-  var cols=['#8a2be2','#e8007a','#00d4ff','#c084fc'];
-  for(var i=0;i<18;i++){
-    var p=document.createElement('div');
-    p.className='particle';
-    var s=Math.random()*4+2;
-    p.style.cssText='width:'+s+'px;height:'+s+'px;background:'+cols[~~(Math.random()*cols.length)]+';left:'+Math.random()*100+'%;bottom:'+Math.random()*20+'%;animation-duration:'+(Math.random()*14+8)+'s;animation-delay:'+(Math.random()*12)+'s;';
-    c.appendChild(p);
-  }
-})();
-
-document.querySelectorAll('.nav-tab').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var target=btn.dataset.panel;
-    document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    var ptab=document.querySelector('.ptab[data-view="'+target+'"]');
-    if(ptab) ptab.click();
-  });
-});
-
-document.querySelectorAll('.ptab').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var target=btn.dataset.view;
-    document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    document.querySelectorAll('.panel-view').forEach(function(v){v.classList.remove('active');});
-    var view=document.getElementById('view-'+target);
-    if(view) view.classList.add('active');
-    var ntab=document.querySelector('.nav-tab[data-panel="'+target+'"]');
-    if(ntab){
-      document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
-      ntab.classList.add('active');
-    }
-  });
-});
-</script>
 </body>
 </html>
