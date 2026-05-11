@@ -160,41 +160,6 @@
       display:flex;align-items:center;justify-content:space-between;
     }
 
-    .features,.summary{
-      display:flex;flex-direction:column;gap:14px;
-    }
-    .section-title{font-size:.86rem;font-weight:600;color:#e5e7eb;}
-    .section-sub{font-size:.8rem;color:var(--muted);}
-
-    .features-row{
-      display:grid;grid-template-columns:1fr;
-      max-width:420px;
-    }
-    .feature-card{
-      border-radius:var(--r-lg);
-      padding:16px 16px 14px;
-      background:linear-gradient(135deg,rgba(11,16,32,.82),rgba(15,23,42,.9));
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow:0 18px 50px rgba(15,23,42,.98);
-      display:flex;flex-direction:column;gap:6px;
-      backdrop-filter:blur(20px);
-      align-items:flex-start;
-    }
-    .feature-title{font-size:.95rem;font-weight:600;letter-spacing:.04em;}
-    .feature-text{font-size:.74rem;color:var(--muted);line-height:1.6;margin-top:4px;}
-
-    .summary-card{
-      border-radius:var(--r-md);
-      padding:12px 12px 10px;
-      background:rgba(11,16,32,.72);
-      border:1px solid rgba(255,255,255,.18);
-      font-size:.75rem;color:var(--muted);
-      display:flex;flex-direction:column;gap:4px;
-      backdrop-filter:blur(18px);
-      max-width:420px;
-    }
-    .summary-title{font-size:.8rem;font-weight:600;color:#e5e7eb;}
-
     @media (max-width:900px){
       .navbar{inset-inline:14px;}
       .page{padding:82px 16px 24px;gap:24px;}
@@ -203,11 +168,6 @@
       .phone{width:190px;height:320px;}
       .hero-title{font-size:clamp(1.5rem,5vw,1.9rem);}
       .hero-sub{font-size:.82rem;line-height:1.6;margin-bottom:12px;}
-      .features-row{max-width:100%;}
-      .feature-card{padding:14px 12px 12px;}
-      .feature-title{font-size:.9rem;}
-      .feature-text{font-size:.72rem;}
-      .summary-card{max-width:100%;}
     }
   </style>
 </head>
@@ -261,25 +221,6 @@
             <span>بدون اسم أو @</span>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="features" aria-label="فكرة Whispr">
-      <header>
-        <p class="section-title">ما هو Whispr؟</p>
-      </header>
-      <div class="features-row">
-        <article class="feature-card" aria-label="ملخص فكرة التطبيق">
-          <h2 class="feature-title">رابط واحد للصراحة.</h2>
-          <p class="feature-text">احصل على رابط شخصي تستقبل عبره رسائل مجهولة بصراحة كاملة، مع تحكم سهل في الحظر والحذف وإيقاف الرسائل متى شئت.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="summary" aria-label="ملخص الخصوصية وكيفية العمل">
-      <div class="summary-card">
-        <p class="summary-title">باختصار شديد.</p>
-        <p>سجّل خلال ثوانٍ، شارك رابطك، استقبل رسائل مجهولة بهوية مخفية ١٠٠٪، ومع ذلك تقدر تحذف أو توقف أو تحظر المزعجين في أي وقت.</p>
       </div>
     </section>
   </main>
