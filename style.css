@@ -296,6 +296,9 @@ textarea.form-control { min-height: 100px; }
 /* ============ View fade-in ============ */
 .view { animation: viewIn .35s var(--ease) both; display: none; }
 .view.active { display: block; }
+/* Fix: wrappers that need flex must override display:block from .view.active */
+.view.active.auth-wrapper     { display: flex; }
+.view.active.onboarding-wrapper { display: flex; }
 @keyframes viewIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
