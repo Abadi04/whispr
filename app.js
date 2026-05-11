@@ -381,11 +381,14 @@ const app = {
 
     const hash = window.location.hash.slice(1) || 'home';
 
-    // FIX: safe localStorage check — treat errors or missing storage as "done"
-    let onboardingDone = true;
-    try { onboardingDone = !!ls.get('whispr_onboarding_done'); } catch { onboardingDone = true; }
+    // Onboarding check: skip if user is logged in, or visiting a profile/auth page
+    const skipOnboarding = state.currentUser ||
+      ['onboarding','login','register'].includes(hash) ||
+      hash.startsWith('u/');
 
-    if (!onboardingDone && !['onboarding','login','register'].includes(hash) && !hash.startsWith('u/')) {
+    const onboardingDone = skipOnboarding || ls.get('whispr_onboarding_done') === '1';
+
+    if (!onboardingDone) {
       window.location.hash = 'onboarding';
       return;
     }
