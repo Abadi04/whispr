@@ -121,66 +121,70 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
 /* RIGHT · Decision Engine (Features of anonymous messaging) */
 .panel-options{
-  padding:30px 28px;
+  padding:30px 26px;
   display:flex;flex-direction:column;justify-content:center;
 }
-.options-header{margin-bottom:10px;}
+.options-header{margin-bottom:14px;}
 .options-kicker{
-  font-size:.83rem;color:var(--muted);
+  font-size:.84rem;color:var(--muted);
 }
 .options-row{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
+  display:flex;align-items:stretch;gap:14px;
+  overflow-x:auto;overflow-y:hidden;
+  padding-bottom:4px;
 }
+.options-row::-webkit-scrollbar{height:3px;}
+.options-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px;}
+
 .option-card{
-  position:relative;
-  border-radius:18px;
-  padding:14px 10px 12px;
+  flex:0 0 190px;
+  border-radius:16px;
+  padding:14px 14px 12px;
   background:radial-gradient(circle at top,rgba(255,255,255,.04),rgba(0,0,0,.9));
   border:1px solid rgba(255,255,255,.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    0 14px 32px rgba(0,0,0,.75);
-  display:flex;flex-direction:column;gap:6px;
-  transition:transform .2s var(--bounce),box-shadow .2s var(--bounce),border-color .16s var(--ease);
+  box-shadow:0 14px 32px rgba(0,0,0,.75);
+  display:flex;flex-direction:column;gap:8px;
+  transition:transform .18s var(--bounce),box-shadow .18s var(--bounce),border-color .16s var(--ease);
 }
 .option-card:hover{
   transform:translateY(-3px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    0 22px 60px rgba(0,0,0,.95);
-  border-color:rgba(255,255,255,.16);
+  box-shadow:0 22px 60px rgba(0,0,0,.95);
+  border-color:rgba(255,255,255,.18);
 }
-.option-head{display:flex;flex-direction:column;gap:2px;}
-.option-title{font-size:.86rem;font-weight:600;}
-.option-tag{font-size:.74rem;color:var(--muted);}
-.option-list{
-  list-style:none;font-size:.72rem;color:var(--muted);
-  display:flex;flex-direction:column;gap:2px;padding:0;margin:2px 0 6px;
-}
-.option-list li::before{
-  content:"•";margin-left:3px;color:var(--accent);
-}
-
-/* Featured core promise (B) as central note */
-.is-featured{
-  transform:scale(1.04) rotate(-1.5deg);
+.option-card.primary{
+  flex-basis:210px;
+  background:radial-gradient(circle at top,rgba(138,43,226,.32),rgba(12,10,24,.95));
   border-color:rgba(138,43,226,.7);
-  box-shadow:
-    0 0 0 1px rgba(138,43,226,.65),
-    0 26px 70px rgba(138,43,226,.5);
+  box-shadow:0 26px 80px rgba(138,43,226,.55);
 }
-.option-a{transform:rotate(1.2deg);} 
-.option-c{transform:rotate(-1.2deg);} 
-.option-card:hover.option-a{transform:translateY(-3px) rotate(1.2deg);} 
-.option-card:hover.option-c{transform:translateY(-3px) rotate(-1.2deg);} 
 
-.option-ribbon{
-  position:absolute;top:8px;left:10px;
-  padding:2px 8px;border-radius:999px;
-  font-size:.68rem;font-weight:600;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.7);
+.option-icon{
+  width:32px;height:32px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--accent);
+}
+.option-card.primary .option-icon{
+  background:rgba(0,0,0,.45);
+  border-color:rgba(0,0,0,.7);
+  color:#c4b5fd;
+}
+
+.option-title{font-size:.86rem;font-weight:600;}
+.option-text{font-size:.75rem;color:var(--muted);line-height:1.6;}
+.option-chip{
+  align-self:flex-start;
+  margin-top:2px;
+  padding:3px 8px;border-radius:999px;
+  font-size:.68rem;font-weight:500;color:var(--accent);
+  background:rgba(0,212,255,.07);
+  border:1px solid rgba(0,212,255,.18);
+}
+.option-card.primary .option-chip{
+  color:#f9fafb;
+  background:rgba(0,0,0,.35);
+  border-color:rgba(255,255,255,.16);
 }
 
 /* Buttons */
@@ -229,7 +233,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .logo-icon{color:#c084fc;display:flex;}
 .nav-ctas{display:flex;align-items:center;gap:8px;}
 
-/* Mobile: allow vertical scroll, keep 3 "note" bubbles side-by-side */
+/* Mobile */
 @media(max-width:960px){
   html,body{height:auto;min-height:100vh;overflow-y:auto;}
   .shell{
@@ -238,10 +242,8 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     height:auto;min-height:100vh;
   }
   .panel-brand{padding:26px 20px 18px;}
-  .panel-options{padding:18px 10px 26px;}
-  .options-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
-  .option-card{padding:12px 8px 10px;}
-  .is-featured{transform:scale(1.02) rotate(-1.5deg);}  
+  .panel-options{padding:18px 12px 26px;}
+  .option-card{flex-basis:170px;padding:12px 10px 10px;}
 }
 @media(max-width:640px){
   .navbar{inset-inline:14px;}
@@ -297,44 +299,34 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
   <section class="panel panel-options" aria-label="مميزات الرسائل المجهولة في Whispr">
     <header class="options-header">
-      <p class="options-kicker">ثلاثة أشياء تحصل عليها من أول رسالة.</p>
+      <p class="options-kicker">ثلاث رسائل أساسية يضمنها لك Whispr من أول يوم.</p>
     </header>
     <div class="options-row">
-      <article class="option-card option-a">
-        <header class="option-head">
-          <h2 class="option-title">رسالة صادقة</h2>
-          <p class="option-tag">كلام حقيقي بدون مجاملة.</p>
-        </header>
-        <ul class="option-list">
-          <li>يكتب لك ما يشعر به فعلاً بلا اسم.</li>
-          <li>تكتشف صورتك عند الناس كما هي.</li>
-        </ul>
-        <button class="btn btn-ghost">مثال على رسالة</button>
+      <article class="option-card">
+        <div class="option-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l9-16H3z"/></svg>
+        </div>
+        <h2 class="option-title">صدق مباشر</h2>
+        <p class="option-text">كل رسالة تُكتب بدون اسم، فتسمع رأيهم كما هو.</p>
+        <span class="option-chip">للصورة الحقيقية عنك</span>
       </article>
 
-      <article class="option-card option-b is-featured" aria-label="وعد الخصوصية في Whispr">
-        <div class="option-ribbon">جوهر Whispr</div>
-        <header class="option-head">
-          <h2 class="option-title">هوية مخفية</h2>
-          <p class="option-tag">نستقبل النص فقط، لا شيء غيره.</p>
-        </header>
-        <ul class="option-list">
-          <li>لا بريد، لا اسم مستخدم، لا صورة.</li>
-          <li>الرسالة تصل ككلمات فقط داخل صندوقك.</li>
-        </ul>
-        <button class="btn btn-primary btn-pulse">ابدأ باستقبال الرسائل</button>
+      <article class="option-card primary" aria-label="وعد الخصوصية في Whispr">
+        <div class="option-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7S3.732 16.057 2.458 12z"/></svg>
+        </div>
+        <h2 class="option-title">هوية مخفية دائماً</h2>
+        <p class="option-text">لا بريد، لا حساب، لا صورة — النص فقط يصل لصندوقك.</p>
+        <span class="option-chip">جوهر Whispr</span>
       </article>
 
-      <article class="option-card option-c">
-        <header class="option-head">
-          <h2 class="option-title">تحكم سريع</h2>
-          <p class="option-tag">بضغطة واحدة تتحكم بكل شيء.</p>
-        </header>
-        <ul class="option-list">
-          <li>إيقاف استقبال الرسائل متى شئت.</li>
-          <li>حذف أو تجاهل أي رسالة فوراً.</li>
-        </ul>
-        <button class="btn btn-ghost">شاهد أدوات التحكم</button>
+      <article class="option-card">
+        <div class="option-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h13"/><path d="M12 5l7 7-7 7"/></svg>
+        </div>
+        <h2 class="option-title">تحكم فوري</h2>
+        <p class="option-text">أوقف استقبال الرسائل أو احذفها في ثانية واحدة.</p>
+        <span class="option-chip">أنت من يحدد الحدود</span>
       </article>
     </div>
   </section>
