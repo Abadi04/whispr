@@ -71,18 +71,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 }
 .logo{display:flex;align-items:center;gap:9px;font-size:1.2rem;font-weight:700;letter-spacing:-.3px;}
 .logo-icon{color:#c084fc;display:flex;flex-shrink:0;}
-.nav-tabs{
-  display:flex;gap:4px;margin:0 auto;
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:var(--r-full);padding:4px;
-}
-.nav-tab{
-  padding:6px 18px;border-radius:var(--r-full);
-  font-size:.83rem;font-weight:500;color:var(--muted);
-  transition:all .22s var(--ease);cursor:pointer;white-space:nowrap;
-}
-.nav-tab.active{background:rgba(138,43,226,.22);color:var(--text);border:1px solid rgba(138,43,226,.3);}
-.nav-tab:hover:not(.active){background:rgba(255,255,255,.06);color:var(--text);}
+.nav-spacer{margin-inline:auto;}
 .nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
 .btn{
@@ -105,7 +94,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .main{
   grid-row:2;
   display:grid;
-  grid-template-columns:1fr 1px 420px;
+  grid-template-columns:1.1fr 420px;
   overflow:hidden;
 }
 
@@ -144,46 +133,17 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .stat-pill strong{color:var(--text);font-size:.95rem;}
 .stat-sep{width:1px;height:20px;background:var(--border);}
 
-.gutter{background:linear-gradient(180deg,transparent,rgba(138,43,226,.15) 40%,rgba(232,0,122,.1) 60%,transparent);width:1px;}
-
 .side-panel{
   display:flex;flex-direction:column;
-  overflow:hidden;background:rgba(12,9,22,.6);
+  padding:24px 24px 20px;
+  background:rgba(12,9,22,.86);
   border-right:1px solid var(--border);
 }
-
-.panel-header{
-  padding:16px 20px 0;flex-shrink:0;
-}
-.panel-tabs{
-  display:flex;gap:2px;
-  border-bottom:1px solid var(--border);
-  padding-bottom:0;
-}
-.ptab{
-  padding:9px 16px;font-size:.8rem;font-weight:500;color:var(--muted);
-  cursor:pointer;border-bottom:2px solid transparent;
-  transition:all .2s var(--ease);white-space:nowrap;
-  margin-bottom:-1px;
-}
-.ptab.active{color:var(--text);border-bottom-color:var(--primary);}
-.ptab:hover:not(.active){color:var(--text);}
-
-.panel-body{
-  flex:1;overflow:hidden;position:relative;
-}
-.panel-view{
-  position:absolute;inset:0;padding:20px;overflow-y:auto;
-  opacity:0;transform:translateX(12px);pointer-events:none;
-  transition:opacity .28s var(--ease),transform .28s var(--ease);
-}
-.panel-view.active{opacity:1;transform:translateX(0);pointer-events:auto;}
-.panel-view::-webkit-scrollbar{width:3px;}
-.panel-view::-webkit-scrollbar-thumb{background:rgba(138,43,226,.3);border-radius:3px;}
+.side-top{flex:1;display:flex;flex-direction:column;gap:18px;align-items:stretch;justify-content:flex-start;}
 
 .phone-wrap{
   display:flex;align-items:center;justify-content:center;
-  padding:10px 0;position:relative;
+  padding:6px 0 4px;position:relative;
 }
 .phone-glow{
   position:absolute;inset:-30px;
@@ -218,78 +178,48 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 }
 .bar-icon{color:var(--accent);display:flex;margin-right:auto;}
 
-.feat-list{display:flex;flex-direction:column;gap:12px;}
-.feat-row{
-  display:flex;align-items:flex-start;gap:12px;
-  padding:14px;border-radius:var(--r-lg);
-  background:var(--surface);border:1px solid var(--border);
-  transition:border-color .2s var(--ease),transform .2s var(--ease);
+.auth-card{
+  margin-top:6px;
+  border-radius:var(--r-xl);
+  padding:18px 18px 14px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  box-shadow:0 18px 40px rgba(0,0,0,.7);
 }
-.feat-row:hover{border-color:rgba(138,43,226,.3);transform:translateX(-3px);}
-.feat-ico{
-  width:38px;height:38px;flex-shrink:0;border-radius:var(--r-md);
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(0,212,255,.09));
-  border:1px solid rgba(138,43,226,.18);color:#c084fc;
+.auth-title{font-size:1.02rem;font-weight:700;margin-bottom:8px;}
+.auth-sub{font-size:.8rem;color:var(--muted);margin-bottom:14px;line-height:1.6;}
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px;}
+.field input{
+  width:100%;padding:8px 10px;border-radius:10px;
+  border:1px solid rgba(51,65,85,.9);
+  background:#020617;color:var(--text);
+  font-size:.82rem;font-family:var(--font);
+  outline:none;transition:border-color .16s var(--ease),box-shadow .16s var(--ease),background .16s var(--ease);
 }
-.feat-info h4{font-size:.88rem;font-weight:600;margin-bottom:4px;}
-.feat-info p{font-size:.78rem;color:var(--muted);line-height:1.55;}
+.field input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 1px rgba(29,155,240,.7);
+  background:#020617;
+}
+.auth-divider{display:flex;align-items:center;gap:8px;margin:10px 0 8px;font-size:.78rem;color:var(--muted-soft);}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:rgba(51,65,85,.8);}
+.switcher{font-size:.78rem;color:var(--muted-soft);margin-top:8px;}
+.switcher a{color:var(--accent);}
+.hint{font-size:.75rem;color:var(--muted-soft);margin-top:8px;line-height:1.5;}
 
-.steps-list{display:flex;flex-direction:column;gap:0;}
-.step-row{
-  display:flex;gap:14px;align-items:flex-start;
-  padding:16px 14px;position:relative;
-}
-.step-row:not(:last-child)::after{
-  content:'';position:absolute;right:27px;top:52px;bottom:0;
-  width:1px;background:linear-gradient(180deg,rgba(138,43,226,.35),transparent);
-}
-.step-num{
-  width:42px;height:42px;flex-shrink:0;border-radius:50%;
-  background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:#fff;font-size:1.05rem;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 14px rgba(138,43,226,.32);position:relative;z-index:1;
-}
-.step-body h4{font-size:.9rem;font-weight:600;margin-bottom:5px;}
-.step-body p{font-size:.8rem;color:var(--muted);line-height:1.6;}
-
-.kpi-row{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-  margin-top:16px;
-}
-.kpi{
-  padding:14px;border-radius:var(--r-lg);
-  background:var(--surface);border:1px solid var(--border);
-  text-align:center;
-}
-.kpi-val{font-size:1.4rem;font-weight:700;color:#c084fc;display:block;}
-.kpi-label{font-size:.73rem;color:var(--muted);margin-top:3px;display:block;}
-
-.panel-cta{
-  padding:14px 20px;flex-shrink:0;
-  border-top:1px solid var(--border);
-  background:rgba(0,0,0,.25);
-  display:flex;align-items:center;gap:10px;
-}
-.panel-cta a{flex:1;text-align:center;}
-.panel-cta-text{font-size:.75rem;color:var(--muted);flex-shrink:0;}
-
-.badge{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 10px;border-radius:var(--r-full);
-  font-size:.72rem;font-weight:500;
-  background:rgba(0,212,255,.08);color:var(--accent);
-  border:1px solid rgba(0,212,255,.18);
+.footer{
+  grid-column:1/-1;
+  padding:10px 24px 16px;
+  font-size:.7rem;color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;
 }
 
 @media(max-width:960px){
   .main{grid-template-columns:1fr;}
-  .gutter{display:none;}
-  .side-panel{display:none;}
+  .side-panel{border-right:none;border-top:1px solid var(--border);padding:20px 20px 18px;}
   .hero-panel{padding:28px 24px;justify-content:flex-start;padding-top:36px;}
   .hero-panel::after{display:none;}
-  .nav-tabs{display:none;}
   html,body{overflow:auto;}
   .shell{height:auto;overflow:visible;}
   .main{height:auto;}
@@ -302,6 +232,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   .btn-xl{padding:12px 24px;font-size:.9rem;}
   .hero-stats{gap:12px;}
   .stat-sep{display:none;}
+  .side-panel{padding:18px 16px 16px;}
 }
 
 .fade-in{animation:fadeIn .5s var(--ease) both;}
@@ -327,14 +258,10 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
       </span>
       Whispr
     </a>
-    <div class="nav-tabs" role="tablist">
-      <button class="nav-tab active" data-panel="preview" role="tab">معاينة</button>
-      <button class="nav-tab" data-panel="features" role="tab">المميزات</button>
-      <button class="nav-tab" data-panel="howto" role="tab">كيف يعمل</button>
-    </div>
+    <div class="nav-spacer"></div>
     <div class="nav-ctas">
-      <a href="index.html#login" class="btn btn-ghost" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">دخول</a>
-      <a href="index.html#register" class="btn btn-primary" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
+      <a href="#" class="btn btn-ghost" onclick="switchForm('login');return false;" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">دخول</a>
+      <a href="#" class="btn btn-primary" onclick="switchForm('register');return false;" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
     </div>
   </nav>
 
@@ -352,11 +279,11 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
         احصل على رابطك الخاص وشاركه مع أصدقائك. سيرسلون لك ما يريدون قوله دون أن تعرف هويتهم — صادقاً، وجريئاً، ومجاناً.
       </p>
       <div class="hero-actions fade-in delay-3">
-        <a href="index.html#register" class="btn btn-primary btn-xl">
+        <a href="#" class="btn btn-primary btn-xl" onclick="switchForm('register');return false;">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           احصل على رابطك
         </a>
-        <a href="index.html#login" class="btn btn-ghost btn-xl">دخول</a>
+        <a href="#" class="btn btn-ghost btn-xl" onclick="switchForm('login');return false;">دخول</a>
       </div>
       <div class="hero-stats fade-in delay-4">
         <div class="stat-pill"><strong>100%</strong> مجاني</div>
@@ -367,113 +294,87 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
       </div>
     </div>
 
-    <div class="gutter"></div>
-
-    <div class="side-panel">
-      <div class="panel-header">
-        <div class="panel-tabs" role="tablist">
-          <button class="ptab active" data-view="preview" role="tab">معاينة المنتج</button>
-          <button class="ptab" data-view="features" role="tab">المميزات</button>
-          <button class="ptab" data-view="howto" role="tab">خطوات البدء</button>
+    <aside class="side-panel" aria-label="معاينة المنتج ونموذج التسجيل">
+      <div class="side-top">
+        <div class="phone-wrap" aria-hidden="true">
+          <div class="phone-glow"></div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="chat-bubble">
+              😂 أنت الشخص الوحيد اللي يضحكني بجد
+              <span class="bubble-time">الآن</span>
+            </div>
+            <div class="chat-bubble sent">
+              جداً، عندك شجاعة نادرة 🔥
+              <span class="bubble-time">منذ ثانيتين</span>
+            </div>
+            <div class="chat-bubble" style="opacity:.6">
+              كيف تجعلني أشعر بالتميز دائماً؟
+              <span class="bubble-time">منذ دقيقة</span>
+            </div>
+            <div class="phone-bar">
+              <span>اكتب رسالتك...</span>
+              <span class="bar-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+              </span>
+            </div>
+          </div>
         </div>
+
+        <div class="auth-card" id="form-login" style="display:block;">
+          <h2 class="auth-title">تسجيل دخول</h2>
+          <p class="auth-sub">ادخل إلى حسابك لمتابعة رسائلك المجهولة والرد عليها.</p>
+          <form>
+            <div class="field">
+              <label for="login-email">البريد الإلكتروني</label>
+              <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+              <label for="login-password">كلمة المرور</label>
+              <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px;">تسجيل دخول</button>
+          </form>
+          <div class="auth-divider">أو</div>
+          <button class="btn btn-ghost" style="width:100%;" onclick="switchForm('register');return false;">إنشاء حساب جديد</button>
+          <p class="switcher">ليس لديك حساب؟ <a href="#" onclick="switchForm('register');return false;">ابدأ الآن مجاناً</a></p>
+        </div>
+
+        <div class="auth-card" id="form-register" style="display:none;">
+          <h2 class="auth-title">إنشاء حساب جديد</h2>
+          <p class="auth-sub">ابدأ خلال ثوانٍ واحصل على رابطك الشخصي لاستقبال الرسائل المجهولة.</p>
+          <form>
+            <div class="field">
+              <label for="reg-name">الاسم الظاهر</label>
+              <input id="reg-name" type="text" autocomplete="name" placeholder="الاسم الذي سيظهر في رابطك" required>
+            </div>
+            <div class="field">
+              <label for="reg-handle">اسم المستخدم</label>
+              <input id="reg-handle" type="text" autocomplete="username" placeholder="username" required>
+            </div>
+            <div class="field">
+              <label for="reg-email">البريد الإلكتروني</label>
+              <input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+              <label for="reg-password">كلمة المرور</label>
+              <input id="reg-password" type="password" autocomplete="new-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:4px;">إنشاء حساب</button>
+          </form>
+          <p class="switcher">لديك حساب بالفعل؟ <a href="#" onclick="switchForm('login');return false;">تسجيل دخول</a></p>
+        </div>
+
+        <p class="hint">لن نعرض بريدك أو اسمك للمرسلين، ويمكنك حذف حسابك أو إيقاف استقبال الرسائل في أي وقت.</p>
       </div>
-
-      <div class="panel-body">
-
-        <div class="panel-view active" id="view-preview">
-          <div class="phone-wrap">
-            <div class="phone-glow"></div>
-            <div class="phone">
-              <div class="phone-notch"></div>
-              <div class="chat-bubble">
-                😂 أنت الشخص الوحيد اللي يضحكني بجد
-                <span class="bubble-time">الآن</span>
-              </div>
-              <div class="chat-bubble sent">
-                جداً، عندك شجاعة نادرة 🔥
-                <span class="bubble-time">منذ ثانيتين</span>
-              </div>
-              <div class="chat-bubble" style="opacity:.6">
-                كيف تجعلني أشعر بالتميز دائماً؟
-                <span class="bubble-time">منذ دقيقة</span>
-              </div>
-              <div class="phone-bar">
-                <span>اكتب رسالتك...</span>
-                <span class="bar-icon">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="kpi-row">
-            <div class="kpi"><span class="kpi-val">+12</span><span class="kpi-label">رسائل اليوم ✨</span></div>
-            <div class="kpi"><span class="kpi-val" style="color:var(--accent);">0</span><span class="kpi-label">هويات مكشوفة 🔒</span></div>
-            <div class="kpi"><span class="kpi-val" style="color:var(--secondary);">فوري</span><span class="kpi-label">وصول الرسائل ⚡</span></div>
-            <div class="kpi"><span class="kpi-val" style="color:#6ee7b7;">مجاني</span><span class="kpi-label">100% بدون رسوم 🎉</span></div>
-          </div>
-        </div>
-
-        <div class="panel-view" id="view-features">
-          <div class="feat-list">
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
-              <div class="feat-info"><h4>رابط شخصي فوري</h4><p>احصل على <span style="color:var(--accent);font-family:monospace;font-size:.75rem;">whispr/u/اسمك</span> فور التسجيل وشاركه أينما تريد.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-              <div class="feat-info"><h4>مجهولية تامة</h4><p>لا تعرف هوية المُرسل إطلاقاً، فيحكي الناس آراءهم الحقيقية بكل حرية.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-              <div class="feat-info"><h4>ردود مجهولة</h4><p>يمكنك الرد على الرسائل بشكل مجهول دون كشف هويتك.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-              <div class="feat-info"><h4>حماية من الإزعاج</h4><p>حظر أي مُرسل مزعج بضغطة واحدة — بدون رسائل غير مرغوبة.</p></div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div class="feat-info"><h4>وصول فوري</h4><p>لا تأكيد بريد، لا إعداد معقد — سجّل وابدأ خلال ثوانٍ.</p></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel-view" id="view-howto">
-          <div class="steps-list">
-            <div class="step-row">
-              <div class="step-num">١</div>
-              <div class="step-body"><h4>سجّل حسابك</h4><p>أنشئ حسابك بالبريد الإلكتروني وكلمة مرور — مباشرة بدون تأكيد.</p></div>
-            </div>
-            <div class="step-row">
-              <div class="step-num">٢</div>
-              <div class="step-body"><h4>شارك رابطك</h4><p>انسخ رابطك الشخصي وشاركه على تويتر، سناب، واتساب — أينما تريد.</p></div>
-            </div>
-            <div class="step-row">
-              <div class="step-num">٣</div>
-              <div class="step-body"><h4>استقبل الرسائل</h4><p>اقرأ ما يقوله الناس عنك بصدق، ورد عليهم إن أردت — كل ذلك بشكل مجهول.</p></div>
-            </div>
-          </div>
-          <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid rgba(138,43,226,.2);border-radius:var(--r-lg);">
-            <div class="badge" style="margin-bottom:10px;">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              ابدأ الآن
-            </div>
-            <p style="font-size:.82rem;color:var(--muted);line-height:1.6;">جاهز تعرف رأيهم الحقيقي؟ انضم الآن واحصل على رابطك المجاني في ثوانٍ.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="panel-cta">
-        <span class="panel-cta-text">مجاني 100%</span>
-        <a href="index.html#register" class="btn btn-primary" style="flex:1;justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          احصل على رابطك الآن
-        </a>
-      </div>
-    </div>
+    </aside>
 
   </div>
+
+  <footer class="footer" aria-label="معلومات إضافية">
+    <span>© 2026 Whispr</span>
+    <span>تجربة تسجيل مستوحاة من تويتر، لكن بهوية Whispr الكاملة.</span>
+  </footer>
 </div>
 
 <script>
@@ -489,31 +390,17 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   }
 })();
 
-document.querySelectorAll('.nav-tab').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var target=btn.dataset.panel;
-    document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    var ptab=document.querySelector('.ptab[data-view="'+target+'"]');
-    if(ptab) ptab.click();
-  });
-});
-
-document.querySelectorAll('.ptab').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var target=btn.dataset.view;
-    document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
-    btn.classList.add('active');
-    document.querySelectorAll('.panel-view').forEach(function(v){v.classList.remove('active');});
-    var view=document.getElementById('view-'+target);
-    if(view) view.classList.add('active');
-    var ntab=document.querySelector('.nav-tab[data-panel="'+target+'"]');
-    if(ntab){
-      document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
-      ntab.classList.add('active');
-    }
-  });
-});
+function switchForm(target){
+  var login=document.getElementById('form-login');
+  var register=document.getElementById('form-register');
+  if(target==='register'){
+    login.style.display='none';
+    register.style.display='block';
+  }else{
+    login.style.display='block';
+    register.style.display='none';
+  }
+}
 </script>
 </body>
 </html>
