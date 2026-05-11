@@ -1,682 +1,519 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Whispr — رسائل مجهولة بلا حدود</title>
-  <meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني." />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Whispr — رسائل مجهولة بلا حدود</title>
+<meta name="description" content="احصل على رابطك الشخصي وابدأ تلقّي رسائل مجهولة من أي شخص. سريع، آمن، ومجاني."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09070f;--surface:rgba(22,16,38,.78);--surface-2:rgba(28,20,46,.9);
+  --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.16);
+  --primary:#8a2be2;--primary-h:#9d4edd;--secondary:#e8007a;--accent:#00d4ff;
+  --text:#f1f0f5;--muted:#8b8fa8;--dim:#5a5e75;
+  --r-xl:20px;--r-lg:14px;--r-md:10px;--r-sm:7px;--r-full:9999px;
+  --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
+  --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+  --nav-h:58px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{overflow:hidden;height:100%;}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;
+}
+a{text-decoration:none;color:inherit;}
+button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+.bg-fx{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 55%,rgba(138,43,226,.16),transparent 42%),
+    radial-gradient(circle at 85% 20%,rgba(232,0,122,.12),transparent 40%),
+    radial-gradient(circle at 50% 95%,rgba(0,212,255,.06),transparent 48%);
+  animation:bgFx 20s ease-in-out infinite alternate;
+}
+@keyframes bgFx{from{opacity:.8;transform:scale(1)}to{opacity:1;transform:scale(1.05)}}
+.grid-fx{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:56px 56px;
+}
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.particle{position:absolute;border-radius:50%;opacity:0;animation:floatUp linear infinite;}
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(1);opacity:0}
+  10%{opacity:.35}90%{opacity:.35}
+  100%{transform:translateY(-100vh) scale(0);opacity:0}
+}
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+.shell{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-rows:var(--nav-h) 1fr;
+  height:100vh;width:100vw;
+  overflow:hidden;
+}
 
-  <style>
-    /* ── Tokens ── */
-    :root {
-      --bg:        #09070f;
-      --surface:   rgba(22,16,38,0.72);
-      --border:    rgba(255,255,255,0.08);
-      --border-h:  rgba(255,255,255,0.18);
-      --primary:   #8a2be2;
-      --primary-h: #9d4edd;
-      --secondary: #e8007a;
-      --accent:    #00d4ff;
-      --text:      #f1f0f5;
-      --muted:     #8b8fa8;
-      --dim:       #5a5e75;
-      --r-xl: 20px; --r-lg: 14px; --r-md: 10px; --r-full: 9999px;
-      --ease:   cubic-bezier(0.25,0.8,0.25,1);
-      --bounce: cubic-bezier(0.34,1.56,0.64,1);
-      --font: 'IBM Plex Sans Arabic', system-ui, sans-serif;
-    }
+.navbar{
+  grid-row:1;
+  display:flex;align-items:center;
+  padding:0 28px;
+  background:rgba(9,7,15,.75);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 1px 0 rgba(255,255,255,.04);
+  gap:16px;
+}
+.logo{display:flex;align-items:center;gap:9px;font-size:1.2rem;font-weight:700;letter-spacing:-.3px;}
+.logo-icon{color:#c084fc;display:flex;flex-shrink:0;}
+.nav-tabs{
+  display:flex;gap:4px;margin:0 auto;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:4px;
+}
+.nav-tab{
+  padding:6px 18px;border-radius:var(--r-full);
+  font-size:.83rem;font-weight:500;color:var(--muted);
+  transition:all .22s var(--ease);cursor:pointer;white-space:nowrap;
+}
+.nav-tab.active{background:rgba(138,43,226,.22);color:var(--text);border:1px solid rgba(138,43,226,.3);}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.06);color:var(--text);}
+.nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 
-    /* ── Reset ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; overflow-x: hidden; }
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    a { text-decoration: none; color: inherit; }
-    img { display: block; max-width: 100%; }
-    button { font-family: var(--font); cursor: pointer; border: none; background: none; }
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 20px;border-radius:var(--r-lg);
+  font-family:var(--font);font-size:.875rem;font-weight:600;
+  border:1px solid transparent;
+  transition:all .22s var(--bounce);
+  position:relative;overflow:hidden;white-space:nowrap;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;box-shadow:0 3px 14px rgba(138,43,226,.28);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(138,43,226,.46);}
+.btn-ghost{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text);}
+.btn-ghost:hover{background:rgba(255,255,255,.09);border-color:var(--border-h);}
+.btn-xl{padding:13px 30px;font-size:.95rem;border-radius:var(--r-xl);}
 
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: rgba(138,43,226,.35); border-radius: 4px; }
+.main{
+  grid-row:2;
+  display:grid;
+  grid-template-columns:1fr 1px 420px;
+  overflow:hidden;
+}
 
-    /* ── Background ── */
-    .bg-layer {
-      position: fixed; inset: 0; z-index: -2; pointer-events: none;
-      background:
-        radial-gradient(circle at 18% 50%, rgba(138,43,226,.18), transparent 45%),
-        radial-gradient(circle at 82% 25%, rgba(232,0,122,.14), transparent 42%),
-        radial-gradient(circle at 50% 90%, rgba(0,212,255,.07), transparent 50%);
-      animation: bgPulse 18s ease-in-out infinite alternate;
-    }
-    @keyframes bgPulse {
-      from { opacity:.85; transform:scale(1); }
-      to   { opacity:1;   transform:scale(1.06); }
-    }
-    .grid-overlay {
-      position: fixed; inset: 0; z-index: -1; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
-      background-size: 60px 60px;
-    }
+.hero-panel{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:32px 44px;overflow:hidden;
+  position:relative;
+}
+.hero-panel::after{
+  content:'';position:absolute;top:0;bottom:0;left:0;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(138,43,226,.3) 30%,rgba(232,0,122,.2) 70%,transparent);
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--accent);border:1px solid rgba(0,212,255,.2);
+  background:rgba(0,212,255,.05);border-radius:var(--r-full);
+  padding:5px 14px;margin-bottom:18px;font-size:.82rem;font-weight:500;
+  width:fit-content;
+}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
-    /* ── Particles ── */
-    .particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-    .particle {
-      position: absolute; border-radius: 50%; opacity: 0;
-      animation: floatUp linear infinite;
-    }
-    @keyframes floatUp {
-      0%   { transform: translateY(0) scale(1); opacity: 0; }
-      10%  { opacity: .4; }
-      90%  { opacity: .4; }
-      100% { transform: translateY(-100vh) scale(0); opacity: 0; }
-    }
+.hero-title{
+  font-size:clamp(1.8rem,3.2vw,3rem);
+  font-weight:700;line-height:1.15;margin-bottom:14px;
+}
+.grad{
+  background:linear-gradient(135deg,#c084fc,var(--secondary));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{font-size:.95rem;color:var(--muted);line-height:1.75;margin-bottom:24px;max-width:420px;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
 
-    /* ── Navbar ── */
-    .navbar {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      padding: 16px 0;
-      background: rgba(9,7,15,.7);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      transition: padding .25s var(--ease), box-shadow .25s var(--ease);
-    }
-    .navbar.scrolled { padding: 10px 0; box-shadow: 0 4px 28px rgba(0,0,0,.5); }
-    .nav-inner {
-      max-width: 1100px; margin: 0 auto; padding: 0 28px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 1.3rem; font-weight: 700; color: var(--text);
-    }
-    .logo-icon { color: #c084fc; display: flex; }
-    .nav-ctas { display: flex; align-items: center; gap: 10px; }
+.hero-stats{display:flex;gap:22px;flex-wrap:wrap;}
+.stat-pill{display:flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted);}
+.stat-pill strong{color:var(--text);font-size:.95rem;}
+.stat-sep{width:1px;height:20px;background:var(--border);}
 
-    /* ── Buttons ── */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 11px 22px; border-radius: var(--r-lg);
-      font-family: var(--font); font-size: .93rem; font-weight: 600;
-      border: 1px solid transparent;
-      transition: all .22s var(--bounce);
-      position: relative; overflow: hidden; white-space: nowrap;
-    }
-    .btn::after {
-      content: ''; position: absolute; inset: 0; border-radius: inherit;
-      background: rgba(255,255,255,.1); opacity: 0; transition: opacity .3s;
-    }
-    .btn:active::after { opacity: 1; }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #fff; box-shadow: 0 4px 18px rgba(138,43,226,.3);
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 7px 26px rgba(138,43,226,.48); }
-    .btn-ghost {
-      background: rgba(255,255,255,.05);
-      border-color: var(--border); color: var(--text);
-    }
-    .btn-ghost:hover { background: rgba(255,255,255,.09); border-color: var(--border-h); }
-    .btn-lg { padding: 14px 32px; font-size: 1rem; border-radius: var(--r-xl); }
-    .btn-outline-accent {
-      background: transparent;
-      border-color: rgba(0,212,255,.35); color: var(--accent);
-    }
-    .btn-outline-accent:hover { background: rgba(0,212,255,.07); border-color: var(--accent); }
+.gutter{background:linear-gradient(180deg,transparent,rgba(138,43,226,.15) 40%,rgba(232,0,122,.1) 60%,transparent);width:1px;}
 
-    /* ── Container ── */
-    .container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+.side-panel{
+  display:flex;flex-direction:column;
+  overflow:hidden;background:rgba(12,9,22,.6);
+  border-right:1px solid var(--border);
+}
 
-    /* ── Hero ── */
-    .hero {
-      min-height: 100vh; display: flex; align-items: center;
-      padding: 120px 0 80px;
-    }
-    .hero-grid {
-      display: grid; grid-template-columns: 1fr 420px;
-      gap: 60px; align-items: center;
-    }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      color: var(--accent); border: 1px solid rgba(0,212,255,.22);
-      background: rgba(0,212,255,.06); border-radius: var(--r-full);
-      padding: 6px 16px; margin-bottom: 22px; font-size: .88rem; font-weight: 500;
-    }
-    .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.panel-header{
+  padding:16px 20px 0;flex-shrink:0;
+}
+.panel-tabs{
+  display:flex;gap:2px;
+  border-bottom:1px solid var(--border);
+  padding-bottom:0;
+}
+.ptab{
+  padding:9px 16px;font-size:.8rem;font-weight:500;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s var(--ease);white-space:nowrap;
+  margin-bottom:-1px;
+}
+.ptab.active{color:var(--text);border-bottom-color:var(--primary);}
+.ptab:hover:not(.active){color:var(--text);}
 
-    .hero-title {
-      font-size: clamp(2rem, 5vw, 3.4rem);
-      font-weight: 700; line-height: 1.15; margin-bottom: 20px;
-    }
-    .grad {
-      background: linear-gradient(135deg, #c084fc, var(--secondary));
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero-sub {
-      font-size: 1.05rem; color: var(--muted); line-height: 1.75;
-      margin-bottom: 36px; max-width: 500px;
-    }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 40px; }
+.panel-body{
+  flex:1;overflow:hidden;position:relative;
+}
+.panel-view{
+  position:absolute;inset:0;padding:20px;overflow-y:auto;
+  opacity:0;transform:translateX(12px);pointer-events:none;
+  transition:opacity .28s var(--ease),transform .28s var(--ease);
+}
+.panel-view.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+.panel-view::-webkit-scrollbar{width:3px;}
+.panel-view::-webkit-scrollbar-thumb{background:rgba(138,43,226,.3);border-radius:3px;}
 
-    .hero-stats { display: flex; gap: 28px; flex-wrap: wrap; }
-    .stat-pill {
-      display: flex; align-items: center; gap: 8px;
-      font-size: .875rem; color: var(--muted);
-    }
-    .stat-pill strong { color: var(--text); font-size: 1.05rem; }
-    .stat-sep { width: 1px; height: 24px; background: var(--border); }
+.phone-wrap{
+  display:flex;align-items:center;justify-content:center;
+  padding:10px 0;position:relative;
+}
+.phone-glow{
+  position:absolute;inset:-30px;
+  background:radial-gradient(circle,rgba(138,43,226,.2),transparent 60%);
+  pointer-events:none;
+}
+.phone{
+  width:240px;border-radius:28px;padding:16px;
+  background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.02));
+  border:1px solid var(--border);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter:blur(12px);
+  animation:phoneFloat 6s ease-in-out infinite alternate;
+}
+@keyframes phoneFloat{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.phone-notch{width:60px;height:5px;border-radius:5px;background:rgba(255,255,255,.12);margin:0 auto 18px;}
+.chat-bubble{
+  border-radius:14px 14px 4px 14px;padding:10px 12px;margin-bottom:8px;
+  font-size:.82rem;line-height:1.5;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+}
+.chat-bubble.sent{
+  border-radius:14px 4px 14px 14px;
+  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(232,0,122,.1));
+  border-color:rgba(138,43,226,.2);
+}
+.bubble-time{font-size:.68rem;color:var(--dim);margin-top:3px;display:block;}
+.phone-bar{
+  margin-top:14px;display:flex;align-items:center;gap:7px;
+  background:rgba(0,0,0,.3);border:1px solid var(--border);
+  border-radius:var(--r-full);padding:8px 12px;color:var(--dim);font-size:.78rem;
+}
+.bar-icon{color:var(--accent);display:flex;margin-right:auto;}
 
-    /* ── Phone mockup ── */
-    .phone-wrap {
-      position: relative; display: flex;
-      align-items: center; justify-content: center;
-    }
-    .phone-glow {
-      position: absolute; inset: -40px;
-      background: radial-gradient(circle, rgba(138,43,226,.25), transparent 65%);
-      pointer-events: none;
-    }
-    .phone {
-      width: 280px; border-radius: 32px; padding: 20px;
-      background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.02));
-      border: 1px solid var(--border);
-      box-shadow: 0 28px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
-      backdrop-filter: blur(12px);
-      animation: phoneFloat 6s ease-in-out infinite alternate;
-    }
-    @keyframes phoneFloat {
-      from { transform: translateY(0); }
-      to   { transform: translateY(-14px); }
-    }
-    .phone-notch { width: 70px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.14); margin: 0 auto 22px; }
-    .chat-bubble {
-      border-radius: 16px 16px 4px 16px; padding: 12px 14px;
-      margin-bottom: 10px; font-size: .88rem; line-height: 1.5;
-      background: rgba(255,255,255,.06); border: 1px solid var(--border);
-    }
-    .chat-bubble.sent {
-      border-radius: 16px 4px 16px 16px;
-      background: linear-gradient(135deg, rgba(138,43,226,.2), rgba(232,0,122,.12));
-      border-color: rgba(138,43,226,.22);
-      text-align: left;
-    }
-    .bubble-time { font-size: .72rem; color: var(--dim); margin-top: 4px; display: block; }
-    .phone-bar {
-      margin-top: 18px; display: flex; align-items: center; gap: 8px;
-      background: rgba(0,0,0,.3); border: 1px solid var(--border);
-      border-radius: var(--r-full); padding: 9px 14px;
-      color: var(--dim); font-size: .82rem;
-    }
-    .bar-icon { color: var(--accent); display: flex; margin-right: auto; }
+.feat-list{display:flex;flex-direction:column;gap:12px;}
+.feat-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--border);
+  transition:border-color .2s var(--ease),transform .2s var(--ease);
+}
+.feat-row:hover{border-color:rgba(138,43,226,.3);transform:translateX(-3px);}
+.feat-ico{
+  width:38px;height:38px;flex-shrink:0;border-radius:var(--r-md);
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(138,43,226,.18),rgba(0,212,255,.09));
+  border:1px solid rgba(138,43,226,.18);color:#c084fc;
+}
+.feat-info h4{font-size:.88rem;font-weight:600;margin-bottom:4px;}
+.feat-info p{font-size:.78rem;color:var(--muted);line-height:1.55;}
 
-    /* ── Floating cards ── */
-    .float-card {
-      position: absolute; padding: 12px 16px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r-lg); box-shadow: 0 8px 32px rgba(0,0,0,.4);
-      backdrop-filter: blur(14px); font-size: .82rem;
-      animation: cardFloat 5s ease-in-out infinite alternate;
-    }
-    .float-card .fc-label { color: var(--muted); font-size: .74rem; display: block; margin-bottom: 3px; }
-    .float-card strong { display: block; }
-    .fc-a { top: 30px; left: -60px; animation-delay: .5s; }
-    .fc-b { bottom: 50px; right: -50px; animation-delay: 1.2s; }
-    @keyframes cardFloat {
-      from { transform: translateY(0) rotate(-1deg); }
-      to   { transform: translateY(-8px) rotate(1deg); }
-    }
+.steps-list{display:flex;flex-direction:column;gap:0;}
+.step-row{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:16px 14px;position:relative;
+}
+.step-row:not(:last-child)::after{
+  content:'';position:absolute;right:27px;top:52px;bottom:0;
+  width:1px;background:linear-gradient(180deg,rgba(138,43,226,.35),transparent);
+}
+.step-num{
+  width:42px;height:42px;flex-shrink:0;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;font-size:1.05rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 14px rgba(138,43,226,.32);position:relative;z-index:1;
+}
+.step-body h4{font-size:.9rem;font-weight:600;margin-bottom:5px;}
+.step-body p{font-size:.8rem;color:var(--muted);line-height:1.6;}
 
-    /* ── Section ── */
-    section { padding: 96px 0; }
-    .section-label {
-      display: inline-flex; align-items: center; gap: 8px;
-      color: var(--accent); border: 1px solid rgba(0,212,255,.2);
-      background: rgba(0,212,255,.05); border-radius: var(--r-full);
-      padding: 5px 14px; font-size: .82rem; font-weight: 500; margin-bottom: 14px;
-    }
-    .section-title { font-size: clamp(1.6rem,3.5vw,2.4rem); font-weight: 700; margin-bottom: 14px; }
-    .section-sub { font-size: 1rem; color: var(--muted); max-width: 520px; line-height: 1.7; }
-    .section-head { margin-bottom: 52px; }
+.kpi-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-top:16px;
+}
+.kpi{
+  padding:14px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--border);
+  text-align:center;
+}
+.kpi-val{font-size:1.4rem;font-weight:700;color:#c084fc;display:block;}
+.kpi-label{font-size:.73rem;color:var(--muted);margin-top:3px;display:block;}
 
-    /* ── Features ── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-    .feat-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r-xl); padding: 28px;
-      backdrop-filter: blur(12px);
-      transition: border-color .25s var(--ease), transform .25s var(--ease);
-      position: relative; overflow: hidden;
-    }
-    .feat-card::before {
-      content: ''; position: absolute; inset: 0; opacity: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(138,43,226,.1), transparent 60%);
-      transition: opacity .35s;
-    }
-    .feat-card:hover { border-color: var(--border-h); transform: translateY(-4px); }
-    .feat-card:hover::before { opacity: 1; }
-    .feat-icon {
-      width: 48px; height: 48px; border-radius: var(--r-lg);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px;
-      background: linear-gradient(135deg, rgba(138,43,226,.2), rgba(0,212,255,.1));
-      border: 1px solid rgba(138,43,226,.2);
-      color: #c084fc;
-    }
-    .feat-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
-    .feat-card p { color: var(--muted); font-size: .875rem; line-height: 1.6; }
+.panel-cta{
+  padding:14px 20px;flex-shrink:0;
+  border-top:1px solid var(--border);
+  background:rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:10px;
+}
+.panel-cta a{flex:1;text-align:center;}
+.panel-cta-text{font-size:.75rem;color:var(--muted);flex-shrink:0;}
 
-    /* Featured big card */
-    .feat-card.big {
-      grid-column: span 2;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center;
-    }
-    .feat-card.big .feat-visual {
-      border-radius: var(--r-lg); overflow: hidden;
-      background: rgba(0,0,0,.25); border: 1px solid var(--border);
-      padding: 18px; display: flex; flex-direction: column; gap: 10px;
-    }
-    .mini-msg {
-      padding: 10px 14px; border-radius: 12px 12px 4px 12px;
-      background: rgba(255,255,255,.05); border: 1px solid var(--border);
-      font-size: .82rem; color: var(--muted);
-    }
-    .mini-msg.alt {
-      border-radius: 12px 12px 12px 4px;
-      background: rgba(138,43,226,.1); border-color: rgba(138,43,226,.2);
-      color: var(--text);
-    }
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:var(--r-full);
+  font-size:.72rem;font-weight:500;
+  background:rgba(0,212,255,.08);color:var(--accent);
+  border:1px solid rgba(0,212,255,.18);
+}
 
-    /* ── How it works ── */
-    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; position: relative; }
-    .steps::before {
-      content: '';
-      position: absolute; top: 32px; right: 18%; left: 18%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(138,43,226,.4), transparent);
-    }
-    .step { text-align: center; padding: 0 24px; }
-    .step-num {
-      width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #fff; font-size: 1.3rem; font-weight: 700;
-      display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: 20px; box-shadow: 0 4px 20px rgba(138,43,226,.35);
-      position: relative; z-index: 1;
-    }
-    .step h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
-    .step p { color: var(--muted); font-size: .875rem; line-height: 1.6; }
+@media(max-width:960px){
+  .main{grid-template-columns:1fr;}
+  .gutter{display:none;}
+  .side-panel{display:none;}
+  .hero-panel{padding:28px 24px;justify-content:flex-start;padding-top:36px;}
+  .hero-panel::after{display:none;}
+  .nav-tabs{display:none;}
+  html,body{overflow:auto;}
+  .shell{height:auto;overflow:visible;}
+  .main{height:auto;}
+  .hero-panel{min-height:calc(100vh - var(--nav-h));}
+}
+@media(max-width:640px){
+  .navbar{padding:0 16px;}
+  .hero-panel{padding:24px 16px;}
+  .hero-title{font-size:clamp(1.7rem,7vw,2.6rem);}
+  .btn-xl{padding:12px 24px;font-size:.9rem;}
+  .hero-stats{gap:12px;}
+  .stat-sep{display:none;}
+}
 
-    /* ── CTA ── */
-    .cta-section {
-      text-align: center; padding: 80px 0 100px;
-    }
-    .cta-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 28px; padding: 60px 40px;
-      backdrop-filter: blur(14px);
-      position: relative; overflow: hidden;
-    }
-    .cta-card::before {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(138,43,226,.15), transparent 55%);
-      pointer-events: none;
-    }
-    .cta-card h2 { font-size: clamp(1.6rem,3.5vw,2.4rem); font-weight: 700; margin-bottom: 14px; }
-    .cta-card p { color: var(--muted); font-size: 1rem; margin-bottom: 32px; max-width: 460px; margin-left: auto; margin-right: auto; }
-    .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-
-    /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 28px 0;
-      color: var(--dim); font-size: .85rem;
-    }
-    .footer-inner {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px;
-    }
-    .footer-logo { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; }
-    .footer-logo svg { color: #c084fc; }
-
-    /* ── Divider ── */
-    .divider {
-      height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
-      margin: 0;
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 900px) {
-      .hero-grid { grid-template-columns: 1fr; gap: 48px; text-align: center; }
-      .hero-sub { margin-left: auto; margin-right: auto; }
-      .hero-actions { justify-content: center; }
-      .hero-stats { justify-content: center; }
-      .phone-wrap { order: -1; }
-      .fc-a { left: -20px; }
-      .fc-b { right: -14px; }
-      .features-grid { grid-template-columns: 1fr 1fr; }
-      .feat-card.big { grid-column: span 2; }
-    }
-
-    @media (max-width: 640px) {
-      .container { padding: 0 16px; }
-      .nav-inner { padding: 0 16px; }
-      section { padding: 64px 0; }
-      .features-grid { grid-template-columns: 1fr; }
-      .feat-card.big { grid-column: span 1; }
-      .feat-card.big { display: block; }
-      .feat-card.big .feat-visual { display: none; }
-      .steps { grid-template-columns: 1fr; gap: 36px; }
-      .steps::before { display: none; }
-      .cta-card { padding: 40px 20px; border-radius: var(--r-xl); }
-      .hero-stats { gap: 16px; }
-      .stat-sep { display: none; }
-      .phone { width: 240px; }
-      .fc-a, .fc-b { display: none; }
-    }
-
-    /* ── Fade-in animations ── */
-    .reveal {
-      opacity: 0; transform: translateY(24px);
-      transition: opacity .6s var(--ease), transform .6s var(--ease);
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    .reveal-delay-1 { transition-delay: .1s; }
-    .reveal-delay-2 { transition-delay: .2s; }
-    .reveal-delay-3 { transition-delay: .3s; }
-    .reveal-delay-4 { transition-delay: .4s; }
-  </style>
+.fade-in{animation:fadeIn .5s var(--ease) both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.08s}.delay-2{animation-delay:.16s}
+.delay-3{animation-delay:.24s}.delay-4{animation-delay:.32s}
+</style>
 </head>
 <body>
 
-<!-- Backgrounds -->
-<div class="bg-layer"></div>
-<div class="grid-overlay"></div>
+<div class="bg-fx"></div>
+<div class="grid-fx"></div>
 <div class="particles" id="particles"></div>
 
-<!-- Navbar -->
-<nav class="navbar" id="navbar">
-  <div class="nav-inner">
+<div class="shell">
+
+  <nav class="navbar">
     <a href="index.html" class="logo">
       <span class="logo-icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
       </span>
       Whispr
     </a>
+    <div class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-panel="preview" role="tab">معاينة</button>
+      <button class="nav-tab" data-panel="features" role="tab">المميزات</button>
+      <button class="nav-tab" data-panel="howto" role="tab">كيف يعمل</button>
+    </div>
     <div class="nav-ctas">
-      <a href="index.html#login" class="btn btn-ghost" style="padding:9px 18px;font-size:.875rem;border-radius:var(--r-full);">تسجيل الدخول</a>
-      <a href="index.html#register" class="btn btn-primary" style="padding:9px 18px;font-size:.875rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
+      <a href="index.html#login" class="btn btn-ghost" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">دخول</a>
+      <a href="index.html#register" class="btn btn-primary" style="padding:7px 16px;font-size:.82rem;border-radius:var(--r-full);">ابدأ مجاناً</a>
     </div>
-  </div>
-</nav>
+  </nav>
 
-<!-- ══ Hero ══ -->
-<section class="hero" style="padding-top:100px;">
-  <div class="container">
-    <div class="hero-grid">
-      <!-- Copy -->
-      <div class="hero-copy">
-        <div class="eyebrow reveal">
-          <span class="eyebrow-dot"></span>
-          رسائل مجهولة — آمنة وسريعة
-        </div>
-        <h1 class="hero-title reveal reveal-delay-1">
-          ماذا يقولون<br>عنك <span class="grad">بصدق؟</span>
-        </h1>
-        <p class="hero-sub reveal reveal-delay-2">
-          احصل على رابطك الخاص وشاركه مع أصدقائك. سيرسلون لك ما يريدون قوله دون أن تعرف هويتهم — صادقاً، وجريئاً، ومجاناً.
-        </p>
-        <div class="hero-actions reveal reveal-delay-3">
-          <a href="index.html#register" class="btn btn-primary btn-lg">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            احصل على رابطك
-          </a>
-          <a href="index.html#login" class="btn btn-ghost btn-lg">دخول</a>
-        </div>
-        <div class="hero-stats reveal reveal-delay-4">
-          <div class="stat-pill"><strong>100%</strong> مجاني</div>
-          <div class="stat-sep"></div>
-          <div class="stat-pill"><strong>0</strong> تتبع للهوية</div>
-          <div class="stat-sep"></div>
-          <div class="stat-pill"><strong>فوري</strong> بدون تأخير</div>
-        </div>
+  <div class="main">
+
+    <div class="hero-panel">
+      <div class="eyebrow fade-in">
+        <span class="eyebrow-dot"></span>
+        رسائل مجهولة — آمنة وسريعة
       </div>
-
-      <!-- Phone mockup -->
-      <div class="phone-wrap reveal reveal-delay-2">
-        <div class="phone-glow"></div>
-        <div class="phone">
-          <div class="phone-notch"></div>
-          <div class="chat-bubble">
-            😂 أنت الشخص الوحيد اللي يضحكني بجد
-            <span class="bubble-time">الآن</span>
-          </div>
-          <div class="chat-bubble sent">
-            جداً، عندك شجاعة نادرة 🔥
-            <span class="bubble-time">منذ ثانيتين</span>
-          </div>
-          <div class="chat-bubble" style="opacity:.6">
-            كيف تجعلني أشعر بالتميز دائماً؟
-            <span class="bubble-time">منذ دقيقة</span>
-          </div>
-          <div class="phone-bar">
-            <span>اكتب رسالتك...</span>
-            <span class="bar-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-            </span>
-          </div>
-        </div>
-
-        <!-- Floating cards -->
-        <div class="float-card fc-a">
-          <span class="fc-label">رسائل اليوم</span>
-          <strong style="color:#c084fc;font-size:1.2rem;">12 ✨</strong>
-        </div>
-        <div class="float-card fc-b">
-          <span class="fc-label">آخر رسالة</span>
-          <strong>منذ ثانية 💬</strong>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ══ Features ══ -->
-<section>
-  <div class="container">
-    <div class="section-head reveal">
-      <div class="section-label">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        المميزات
-      </div>
-      <h2 class="section-title">كل ما تحتاجه في مكان واحد</h2>
-      <p class="section-sub">Whispr مبني ليكون بسيطاً وقوياً — بدون تعقيد، بدون إعلانات، فقط رسائل.</p>
-    </div>
-
-    <div class="features-grid">
-      <!-- Big card -->
-      <div class="feat-card big reveal">
-        <div>
-          <div class="feat-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          </div>
-          <h3>رابط شخصي فوري</h3>
-          <p>بمجرد تسجيلك، تحصل على رابط فريد مثل <span style="color:var(--accent);font-family:monospace;font-size:.82rem;">whispr/u/اسمك</span> تشاركه مع من تريد.</p>
-        </div>
-        <div class="feat-visual">
-          <div class="mini-msg">أنت الأفضل في ما تفعله 💜</div>
-          <div class="mini-msg alt">شكراً على صراحتك دائماً 🙏</div>
-          <div class="mini-msg" style="opacity:.6">لديك طاقة إيجابية جداً ✨</div>
-        </div>
-      </div>
-
-      <div class="feat-card reveal reveal-delay-1">
-        <div class="feat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <h3>مجهولية تامة</h3>
-        <p>لا تعرف هوية المُرسل إطلاقاً، فيحكي لك الناس آراءهم الحقيقية بكل حرية.</p>
-      </div>
-
-      <div class="feat-card reveal reveal-delay-2">
-        <div class="feat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <h3>ردود مجهولة</h3>
-        <p>يمكنك الرد على الرسائل بشكل مجهول، فيظهر الرد للمُرسل دون كشف هويتك.</p>
-      </div>
-
-      <div class="feat-card reveal reveal-delay-1">
-        <div class="feat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <h3>حماية من الإزعاج</h3>
-        <p>حظر أي مُرسل مزعج بضغطة واحدة، ولن يتمكن من إرسال رسائل إليك مجدداً.</p>
-      </div>
-
-      <div class="feat-card reveal reveal-delay-2">
-        <div class="feat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <h3>وصول فوري</h3>
-        <p>لا تأكيد بريد، لا إعداد معقد — سجّل وابدأ تلقّي الرسائل خلال ثوانٍ.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ══ How it works ══ -->
-<section>
-  <div class="container">
-    <div class="section-head reveal" style="text-align:center;">
-      <div class="section-label" style="margin:0 auto 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        كيف يعمل
-      </div>
-      <h2 class="section-title">ثلاث خطوات فقط</h2>
-      <p class="section-sub" style="margin:0 auto;">أسهل من أي وقت مضى لتبدأ تلقّي رسائل صادقة</p>
-    </div>
-
-    <div class="steps">
-      <div class="step reveal">
-        <div class="step-num">١</div>
-        <h3>سجّل حسابك</h3>
-        <p>أنشئ حسابك بالبريد الإلكتروني وكلمة مرور — بدون تأكيد ومباشرة.</p>
-      </div>
-      <div class="step reveal reveal-delay-1">
-        <div class="step-num">٢</div>
-        <h3>شارك رابطك</h3>
-        <p>انسخ رابطك الشخصي وشاركه على تويتر، سناب، واتساب — أينما تريد.</p>
-      </div>
-      <div class="step reveal reveal-delay-2">
-        <div class="step-num">٣</div>
-        <h3>استقبل الرسائل</h3>
-        <p>اقرأ ما يقوله الناس عنك بصدق، ورد عليهم إن أردت — كل ذلك بشكل مجهول.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ══ CTA ══ -->
-<section class="cta-section">
-  <div class="container">
-    <div class="cta-card reveal">
-      <div class="section-label" style="margin:0 auto 18px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        ابدأ الآن
-      </div>
-      <h2>جاهز تعرف رأيهم الحقيقي؟</h2>
-      <p>انضم الآن واحصل على رابطك المجاني في ثوانٍ — بدون بطاقة ائتمان.</p>
-      <div class="cta-actions">
-        <a href="index.html#register" class="btn btn-primary btn-lg">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          ابدأ مجاناً
+      <h1 class="hero-title fade-in delay-1">
+        ماذا يقولون<br>عنك <span class="grad">بصدق؟</span>
+      </h1>
+      <p class="hero-sub fade-in delay-2">
+        احصل على رابطك الخاص وشاركه مع أصدقائك. سيرسلون لك ما يريدون قوله دون أن تعرف هويتهم — صادقاً، وجريئاً، ومجاناً.
+      </p>
+      <div class="hero-actions fade-in delay-3">
+        <a href="index.html#register" class="btn btn-primary btn-xl">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          احصل على رابطك
         </a>
-        <a href="index.html#login" class="btn btn-outline-accent btn-lg">لدي حساب بالفعل</a>
+        <a href="index.html#login" class="btn btn-ghost btn-xl">دخول</a>
+      </div>
+      <div class="hero-stats fade-in delay-4">
+        <div class="stat-pill"><strong>100%</strong> مجاني</div>
+        <div class="stat-sep"></div>
+        <div class="stat-pill"><strong>0</strong> تتبع للهوية</div>
+        <div class="stat-sep"></div>
+        <div class="stat-pill"><strong>فوري</strong> بدون تأخير</div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ══ Footer ══ -->
-<footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Whispr
+    <div class="gutter"></div>
+
+    <div class="side-panel">
+      <div class="panel-header">
+        <div class="panel-tabs" role="tablist">
+          <button class="ptab active" data-view="preview" role="tab">معاينة المنتج</button>
+          <button class="ptab" data-view="features" role="tab">المميزات</button>
+          <button class="ptab" data-view="howto" role="tab">خطوات البدء</button>
+        </div>
       </div>
-      <span>رسائل مجهولة — آمنة وسريعة</span>
-      <a href="index.html#register" style="color:var(--accent);font-size:.85rem;">ابدأ مجاناً ←</a>
+
+      <div class="panel-body">
+
+        <div class="panel-view active" id="view-preview">
+          <div class="phone-wrap">
+            <div class="phone-glow"></div>
+            <div class="phone">
+              <div class="phone-notch"></div>
+              <div class="chat-bubble">
+                😂 أنت الشخص الوحيد اللي يضحكني بجد
+                <span class="bubble-time">الآن</span>
+              </div>
+              <div class="chat-bubble sent">
+                جداً، عندك شجاعة نادرة 🔥
+                <span class="bubble-time">منذ ثانيتين</span>
+              </div>
+              <div class="chat-bubble" style="opacity:.6">
+                كيف تجعلني أشعر بالتميز دائماً؟
+                <span class="bubble-time">منذ دقيقة</span>
+              </div>
+              <div class="phone-bar">
+                <span>اكتب رسالتك...</span>
+                <span class="bar-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi"><span class="kpi-val">+12</span><span class="kpi-label">رسائل اليوم ✨</span></div>
+            <div class="kpi"><span class="kpi-val" style="color:var(--accent);">0</span><span class="kpi-label">هويات مكشوفة 🔒</span></div>
+            <div class="kpi"><span class="kpi-val" style="color:var(--secondary);">فوري</span><span class="kpi-label">وصول الرسائل ⚡</span></div>
+            <div class="kpi"><span class="kpi-val" style="color:#6ee7b7;">مجاني</span><span class="kpi-label">100% بدون رسوم 🎉</span></div>
+          </div>
+        </div>
+
+        <div class="panel-view" id="view-features">
+          <div class="feat-list">
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+              <div class="feat-info"><h4>رابط شخصي فوري</h4><p>احصل على <span style="color:var(--accent);font-family:monospace;font-size:.75rem;">whispr/u/اسمك</span> فور التسجيل وشاركه أينما تريد.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="feat-info"><h4>مجهولية تامة</h4><p>لا تعرف هوية المُرسل إطلاقاً، فيحكي الناس آراءهم الحقيقية بكل حرية.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+              <div class="feat-info"><h4>ردود مجهولة</h4><p>يمكنك الرد على الرسائل بشكل مجهول دون كشف هويتك.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="feat-info"><h4>حماية من الإزعاج</h4><p>حظر أي مُرسل مزعج بضغطة واحدة — بدون رسائل غير مرغوبة.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div class="feat-info"><h4>وصول فوري</h4><p>لا تأكيد بريد، لا إعداد معقد — سجّل وابدأ خلال ثوانٍ.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-view" id="view-howto">
+          <div class="steps-list">
+            <div class="step-row">
+              <div class="step-num">١</div>
+              <div class="step-body"><h4>سجّل حسابك</h4><p>أنشئ حسابك بالبريد الإلكتروني وكلمة مرور — مباشرة بدون تأكيد.</p></div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">٢</div>
+              <div class="step-body"><h4>شارك رابطك</h4><p>انسخ رابطك الشخصي وشاركه على تويتر، سناب، واتساب — أينما تريد.</p></div>
+            </div>
+            <div class="step-row">
+              <div class="step-num">٣</div>
+              <div class="step-body"><h4>استقبل الرسائل</h4><p>اقرأ ما يقوله الناس عنك بصدق، ورد عليهم إن أردت — كل ذلك بشكل مجهول.</p></div>
+            </div>
+          </div>
+          <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid rgba(138,43,226,.2);border-radius:var(--r-lg);">
+            <div class="badge" style="margin-bottom:10px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              ابدأ الآن
+            </div>
+            <p style="font-size:.82rem;color:var(--muted);line-height:1.6;">جاهز تعرف رأيهم الحقيقي؟ انضم الآن واحصل على رابطك المجاني في ثوانٍ.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="panel-cta">
+        <span class="panel-cta-text">مجاني 100%</span>
+        <a href="index.html#register" class="btn btn-primary" style="flex:1;justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          احصل على رابطك الآن
+        </a>
+      </div>
     </div>
+
   </div>
-</footer>
+</div>
 
 <script>
-  // Lucide icons
-  document.addEventListener('DOMContentLoaded', () => {
-    if (window.lucide) lucide.createIcons();
-  });
-
-  // Navbar scroll
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 40);
-  }, { passive: true });
-
-  // Particles
-  const container = document.getElementById('particles');
-  const colors = ['#8a2be2','#e8007a','#00d4ff','#c084fc'];
-  for (let i = 0; i < 22; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.random() * 4 + 2;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      left:${Math.random()*100}%;
-      bottom:${Math.random()*20}%;
-      animation-duration:${Math.random()*12+8}s;
-      animation-delay:${Math.random()*10}s;
-    `;
-    container.appendChild(p);
+(function(){
+  const c=document.getElementById('particles');
+  const cols=['#8a2be2','#e8007a','#00d4ff','#c084fc'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const s=Math.random()*4+2;
+    p.style.cssText='width:'+s+'px;height:'+s+'px;background:'+cols[~~(Math.random()*cols.length)]+';left:'+Math.random()*100+'%;bottom:'+Math.random()*20+'%;animation-duration:'+(Math.random()*14+8)+'s;animation-delay:'+(Math.random()*12)+'s;';
+    c.appendChild(p);
   }
+})();
 
-  // Reveal on scroll
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  reveals.forEach(el => observer.observe(el));
+document.querySelectorAll('.nav-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var target=btn.dataset.panel;
+    document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    var ptab=document.querySelector('.ptab[data-view="'+target+'"]');
+    if(ptab) ptab.click();
+  });
+});
+
+document.querySelectorAll('.ptab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var target=btn.dataset.view;
+    document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    document.querySelectorAll('.panel-view').forEach(function(v){v.classList.remove('active');});
+    var view=document.getElementById('view-'+target);
+    if(view) view.classList.add('active');
+    var ntab=document.querySelector('.nav-tab[data-panel="'+target+'"]');
+    if(ntab){
+      document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+      ntab.classList.add('active');
+    }
+  });
+});
 </script>
 </body>
 </html>
