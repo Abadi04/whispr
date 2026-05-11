@@ -160,7 +160,7 @@
       display:flex;align-items:center;justify-content:space-between;
     }
 
-    .features,.how,.privacy{
+    .features,.summary{
       display:flex;flex-direction:column;gap:14px;
     }
     .section-title{font-size:.86rem;font-weight:600;color:#e5e7eb;}
@@ -183,36 +183,17 @@
     .feature-title{font-size:.95rem;font-weight:600;letter-spacing:.04em;}
     .feature-text{font-size:.74rem;color:var(--muted);line-height:1.6;margin-top:4px;}
 
-    .how-steps{
-      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:10px;
-    }
-    .step-card{
+    .summary-card{
       border-radius:var(--r-md);
-      padding:10px 10px 8px;
-      background:rgba(11,16,32,.7);
-      border:1px solid rgba(255,255,255,.16);
-      font-size:.75rem;color:var(--muted);
-      display:flex;flex-direction:column;gap:4px;
-      backdrop-filter:blur(16px);
-    }
-    .step-label{font-size:.72rem;color:var(--accent);font-weight:500;}
-    .step-title{font-size:.78rem;font-weight:600;color:#e5e7eb;}
-
-    .privacy-grid{
-      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-    }
-    .privacy-item{
-      border-radius:var(--r-md);
-      padding:10px 10px 8px;
+      padding:12px 12px 10px;
       background:rgba(11,16,32,.72);
       border:1px solid rgba(255,255,255,.18);
       font-size:.75rem;color:var(--muted);
       display:flex;flex-direction:column;gap:4px;
       backdrop-filter:blur(18px);
+      max-width:420px;
     }
-    .privacy-title{font-size:.78rem;font-weight:600;color:#e5e7eb;}
+    .summary-title{font-size:.8rem;font-weight:600;color:#e5e7eb;}
 
     @media (max-width:900px){
       .navbar{inset-inline:14px;}
@@ -226,8 +207,7 @@
       .feature-card{padding:14px 12px 12px;}
       .feature-title{font-size:.9rem;}
       .feature-text{font-size:.72rem;}
-      .how-steps{grid-template-columns:repeat(2,minmax(0,1fr));}
-      .privacy-grid{grid-template-columns:1fr;}
+      .summary-card{max-width:100%;}
     }
   </style>
 </head>
@@ -255,7 +235,7 @@
       <div class="hero-main">
         <span class="pill">رسائل مجهولة، بخصوصية كاملة</span>
         <h1 class="hero-title">
-          استقبل رسائل مجهولة<br>
+          استقبل رسائلك المجهولة<br>
           <span>برابطك الشخصي فقط.</span>
         </h1>
         <p class="hero-sub">
@@ -286,67 +266,20 @@
 
     <section class="features" aria-label="فكرة Whispr">
       <header>
-        <p class="section-title">فكرة Whispr في كرت واحد.</p>
+        <p class="section-title">ما هو Whispr؟</p>
       </header>
       <div class="features-row">
         <article class="feature-card" aria-label="ملخص فكرة التطبيق">
-          <h2 class="feature-title">رابط. رسائل. صراحة.</h2>
-          <p class="feature-text">رابط شخصي واحد، رسائل مجهولة بهوية مخفية ١٠٠٪، وتحكم بسيط في ما تقرأ وما تحظره وما ترد عليه.</p>
+          <h2 class="feature-title">رابط واحد للصراحة.</h2>
+          <p class="feature-text">احصل على رابط شخصي تستقبل عبره رسائل مجهولة بصراحة كاملة، مع تحكم سهل في الحظر والحذف وإيقاف الرسائل متى شئت.</p>
         </article>
       </div>
     </section>
 
-    <section class="how" aria-label="كيف يعمل Whispr">
-      <header>
-        <p class="section-title">كيف يعمل Whispr؟</p>
-        <p class="section-sub">أربع خطوات بسيطة من إنشاء الحساب حتى التحكم في التجربة.</p>
-      </header>
-      <div class="how-steps">
-        <div class="step-card">
-          <span class="step-label">١</span>
-          <p class="step-title">أنشئ حسابك</p>
-          <p>سجّل خلال ثوانٍ لتحصل على ملفك ورابطك الشخصي.</p>
-        </div>
-        <div class="step-card">
-          <span class="step-label">٢</span>
-          <p class="step-title">شارك رابطك</p>
-          <p>ضعه في البايو أو الحالات أو أي مكان يتواجد فيه متابعوك.</p>
-        </div>
-        <div class="step-card">
-          <span class="step-label">٣</span>
-          <p class="step-title">استقبل الرسائل</p>
-          <p>تصل كل رسالة إلى صندوق وارد واحد بهوية مجهولة دائماً.</p>
-        </div>
-        <div class="step-card">
-          <span class="step-label">٤</span>
-          <p class="step-title">تحكم بالتجربة</p>
-          <p>احذف، أو أوقف استقبال الرسائل، أو رد بشكل علني متى أردت.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="privacy" aria-label="الخصوصية والأمان">
-      <header>
-        <p class="section-title">الخصوصية والأمان.</p>
-        <p class="section-sub">تلخيص واضح لما يحدث خلف الكواليس عند استخدامك Whispr.</p>
-      </header>
-      <div class="privacy-grid">
-        <div class="privacy-item">
-          <p class="privacy-title">مجهولية تامة</p>
-          <p>لا نعرض أو نخزّن هوية المرسِل؛ لا اسم، لا بريد، لا موقع، فقط محتوى الرسالة.</p>
-        </div>
-        <div class="privacy-item">
-          <p class="privacy-title">حظر المزعجين</p>
-          <p>يمكنك حظر أي مرسِل مزعج حتى لا تصلك منه رسائل مستقبلية.</p>
-        </div>
-        <div class="privacy-item">
-          <p class="privacy-title">ردود علنية آمنة</p>
-          <p>ردّك العلني لا يكشف من كتب الرسالة الأصلية، فقط يعرض ردّك أنت.</p>
-        </div>
-        <div class="privacy-item">
-          <p class="privacy-title">الملف الشخصي والصور</p>
-          <p>صورتك وملفك لتعريف الآخرين بك أنت، ولا تُستخدم لمعرفة من أرسل الرسائل.</p>
-        </div>
+    <section class="summary" aria-label="ملخص الخصوصية وكيفية العمل">
+      <div class="summary-card">
+        <p class="summary-title">باختصار شديد.</p>
+        <p>سجّل خلال ثوانٍ، شارك رابطك، استقبل رسائل مجهولة بهوية مخفية ١٠٠٪، ومع ذلك تقدر تحذف أو توقف أو تحظر المزعجين في أي وقت.</p>
       </div>
     </section>
   </main>
