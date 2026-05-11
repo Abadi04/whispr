@@ -6,7 +6,12 @@
 // --- Supabase Setup ---
 const supabaseUrl = 'https://hhbhmhyqgszvgkaacbvm.supabase.co';
 const supabaseKey = 'sb_publishable_H_ZX2gdYhq606lCTUqXPQA_KrnRefL_';
-const supabaseClient = window.supabase ? window.supabase.createClient(supabaseUrl, supabaseKey) : null;
+let supabaseClient = null;
+try {
+  supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+    ? window.supabase.createClient(supabaseUrl, supabaseKey)
+    : null;
+} catch(e) { console.warn('Supabase init failed', e); supabaseClient = null; }
 window.supabaseClient = supabaseClient;
 
 // --- SVG Icons (professional, no emojis) ---
@@ -45,6 +50,13 @@ const icons = {
   slash:   `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>`,
   msg_circle:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
   eye:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+};
+
+// --- localStorage safe wrapper ---
+const ls = {
+  get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+  set(key, val) { try { localStorage.setItem(key, val); } catch {} },
+  remove(key) { try { localStorage.removeItem(key); } catch {} },
 };
 
 // --- Translations ---
@@ -99,22 +111,21 @@ const TRANSLATIONS = {
 // --- App State ---
 const state = {
   lang: 'ar',
-  theme: localStorage.getItem('whispr_theme') || 'dark',
-  largeText: localStorage.getItem('whispr_largetext') === 'true',
-  currentUser: JSON.parse(localStorage.getItem('whispr_current_user')) || null,
-  // local-only cache for messages (used offline / before Supabase loads)
-  _localMessages: JSON.parse(localStorage.getItem('bawh_messages')) || [],
-  _localUsers: JSON.parse(localStorage.getItem('bawh_users')) || [],
+  theme: ls.get('whispr_theme') || 'dark',
+  largeText: ls.get('whispr_largetext') === 'true',
+  currentUser: JSON.parse(ls.get('whispr_current_user') || 'null'),
+  _localMessages: JSON.parse(ls.get('bawh_messages') || '[]'),
+  _localUsers: JSON.parse(ls.get('bawh_users') || '[]'),
 };
 
 const t = (key) => TRANSLATIONS[state.lang][key] || key;
 
 const saveLocal = () => {
-  localStorage.setItem('whispr_current_user', JSON.stringify(state.currentUser));
-  localStorage.setItem('whispr_theme', state.theme);
-  localStorage.setItem('whispr_largetext', state.largeText);
-  localStorage.setItem('bawh_messages', JSON.stringify(state._localMessages));
-  localStorage.setItem('bawh_users', JSON.stringify(state._localUsers));
+  ls.set('whispr_current_user', JSON.stringify(state.currentUser));
+  ls.set('whispr_theme', state.theme);
+  ls.set('whispr_largetext', state.largeText);
+  ls.set('bawh_messages', JSON.stringify(state._localMessages));
+  ls.set('bawh_users', JSON.stringify(state._localUsers));
 };
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -176,39 +187,22 @@ const blocksAPI = {
 
 // --- Supabase Messages API ---
 const messagesAPI = {
-  // Fetch messages where I am receiver, join with Supabase for replies
   async getInbox(userId) {
     if (!supabaseClient) {
-      // Fallback to local
       return state._localMessages
         .filter(m => m.recipientId === userId)
         .sort((a,b) => b.timestamp - a.timestamp)
-        .map(m => ({
-          id: m.id, content: m.content,
-          timestamp: m.timestamp, reply: m.reply || null,
-          isRead: m.isRead, senderId: m.senderId || null
-        }));
+        .map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply || null, isRead: m.isRead, senderId: m.senderId || null }));
     }
     try {
       const { data, error } = await supabaseClient
-        .from('messages')
-        .select('id, content, created_at, is_read, sender_id')
-        .eq('receiver_id', userId)
-        .order('created_at', { ascending: false });
+        .from('messages').select('id, content, created_at, is_read, sender_id')
+        .eq('receiver_id', userId).order('created_at', { ascending: false });
       if (error) throw error;
-      // Also get local messages (sent via local form) merged with Supabase ones
       const supaIds = new Set((data || []).map(m => m.id));
       const localOnly = state._localMessages.filter(m => m.recipientId === userId && !supaIds.has(m.id));
-      const supaRows = (data || []).map(m => ({
-        id: m.id, content: m.content,
-        timestamp: new Date(m.created_at).getTime(),
-        reply: m.reply || null, isRead: m.is_read, senderId: m.sender_id
-      }));
-      const localRows = localOnly.map(m => ({
-        id: m.id, content: m.content,
-        timestamp: m.timestamp, reply: m.reply || null,
-        isRead: m.isRead, senderId: m.senderId || null
-      }));
+      const supaRows = (data || []).map(m => ({ id: m.id, content: m.content, timestamp: new Date(m.created_at).getTime(), reply: m.reply || null, isRead: m.is_read, senderId: m.sender_id }));
+      const localRows = localOnly.map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply || null, isRead: m.isRead, senderId: m.senderId || null }));
       return [...supaRows, ...localRows].sort((a,b) => b.timestamp - a.timestamp);
     } catch(e) {
       console.error('inbox fetch error', e);
@@ -226,11 +220,8 @@ const messagesAPI = {
         const { error } = await supabaseClient.from('messages').insert(payload);
         if (error) throw error;
         return { ok: true };
-      } catch(e) {
-        console.error('send error', e);
-      }
+      } catch(e) { console.error('send error', e); }
     }
-    // Fallback to local
     const msg = { id: generateId(), recipientId: receiverId, senderId, content, timestamp: Date.now(), reply: null, isRead: false };
     state._localMessages.push(msg);
     saveLocal();
@@ -245,7 +236,6 @@ const messagesAPI = {
         return { ok: true };
       } catch(e) { console.error('reply error', e); }
     }
-    // Local fallback
     const idx = state._localMessages.findIndex(m => m.id === msgId);
     if (idx !== -1) { state._localMessages[idx].reply = replyText; saveLocal(); }
     return { ok: true };
@@ -253,10 +243,7 @@ const messagesAPI = {
 
   async markRead(userId) {
     if (supabaseClient) {
-      try {
-        await supabaseClient.from('messages').update({ is_read: true })
-          .eq('receiver_id', userId).eq('is_read', false);
-      } catch {}
+      try { await supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', userId).eq('is_read', false); } catch {}
     }
     state._localMessages.forEach(m => { if (m.recipientId === userId) m.isRead = true; });
     saveLocal();
@@ -271,19 +258,13 @@ const messagesAPI = {
   },
 
   async getPublicReplies(userId) {
-    // Returns messages that have been replied to (visible on public profile)
     if (supabaseClient) {
       try {
         const { data, error } = await supabaseClient.from('messages')
-          .select('id, content, created_at, reply')
-          .eq('receiver_id', userId)
-          .not('reply', 'is', null)
-          .order('created_at', { ascending: false });
+          .select('id, content, created_at, reply').eq('receiver_id', userId)
+          .not('reply', 'is', null).order('created_at', { ascending: false });
         if (error) throw error;
-        return (data || []).map(m => ({
-          id: m.id, content: m.content,
-          timestamp: new Date(m.created_at).getTime(), reply: m.reply
-        }));
+        return (data || []).map(m => ({ id: m.id, content: m.content, timestamp: new Date(m.created_at).getTime(), reply: m.reply }));
       } catch(e) { console.error('public replies error', e); }
     }
     return state._localMessages.filter(m => m.recipientId === userId && m.reply)
@@ -297,13 +278,11 @@ const profilesAPI = {
   async getByUsername(username) {
     if (supabaseClient) {
       try {
-        const { data, error } = await supabaseClient.from('profiles')
-          .select('id, email, full_name, avatar_url')
-          .eq('full_name', username).maybeSingle();
+        const { data } = await supabaseClient.from('profiles')
+          .select('id, email, full_name, avatar_url').eq('full_name', username).maybeSingle();
         if (data) return { id: data.id, username: data.full_name || username, email: data.email, avatar_url: data.avatar_url };
       } catch {}
     }
-    // local fallback
     const u = state._localUsers.find(u => u.username === username);
     return u || null;
   },
@@ -343,7 +322,6 @@ const app = {
       saveLocal();
       this.applyTheme();
     });
-
     window.addEventListener('scroll', () => {
       document.querySelector('.navbar')?.classList.toggle('scrolled', window.scrollY > 20);
     }, { passive: true });
@@ -368,7 +346,6 @@ const app = {
 
   navigate(route) { window.location.hash = route; },
 
-  // Auth init — runs once per session
   async initAuth() {
     if (this.authPromise) return this.authPromise;
     this.authPromise = (async () => {
@@ -378,7 +355,6 @@ const app = {
         if (data?.user) {
           this.authUser = data.user;
           if (!state.currentUser || state.currentUser.supaId !== data.user.id) {
-            // Try to load profile from Supabase
             try {
               const { data: profile } = await supabaseClient.from('profiles')
                 .select('id, full_name, email, avatar_url').eq('id', data.user.id).maybeSingle();
@@ -390,11 +366,7 @@ const app = {
             } catch {}
           }
         } else {
-          // No session
-          if (state.currentUser) {
-            state.currentUser = null;
-            saveLocal();
-          }
+          if (state.currentUser) { state.currentUser = null; saveLocal(); }
         }
       } catch(e) { console.error('initAuth error', e); }
     })();
@@ -402,7 +374,6 @@ const app = {
   },
 
   async handleRoute() {
-    // Show loading only on first load
     if (!this.currentRoute) {
       this.root.innerHTML = `<div class="loading-screen"><span class="loading-spin">${icons.spin}</span><span>جاري التحميل...</span></div>`;
     }
@@ -410,8 +381,11 @@ const app = {
 
     const hash = window.location.hash.slice(1) || 'home';
 
-    // Onboarding gate
-    if (!localStorage.getItem('whispr_onboarding_done') && !['onboarding','login','register'].includes(hash) && !hash.startsWith('u/')) {
+    // FIX: safe localStorage check — treat errors or missing storage as "done"
+    let onboardingDone = true;
+    try { onboardingDone = !!ls.get('whispr_onboarding_done'); } catch { onboardingDone = true; }
+
+    if (!onboardingDone && !['onboarding','login','register'].includes(hash) && !hash.startsWith('u/')) {
       window.location.hash = 'onboarding';
       return;
     }
@@ -501,7 +475,6 @@ const app = {
 
     this.root.innerHTML = html;
 
-    // Post-render hooks
     if (route === 'u' && parts[1]) this.setupProfileEvents(parts[1]);
     else if (route === 'inbox') this.setupInboxEvents();
     else if (route === 'login') this.setupLoginEvents();
@@ -509,7 +482,6 @@ const app = {
     else if (route === 'onboarding') this.setupOnboardingEvents();
   },
 
-  // --- Actions ---
   async logout() {
     if (supabaseClient) await supabaseClient.auth.signOut();
     state.currentUser = null;
@@ -555,21 +527,16 @@ const app = {
     if (!supabaseClient || !state.currentUser || !file) return;
     if (!file.type.startsWith('image/')) return showToast('اختر ملف صورة فقط', 'error');
     if (file.size > 3 * 1024 * 1024) return showToast('حجم الصورة أكبر من 3 ميجابايت', 'error');
-
     try {
       const { data: authData } = await supabaseClient.auth.getUser();
       if (!authData?.user) return showToast('سجل الدخول أولاً', 'error');
-
       showToast('جاري رفع الصورة...', 'info');
       const ext = (file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
       const path = `${authData.user.id}/avatar.${ext}`;
-
       const { error: upErr } = await supabaseClient.storage.from('avatars').upload(path, file, { cacheControl: '60', upsert: true });
       if (upErr) return showToast('فشل رفع الصورة', 'error');
-
       const { data } = supabaseClient.storage.from('avatars').getPublicUrl(path);
       const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
-
       await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', authData.user.id);
       state.currentUser.avatar_url = publicUrl;
       saveLocal();
@@ -615,11 +582,10 @@ const app = {
   },
 
   finishOnboarding() {
-    localStorage.setItem('whispr_onboarding_done', '1');
+    ls.set('whispr_onboarding_done', '1');
     this.navigate(state.currentUser ? 'inbox' : 'home');
   },
 
-  // --- Views ---
   views: {
     onboarding() {
       return `<div class="view active auth-wrapper onboarding-wrapper">
@@ -772,7 +738,6 @@ const app = {
     },
 
     async profile(username) {
-      // Find user
       let user = await profilesAPI.getByUsername(username);
       if (!user) {
         return `<div class="view active empty-state">
@@ -780,21 +745,15 @@ const app = {
           <h3>${t('err_user_not_found')}</h3>
         </div>`;
       }
-
-      // Get public replies
       const replies = await messagesAPI.getPublicReplies(user.id);
       const limit = app.chatLimit || 30;
       const visible = replies.slice(0, limit);
       const hasMore = replies.length > limit;
-
       let lastDateLabel = null;
       const repliesHtml = visible.map(msg => {
         const dl = getDateLabel(msg.timestamp);
         let sep = '';
-        if (dl !== lastDateLabel) {
-          sep = `<div class="date-sep"><span>${dl}</span></div>`;
-          lastDateLabel = dl;
-        }
+        if (dl !== lastDateLabel) { sep = `<div class="date-sep"><span>${dl}</span></div>`; lastDateLabel = dl; }
         return `${sep}<div class="msg-thread-item glass-card">
           <div class="msg-bubble incoming">${escHtml(msg.content)}</div>
           <div class="msg-bubble reply">${icons.reply} <span>${escHtml(msg.reply)}</span></div>
@@ -819,12 +778,8 @@ const app = {
               </button>` : ''}
           </div>
         </div>
-
         <div class="glass-card send-card">
-          <div class="send-card-header">
-            ${icons.send}
-            <h3>${t('profile_title')}</h3>
-          </div>
+          <div class="send-card-header">${icons.send}<h3>${t('profile_title')}</h3></div>
           <div class="prompt-row" id="prompt-row">
             <button class="prompt-chip" onclick="app.insertPrompt('ما الشيء الذي تتمنى أن أخبرك به بصراحة؟')">سؤال صريح</button>
             <button class="prompt-chip" onclick="app.insertPrompt('رسالة لطيفة وصلتني منك وأحببتها...')">رسالة لطيفة</button>
@@ -844,7 +799,6 @@ const app = {
             </div>
           </form>
         </div>
-
         ${replies.length > 0 ? `
           <div class="inbox-container">
             <div class="section-header"><h3>الردود السابقة</h3></div>
@@ -858,24 +812,16 @@ const app = {
       const user = state.currentUser;
       const shareUrl = `${location.origin}${location.pathname}#u/${user.username}`;
       const shareText = 'أرسل لي رسالة مجهولة على Whispr';
-
-      // Load messages from Supabase
       const messages = await messagesAPI.getInbox(user.id);
       const unread = messages.filter(m => !m.isRead).length;
       const replied = messages.filter(m => m.reply).length;
-
-      // Get blocked ids
       const blockedIds = await blocksAPI.getBlockedIds(user.id);
       const filtered = messages.filter(m => !m.senderId || !blockedIds.includes(m.senderId));
-
       let lastDateLabel = null;
       const msgsHtml = filtered.map(msg => {
         const dl = getDateLabel(msg.timestamp);
         let sep = '';
-        if (dl !== lastDateLabel) {
-          sep = `<div class="date-sep"><span>${dl}</span></div>`;
-          lastDateLabel = dl;
-        }
+        if (dl !== lastDateLabel) { sep = `<div class="date-sep"><span>${dl}</span></div>`; lastDateLabel = dl; }
         return `${sep}
         <div class="msg-card glass-card ${!msg.isRead ? 'unread' : ''}" id="msg-${msg.id}">
           <div class="msg-card-header">
@@ -897,7 +843,6 @@ const app = {
         </div>`;
       }).join('');
 
-      // Check if owner
       let isOwner = false;
       if (supabaseClient) {
         try {
@@ -939,12 +884,10 @@ const app = {
             </button>
           </div>
         </div>
-
         <div class="inbox-toolbar">
           <h2>${t('inbox_title')}</h2>
           <span class="pill">${filtered.length} ${t('msgs_count')}</span>
         </div>
-
         <div class="settings-list">
           <button class="settings-item glass-card" onclick="app.navigate('blocked')">
             <div class="settings-item-label">${icons.ban} <span>المستخدمون المحظورون</span></div>
@@ -962,7 +905,6 @@ const app = {
             </label>
           </div>
         </div>
-
         <div class="messages-list">
           ${filtered.length === 0
             ? `<div class="empty-state glass-card">
@@ -980,7 +922,6 @@ const app = {
       const blockedIds = await blocksAPI.getBlockedIds(state.currentUser.id);
       const blockedUsers = await Promise.all(blockedIds.map(id => profilesAPI.getById(id)));
       const valid = blockedUsers.filter(Boolean);
-
       return `<div class="view active inbox-container">
         <div class="page-header">
           <button class="btn btn-ghost icon-only" onclick="app.navigate('inbox')">${icons.back}</button>
@@ -1029,10 +970,7 @@ const app = {
     }
   },
 
-  // --- Form Handlers ---
-  setupOnboardingEvents() {
-    // nextOnboard is called inline
-  },
+  setupOnboardingEvents() {},
 
   nextOnboard(step) {
     document.getElementById(`onboard-${step}`)?.classList.add('hidden');
@@ -1048,7 +986,6 @@ const app = {
       const em = document.getElementById('login-email').value.trim();
       const pw = document.getElementById('login-password').value;
       setLoading(btn, true, `${icons.spin} جاري الدخول...`);
-
       if (supabaseClient) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email: em, password: pw });
         if (error) {
@@ -1086,13 +1023,11 @@ const app = {
       const em = document.getElementById('reg-email').value.trim();
       const pw = document.getElementById('reg-password').value;
       setLoading(btn, true, `${icons.spin} جاري التسجيل...`);
-
       if (state._localUsers.some(u => u.username === un)) {
         showToast(t('err_user_exists'), 'error');
         setLoading(btn, false, `${icons.register} ${t('btn_register_submit')}`);
         return;
       }
-
       if (supabaseClient) {
         const { data, error } = await supabaseClient.auth.signUp({
           email: em, password: pw, options: { data: { full_name: un } }
@@ -1124,8 +1059,6 @@ const app = {
   async setupProfileEvents(username) {
     const user = await profilesAPI.getByUsername(username);
     if (!user) return;
-
-    // Setup block state
     if (state.currentUser && state.currentUser.id !== user.id) {
       const isBlocked = await blocksAPI.isBlocked(state.currentUser.id, user.id);
       const btn = document.getElementById(`block-btn-${user.id}`);
@@ -1134,8 +1067,6 @@ const app = {
         btn.querySelector('.block-btn-text').textContent = isBlocked ? 'إلغاء الحظر' : 'حظر هذا المرسل';
       }
     }
-
-    // Textarea auto-expand + char counter
     const ta = document.getElementById('msg-content');
     const counter = document.getElementById('char-counter');
     if (ta && counter) {
@@ -1146,30 +1077,20 @@ const app = {
         ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
       });
     }
-
-    // Send form
     const form = document.getElementById('send-msg-form');
     if (!form) return;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const content = ta?.value?.trim();
       if (!content) return;
-
       const errEl = document.getElementById('send-block-error');
       if (errEl) errEl.classList.add('hidden');
-
-      // Check if blocked
       if (state.currentUser) {
         const isBlocked = await blocksAPI.isBlocked(user.id, state.currentUser.id);
-        if (isBlocked) {
-          if (errEl) errEl.classList.remove('hidden');
-          return;
-        }
+        if (isBlocked) { if (errEl) errEl.classList.remove('hidden'); return; }
       }
-
       const btn = form.querySelector('.send-btn');
       setLoading(btn, true);
-
       const { ok } = await messagesAPI.send(user.id, content, state.currentUser?.id || null);
       if (ok) {
         if (ta) { ta.value = ''; ta.style.height = 'auto'; }
@@ -1185,7 +1106,6 @@ const app = {
 
   setupInboxEvents() {
     if (!state.currentUser) return;
-    // Mark as read
     messagesAPI.markRead(state.currentUser.id);
   },
 
@@ -1193,9 +1113,7 @@ const app = {
     const area = document.getElementById(`reply-area-${msgId}`);
     if (!area) return;
     area.classList.toggle('hidden');
-    if (!area.classList.contains('hidden')) {
-      area.querySelector('textarea')?.focus();
-    }
+    if (!area.classList.contains('hidden')) area.querySelector('textarea')?.focus();
   },
 
   async submitReply(e, msgId) {
@@ -1215,7 +1133,6 @@ const app = {
     }
   },
 
-  // --- Visual Effects ---
   celebrateSend(button) {
     if (!button) return;
     const rect = button.getBoundingClientRect();
@@ -1290,6 +1207,5 @@ function setLoading(btn, isLoading, originalHtml) {
   }
 }
 
-// Make nextOnboard globally accessible
 window.app = app;
 document.addEventListener('DOMContentLoaded', () => app.init());
