@@ -14,7 +14,7 @@
   --border:rgba(255,255,255,.07);--border-h:rgba(255,255,255,.16);
   --primary:#8a2be2;--primary-h:#9d4edd;--secondary:#e8007a;--accent:#00d4ff;
   --text:#f1f0f5;--muted:#8b8fa8;--dim:#5a5e75;
-  --r-xl:20px;--r-lg:14px;--r-md:10px;--r-sm:7px;--r-full:9999px;
+  --r-xl:20px;--r-lg:16px;--r-md:10px;--r-sm:7px;--r-full:9999px;
   --ease:cubic-bezier(.25,.8,.25,1);--bounce:cubic-bezier(.34,1.56,.64,1);
   --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
 }
@@ -121,68 +121,73 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
 /* RIGHT · Decision Engine (Features of anonymous messaging) */
 .panel-options{
-  padding:30px 34px;
+  padding:30px 28px;
   display:flex;flex-direction:column;justify-content:center;
 }
-.options-header{margin-bottom:12px;}
+.options-header{margin-bottom:10px;}
 .options-kicker{
-  font-size:.85rem;color:var(--muted);
+  font-size:.83rem;color:var(--muted);
 }
 .options-row{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:16px;
+  gap:12px;
 }
 .option-card{
   position:relative;
-  border-radius:22px;
-  padding:18px 16px 16px;
-  background:radial-gradient(circle at top,rgba(255,255,255,.05),rgba(0,0,0,.85));
-  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  padding:14px 10px 12px;
+  background:radial-gradient(circle at top,rgba(255,255,255,.04),rgba(0,0,0,.9));
+  border:1px solid rgba(255,255,255,.08);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.06),
-    0 18px 40px rgba(0,0,0,.7);
-  display:flex;flex-direction:column;gap:10px;
-  transition:transform .22s var(--bounce),box-shadow .22s var(--bounce),border-color .18s var(--ease);
+    0 14px 32px rgba(0,0,0,.75);
+  display:flex;flex-direction:column;gap:6px;
+  transition:transform .2s var(--bounce),box-shadow .2s var(--bounce),border-color .16s var(--ease);
 }
 .option-card:hover{
-  transform:translateY(-4px);
+  transform:translateY(-3px);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.08),
-    0 26px 70px rgba(0,0,0,.9);
-  border-color:rgba(255,255,255,.18);
+    0 22px 60px rgba(0,0,0,.95);
+  border-color:rgba(255,255,255,.16);
 }
-.option-head{display:flex;flex-direction:column;gap:4px;}
-.option-title{font-size:.95rem;font-weight:600;}
-.option-tag{font-size:.78rem;color:var(--muted);}
+.option-head{display:flex;flex-direction:column;gap:2px;}
+.option-title{font-size:.86rem;font-weight:600;}
+.option-tag{font-size:.74rem;color:var(--muted);}
 .option-list{
-  list-style:none;font-size:.78rem;color:var(--muted);
-  display:flex;flex-direction:column;gap:4px;padding:0;margin:0;
+  list-style:none;font-size:.72rem;color:var(--muted);
+  display:flex;flex-direction:column;gap:2px;padding:0;margin:2px 0 6px;
 }
 .option-list li::before{
-  content:"•";margin-left:4px;color:var(--accent);
+  content:"•";margin-left:3px;color:var(--accent);
 }
 
-/* Featured core promise (B) */
+/* Featured core promise (B) as central note */
 .is-featured{
-  transform:scale(1.05);
+  transform:scale(1.04) rotate(-1.5deg);
   border-color:rgba(138,43,226,.7);
   box-shadow:
-    0 0 0 1px rgba(138,43,226,.7),
-    0 32px 90px rgba(138,43,226,.55);
+    0 0 0 1px rgba(138,43,226,.65),
+    0 26px 70px rgba(138,43,226,.5);
 }
+.option-a{transform:rotate(1.2deg);} 
+.option-c{transform:rotate(-1.2deg);} 
+.option-card:hover.option-a{transform:translateY(-3px) rotate(1.2deg);} 
+.option-card:hover.option-c{transform:translateY(-3px) rotate(-1.2deg);} 
+
 .option-ribbon{
-  position:absolute;top:10px;left:14px;
-  padding:3px 10px;border-radius:999px;
-  font-size:.7rem;font-weight:600;
+  position:absolute;top:8px;left:10px;
+  padding:2px 8px;border-radius:999px;
+  font-size:.68rem;font-weight:600;
   background:linear-gradient(135deg,var(--primary),var(--secondary));
-  color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.7);
+  color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.7);
 }
 
 /* Buttons */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  padding:9px 18px;border-radius:999px;
-  font-size:.82rem;font-weight:600;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 14px;border-radius:999px;
+  font-size:.78rem;font-weight:600;
   border:1px solid transparent;white-space:nowrap;
   transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--bounce),box-shadow .18s var(--ease);
 }
@@ -224,7 +229,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .logo-icon{color:#c084fc;display:flex;}
 .nav-ctas{display:flex;align-items:center;gap:8px;}
 
-/* Mobile: allow vertical scroll, but keep 3 cards side-by-side */
+/* Mobile: allow vertical scroll, keep 3 "note" bubbles side-by-side */
 @media(max-width:960px){
   html,body{height:auto;min-height:100vh;overflow-y:auto;}
   .shell{
@@ -233,9 +238,10 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     height:auto;min-height:100vh;
   }
   .panel-brand{padding:26px 20px 18px;}
-  .panel-options{padding:20px 12px 28px;}
-  .options-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
-  .is-featured{transform:scale(1.03);}  
+  .panel-options{padding:18px 10px 26px;}
+  .options-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .option-card{padding:12px 8px 10px;}
+  .is-featured{transform:scale(1.02) rotate(-1.5deg);}  
 }
 @media(max-width:640px){
   .navbar{inset-inline:14px;}
@@ -291,47 +297,44 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 
   <section class="panel panel-options" aria-label="مميزات الرسائل المجهولة في Whispr">
     <header class="options-header">
-      <p class="options-kicker">ما الذي يميز Whispr عن أي صندوق رسائل آخر؟</p>
+      <p class="options-kicker">ثلاثة أشياء تحصل عليها من أول رسالة.</p>
     </header>
     <div class="options-row">
       <article class="option-card option-a">
         <header class="option-head">
-          <h2 class="option-title">صدق بلا مجاملة</h2>
-          <p class="option-tag">كل رسالة تُكتب بدون خوف من انكشاف الهوية</p>
+          <h2 class="option-title">رسالة صادقة</h2>
+          <p class="option-tag">كلام حقيقي بدون مجاملة.</p>
         </header>
         <ul class="option-list">
-          <li>شجّع الناس أن يقولوا ما لا يستطيعون قوله علناً.</li>
-          <li>اكتشف كيف يراك الآخرون فعلاً.</li>
-          <li>مثالي لمعرفة نقاط قوّتك وضعفك.</li>
+          <li>يكتب لك ما يشعر به فعلاً بلا اسم.</li>
+          <li>تكتشف صورتك عند الناس كما هي.</li>
         </ul>
-        <button class="btn btn-ghost">شاهد كيف تبدو الرسائل</button>
+        <button class="btn btn-ghost">مثال على رسالة</button>
       </article>
 
       <article class="option-card option-b is-featured" aria-label="وعد الخصوصية في Whispr">
         <div class="option-ribbon">جوهر Whispr</div>
         <header class="option-head">
-          <h2 class="option-title">هوية مخفية دائماً</h2>
-          <p class="option-tag">لا نعرض ولا نخزّن اسم أو حساب المُرسل</p>
+          <h2 class="option-title">هوية مخفية</h2>
+          <p class="option-tag">نستقبل النص فقط، لا شيء غيره.</p>
         </header>
         <ul class="option-list">
-          <li>كل رسالة تصل بدون أي معلومة تعريفية عن صاحبها.</li>
-          <li>لن ترى بريد، ولا اسم مستخدم، ولا صورة.</li>
-          <li>أنت تتحكم فقط في قراءة الرسائل أو حظر المزعجين.</li>
+          <li>لا بريد، لا اسم مستخدم، لا صورة.</li>
+          <li>الرسالة تصل ككلمات فقط داخل صندوقك.</li>
         </ul>
-        <button class="btn btn-primary btn-pulse">ابدأ باستقبال الرسائل المجهولة</button>
+        <button class="btn btn-primary btn-pulse">ابدأ باستقبال الرسائل</button>
       </article>
 
       <article class="option-card option-c">
         <header class="option-head">
-          <h2 class="option-title">تحكم كامل في خصوصيتك</h2>
-          <p class="option-tag">صندوق وارد بسيط، بلا ضجيج أو تصنيفات معقدة</p>
+          <h2 class="option-title">تحكم سريع</h2>
+          <p class="option-tag">بضغطة واحدة تتحكم بكل شيء.</p>
         </header>
         <ul class="option-list">
-          <li>أوقف استقبال الرسائل في أي وقت بضغطة واحدة.</li>
-          <li>احذف أي رسالة لا تعجبك فوراً.</li>
-          <li>لا إشعارات مزعجة — أنت من يقرر متى تقرأ.</li>
+          <li>إيقاف استقبال الرسائل متى شئت.</li>
+          <li>حذف أو تجاهل أي رسالة فوراً.</li>
         </ul>
-        <button class="btn btn-ghost">اكتشف خيارات الخصوصية</button>
+        <button class="btn btn-ghost">شاهد أدوات التحكم</button>
       </article>
     </div>
   </section>
