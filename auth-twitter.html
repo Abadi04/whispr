@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Whispr — صفحة تسجيل</title>
+  <meta name="description" content="تسجيل الدخول أو إنشاء حساب جديد في Whispr بتجربة بسيطة تشبه صفحة تسجيل الدخول لتويتر.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#000000;
+      --surface:#050815;
+      --surface-card:#060818;
+      --border:rgba(148,163,184,.45);
+      --primary:#1d9bf0;
+      --primary-soft:rgba(29,155,240,.18);
+      --accent:#00d4ff;
+      --text:#f9fafb;
+      --muted:#9ca3af;
+      --muted-soft:#6b7280;
+      --r-lg:18px;--r-full:999px;
+      --ease:cubic-bezier(.25,.8,.25,1);
+      --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100%;}
+    body{
+      font-family:var(--font);
+      background:radial-gradient(circle at top,rgba(15,23,42,.9),#020617 55%,#000 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+    a{text-decoration:none;color:inherit;}
+    button{font-family:var(--font);cursor:pointer;border:none;background:none;}
+
+    .shell{
+      min-height:100vh;
+      display:flex;flex-direction:column;
+      padding:16px 16px 24px;
+    }
+    .content{
+      flex:1;
+      max-width:1120px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+      gap:36px;
+      align-items:center;
+    }
+
+    .brand-side{
+      display:flex;flex-direction:column;gap:24px;
+    }
+    .brand-logo{
+      display:flex;align-items:center;gap:10px;
+    }
+    .brand-mark{
+      width:44px;height:44px;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(circle at 30% 0%,#0ea5e9,#1d4ed8);
+      box-shadow:0 0 0 1px rgba(15,23,42,1),0 16px 40px rgba(15,23,42,1);
+    }
+    .brand-mark svg{color:#f9fafb;}
+    .brand-text-main{font-size:1.2rem;font-weight:700;}
+    .brand-text-sub{font-size:.8rem;color:var(--muted-soft);}
+
+    .brand-heading{
+      font-size:clamp(2rem,3.3vw,2.6rem);
+      line-height:1.15;font-weight:800;
+      letter-spacing:.01em;
+    }
+    .brand-heading span{display:block;}
+    .brand-copy{font-size:.9rem;color:var(--muted);max-width:30rem;line-height:1.8;}
+
+    .auth-side{display:flex;flex-direction:column;gap:16px;align-items:stretch;}
+    .auth-card{
+      border-radius:var(--r-lg);
+      padding:20px 20px 18px;
+      background:var(--surface-card);
+      border:1px solid rgba(148,163,184,.45);
+      box-shadow:0 18px 50px rgba(15,23,42,1);
+    }
+    .auth-title{font-size:1.1rem;font-weight:700;margin-bottom:12px;}
+    .auth-sub{font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+
+    .field{margin-bottom:12px;}
+    .field label{display:block;font-size:.8rem;color:var(--muted-soft);margin-bottom:4px;}
+    .field input{
+      width:100%;padding:9px 11px;border-radius:10px;
+      border:1px solid rgba(51,65,85,.9);
+      background:#020617;color:var(--text);
+      font-size:.85rem;font-family:var(--font);
+      outline:none;transition:border-color .16s var(--ease),box-shadow .16s var(--ease),background .16s var(--ease);
+    }
+    .field input:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 1px rgba(29,155,240,.8);
+      background:#020617;
+    }
+
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      padding:10px 16px;border-radius:var(--r-full);
+      font-size:.85rem;font-weight:600;
+      border:1px solid transparent;white-space:nowrap;width:100%;
+      transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease),color .18s var(--ease);
+    }
+    .btn-primary{background:#f9fafb;color:#020617;box-shadow:0 10px 30px rgba(15,23,42,.9);}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 18px 40px rgba(15,23,42,1);}
+    .btn-outline{background:transparent;border-color:var(--border);color:var(--text);}
+    .btn-outline:hover{background:#020617;}
+
+    .auth-divider{display:flex;align-items:center;gap:8px;margin:14px 0 10px;font-size:.8rem;color:var(--muted-soft);}
+    .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:rgba(51,65,85,.8);}
+
+    .hint{font-size:.78rem;color:var(--muted-soft);margin-top:6px;line-height:1.5;}
+
+    .switcher{font-size:.8rem;color:var(--muted-soft);margin-top:10px;}
+    .switcher a{color:var(--accent);}
+
+    .footer{max-width:1120px;margin:16px auto 0;font-size:.7rem;color:var(--muted-soft);display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;}
+
+    @media (max-width:900px){
+      .shell{padding:12px 14px 18px;}
+      .content{grid-template-columns:1fr;gap:28px;}
+      .brand-side{margin-top:32px;}
+      .brand-heading{font-size:clamp(1.8rem,5vw,2.1rem);}
+      .brand-copy{font-size:.86rem;}
+      .auth-side{max-width:360px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main class="content" aria-label="صفحة التسجيل في Whispr">
+      <section class="brand-side" aria-label="تعريف Whispr">
+        <div class="brand-logo">
+          <div class="brand-mark" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 9l2-3 2 3 3-3 2 3 3-2v8a7 7 0 0 1-7 7h-1a7 7 0 0 1-7-7V7z"/>
+              <path d="M9 13h.01"/>
+              <path d="M15 13h.01"/>
+              <path d="M10 16c.5.3 1.1.5 2 .5s1.5-.2 2-.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-text-main">Whispr</div>
+            <div class="brand-text-sub">استقبل رسائلك المجهولة بهدوء</div>
+          </div>
+        </div>
+        <h1 class="brand-heading">
+          <span>صفحة واحدة لكل</span>
+          <span>رسائلك المجهولة.</span>
+        </h1>
+        <p class="brand-copy">
+          سجّل دخولك أو أنشئ حساباً جديداً لتتحكم في رابطك الشخصي، الرسائل التي تصلك، وإعدادات المجهولية، في واجهة بسيطة مستوحاة من صفحة تسجيل الدخول في تويتر.
+        </p>
+      </section>
+
+      <section class="auth-side" aria-label="نموذج تسجيل الدخول والتسجيل">
+        <div class="auth-card" id="form-login" style="display:block;">
+          <h2 class="auth-title">تسجيل دخول</h2>
+          <p class="auth-sub">ادخل إلى حسابك لمتابعة رسائلك المجهولة والرد عليها.</p>
+          <form>
+            <div class="field">
+              <label for="login-email">البريد الإلكتروني</label>
+              <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+              <label for="login-password">كلمة المرور</label>
+              <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary">تسجيل دخول</button>
+          </form>
+          <p class="switcher">ليس لديك حساب؟ <a href="#" onclick="switchForm('register');return false;">إنشاء حساب جديد</a></p>
+        </div>
+
+        <div class="auth-card" id="form-register" style="display:none;">
+          <h2 class="auth-title">إنشاء حساب جديد</h2>
+          <p class="auth-sub">ابدأ خلال ثوانٍ واحصل على رابطك الشخصي لاستقبال الرسائل المجهولة.</p>
+          <form>
+            <div class="field">
+              <label for="reg-name">الاسم الظاهر</label>
+              <input id="reg-name" type="text" autocomplete="name" placeholder="الاسم الذي سيظهر في رابطك" required>
+            </div>
+            <div class="field">
+              <label for="reg-handle">اسم المستخدم</label>
+              <input id="reg-handle" type="text" autocomplete="username" placeholder="username" required>
+            </div>
+            <div class="field">
+              <label for="reg-email">البريد الإلكتروني</label>
+              <input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+              <label for="reg-password">كلمة المرور</label>
+              <input id="reg-password" type="password" autocomplete="new-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary">إنشاء حساب</button>
+          </form>
+          <p class="switcher">لديك حساب بالفعل؟ <a href="#" onclick="switchForm('login');return false;">تسجيل دخول</a></p>
+        </div>
+
+        <p class="hint">لن نعرض بريدك أو اسمك للمرسلين، ويمكنك حذف حسابك أو إيقاف استقبال الرسائل في أي وقت.</p>
+      </section>
+    </main>
+
+    <footer class="footer" aria-label="معلومات إضافية">
+      <span>© 2026 Whispr</span>
+      <span>تجربة تسجيل بسيطة تشبه تويتر، لكن للرسائل المجهولة.</span>
+    </footer>
+  </div>
+
+  <script>
+    function switchForm(target){
+      var login=document.getElementById('form-login');
+      var register=document.getElementById('form-register');
+      if(target==='register'){
+        login.style.display='none';
+        register.style.display='block';
+      }else{
+        login.style.display='block';
+        register.style.display='none';
+      }
+    }
+  </script>
+</body>
+</html>
