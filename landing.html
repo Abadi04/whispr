@@ -19,7 +19,7 @@
   --font:'IBM Plex Sans Arabic',system-ui,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
+html,body{height:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;}
 body{
   font-family:var(--font);background:var(--bg);color:var(--text);
   -webkit-font-smoothing:antialiased;
@@ -119,7 +119,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   box-shadow:0 20px 50px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-/* RIGHT · Decision Engine */
+/* RIGHT · Decision Engine (Features of anonymous messaging) */
 .panel-options{
   padding:30px 34px;
   display:flex;flex-direction:column;justify-content:center;
@@ -162,7 +162,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   content:"•";margin-left:4px;color:var(--accent);
 }
 
-/* Featured B */
+/* Featured core promise (B) */
 .is-featured{
   transform:scale(1.05);
   border-color:rgba(138,43,226,.7);
@@ -210,7 +210,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   100%{box-shadow:0 0 0 0 rgba(138,43,226,0);transform:translateY(0)}
 }
 
-/* Top navigation (minimal) */
+/* Top nav */
 .navbar{
   position:fixed;top:16px;inset-inline:24px;z-index:3;
   height:46px;border-radius:999px;
@@ -224,14 +224,16 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
 .logo-icon{color:#c084fc;display:flex;}
 .nav-ctas{display:flex;align-items:center;gap:8px;}
 
-/* Mobile: still single-view without vertical scroll (split rows) */
+/* Mobile: focus on phones, allow vertical scroll if needed */
 @media(max-width:960px){
+  html,body{height:auto;min-height:100vh;overflow-y:auto;}
   .shell{
     grid-template-columns:1fr;
-    grid-template-rows:52% 48%;
+    grid-template-rows:auto auto;
+    height:auto;min-height:100vh;
   }
   .panel-brand{padding:26px 20px 18px;}
-  .panel-options{padding:20px 16px 18px;}
+  .panel-options{padding:20px 16px 28px;}
   .options-row{grid-template-columns:1fr;gap:10px;}
   .is-featured{transform:scale(1.01);}  
 }
@@ -265,7 +267,7 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
   <section class="panel panel-brand">
     <div class="brand-layer-glass"></div>
     <header class="brand-header">
-      <span class="brand-pill">منصة رسائل مجهولة</span>
+      <span class="brand-pill">رسائل مجهولة، بخصوصية كاملة</span>
       <h1 class="brand-title">
         اسألهم بصدق،<br>
         <span class="brand-title-accent">واسمع كل شيء.</span>
@@ -276,8 +278,8 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
       <button class="btn btn-primary btn-pulse">احصل على رابطك الآن</button>
       <div class="brand-meta">
         <span>مجاني 100%</span>
-        <span>بدون تتبع</span>
-        <span>يعمل على كل المنصات</span>
+        <span>دون طلب اسم أو حساب</span>
+        <span>لا نكشف هوية أي مُرسل</span>
       </div>
     </header>
     <div class="brand-visual">
@@ -287,49 +289,49 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none;}
     </div>
   </section>
 
-  <section class="panel panel-options" aria-label="خيارات الاستخدام">
+  <section class="panel panel-options" aria-label="مميزات الرسائل المجهولة في Whispr">
     <header class="options-header">
-      <p class="options-kicker">اختر كيف تريد استخدام Whispr</p>
+      <p class="options-kicker">ما الذي يميز Whispr عن أي صندوق رسائل آخر؟</p>
     </header>
     <div class="options-row">
       <article class="option-card option-a">
         <header class="option-head">
-          <h2 class="option-title">وضع الأصدقاء</h2>
-          <p class="option-tag">تجربة اجتماعية مرحة</p>
+          <h2 class="option-title">صدق بلا مجاملة</h2>
+          <p class="option-tag">كل رسالة تُكتب بدون خوف من انكشاف الهوية</p>
         </header>
         <ul class="option-list">
-          <li>شارك رابطك مع الأصدقاء فقط.</li>
-          <li>احصل على رسائل خفيفة ومواقف مضحكة.</li>
-          <li>تحكم كامل في الحظر والردود.</li>
+          <li>شجّع الناس أن يقولوا ما لا يستطيعون قوله علناً.</li>
+          <li>اكتشف كيف يراك الآخرون فعلاً.</li>
+          <li>مثالي لمعرفة نقاط قوّتك وضعفك.</li>
         </ul>
-        <button class="btn btn-ghost">جرّبه مع الأصدقاء</button>
+        <button class="btn btn-ghost">شاهد كيف تبدو الرسائل</button>
       </article>
 
-      <article class="option-card option-b is-featured" aria-label="الخيار الموصى به">
-        <div class="option-ribbon">الأكثر شعبية</div>
+      <article class="option-card option-b is-featured" aria-label="وعد الخصوصية في Whispr">
+        <div class="option-ribbon">جوهر Whispr</div>
         <header class="option-head">
-          <h2 class="option-title">وضع المحتوى</h2>
-          <p class="option-tag">لصنّاع المحتوى والمؤثرين</p>
+          <h2 class="option-title">هوية مخفية دائماً</h2>
+          <p class="option-tag">لا نعرض ولا نخزّن اسم أو حساب المُرسل</p>
         </header>
         <ul class="option-list">
-          <li>رابط ثابت في البايو لجميع منصاتك.</li>
-          <li>صندوق وارد منظم برسائل مجهولة عالية الجودة.</li>
-          <li>فلترة تلقائية للرسائل المزعجة أو المتكررة.</li>
+          <li>كل رسالة تصل بدون أي معلومة تعريفية عن صاحبها.</li>
+          <li>لن ترى بريد، ولا اسم مستخدم، ولا صورة.</li>
+          <li>أنت تتحكم فقط في قراءة الرسائل أو حظر المزعجين.</li>
         </ul>
-        <button class="btn btn-primary btn-pulse">ابدأ بوضع المحتوى</button>
+        <button class="btn btn-primary btn-pulse">ابدأ باستقبال الرسائل المجهولة</button>
       </article>
 
       <article class="option-card option-c">
         <header class="option-head">
-          <h2 class="option-title">وضع الأسئلة العميقة</h2>
-          <p class="option-tag">للتقييم الذاتي والتغذية الراجعة</p>
+          <h2 class="option-title">تحكم كامل في خصوصيتك</h2>
+          <p class="option-tag">صندوق وارد بسيط، بلا ضجيج أو تصنيفات معقدة</p>
         </header>
         <ul class="option-list">
-          <li>أرسل أسئلة مخصصة لجمهورك.</li>
-          <li>استقبل إجابات طويلة مجهولة الهوية.</li>
-          <li>صدّر الردود للتحليل لاحقاً.</li>
+          <li>أوقف استقبال الرسائل في أي وقت بضغطة واحدة.</li>
+          <li>احذف أي رسالة لا تعجبك فوراً.</li>
+          <li>لا إشعارات مزعجة — أنت من يقرر متى تقرأ.</li>
         </ul>
-        <button class="btn btn-ghost">اكتشف الأسئلة العميقة</button>
+        <button class="btn btn-ghost">اكتشف خيارات الخصوصية</button>
       </article>
     </div>
   </section>
