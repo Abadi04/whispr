@@ -741,6 +741,9 @@ const app = {
             </button>
           </form>
           <div class="auth-footer">
+            <a class="auth-link" id="forgot-password-link" href="#">نسيت كلمة المرور؟</a>
+          </div>
+          <div class="auth-footer">
             ${t('no_account')} <a class="auth-link" onclick="app.navigate('register')">${t('create_account')}</a>
           </div>
         </div>
@@ -1044,7 +1047,20 @@ const app = {
       if (supabaseClient) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email: em, password: pw });
         if (error) {
-          showToast(t('err_invalid_creds'), 'error');
+          console.error('[login] supabase error:', error);
+          const code = (error.code || error.name || '').toLowerCase();
+          const msg = (error.message || '').toLowerCase();
+          let friendly = t('err_invalid_creds');
+          if (msg.includes('email not confirmed') || code.includes('email_not_confirmed')) {
+            friendly = 'البريد لم يُؤكَّد بعد. تحقق من صندوق الوارد أو راسلنا لإعادة الإرسال.';
+          } else if (msg.includes('invalid login credentials') || code.includes('invalid_credentials')) {
+            friendly = 'البريد أو كلمة المرور غير صحيحة. اضغط "نسيت كلمة المرور" لإعادة تعيينها.';
+          } else if (msg.includes('rate limit') || code.includes('over_request_rate')) {
+            friendly = 'محاولات كثيرة، انتظر قليلاً ثم أعد المحاولة.';
+          } else if (error.message) {
+            friendly = error.message;
+          }
+          showToast(friendly, 'error');
         } else {
           this.authPromise = null;
           await this.initAuth();
@@ -1066,6 +1082,24 @@ const app = {
       }
       setLoading(btn, false, `${icons.login} ${t('btn_login_submit')}`);
     });
+
+    const forgot = document.getElementById('forgot-password-link');
+    if (forgot) {
+      forgot.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const em = document.getElementById('login-email').value.trim();
+        if (!em) { showToast('اكتب بريدك الإلكتروني أولاً ثم اضغط الرابط', 'info'); return; }
+        if (!supabaseClient) { showToast('الخدمة غير متاحة', 'error'); return; }
+        const redirectTo = `${location.origin}${location.pathname}#login`;
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(em, { redirectTo });
+        if (error) {
+          console.error('[forgot-password] supabase error:', error);
+          showToast(error.message || 'تعذر إرسال رابط إعادة التعيين', 'error');
+        } else {
+          showToast('أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك', 'success');
+        }
+      });
+    }
   },
 
   setupRegisterEvents() {
