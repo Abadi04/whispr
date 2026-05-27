@@ -186,91 +186,128 @@ const blocksAPI = {
 };
 
 // --- Supabase Messages API ---
+// All reads/writes go through Supabase. We intentionally do NOT silently fall
+// back to localStorage on failure — that used to mask real RLS / schema errors
+// (sender thought the message was sent but it only lived in their own browser,
+// so the receiver never got it). Errors are now surfaced to the caller.
 const messagesAPI = {
   async getInbox(userId) {
     if (!supabaseClient) {
-      return state._localMessages
-        .filter(m => m.recipientId === userId)
-        .sort((a,b) => b.timestamp - a.timestamp)
-        .map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply || null, isRead: m.isRead, senderId: m.senderId || null }));
+      console.warn('[messagesAPI.getInbox] Supabase client missing');
+      return [];
     }
-    try {
-      const { data, error } = await supabaseClient
-        .from('messages').select('id, content, created_at, is_read, sender_id')
-        .eq('receiver_id', userId).order('created_at', { ascending: false });
-      if (error) throw error;
-      const supaIds = new Set((data || []).map(m => m.id));
-      const localOnly = state._localMessages.filter(m => m.recipientId === userId && !supaIds.has(m.id));
-      const supaRows = (data || []).map(m => ({ id: m.id, content: m.content, timestamp: new Date(m.created_at).getTime(), reply: m.reply || null, isRead: m.is_read, senderId: m.sender_id }));
-      const localRows = localOnly.map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply || null, isRead: m.isRead, senderId: m.senderId || null }));
-      return [...supaRows, ...localRows].sort((a,b) => b.timestamp - a.timestamp);
-    } catch(e) {
-      console.error('inbox fetch error', e);
-      return state._localMessages.filter(m => m.recipientId === userId)
-        .sort((a,b) => b.timestamp - a.timestamp)
-        .map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply||null, isRead: m.isRead, senderId: m.senderId||null }));
+    if (!userId) {
+      console.warn('[messagesAPI.getInbox] called without userId');
+      return [];
     }
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .select('id, content, created_at, is_read, sender_id, reply')
+      .eq('receiver_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('[messagesAPI.getInbox] supabase error:', error);
+      throw error;
+    }
+    return (data || []).map(m => ({
+      id: m.id,
+      content: m.content,
+      timestamp: new Date(m.created_at).getTime(),
+      reply: m.reply || null,
+      isRead: !!m.is_read,
+      senderId: m.sender_id || null,
+    }));
   },
 
   async send(receiverId, content, senderId = null) {
-    if (supabaseClient) {
-      try {
-        const payload = { receiver_id: receiverId, content: content };
-        if (senderId) payload.sender_id = senderId;
-        const { error } = await supabaseClient.from('messages').insert(payload);
-        if (error) throw error;
-        return { ok: true };
-      } catch(e) { console.error('send error', e); }
+    if (!supabaseClient) {
+      console.error('[messagesAPI.send] Supabase client missing');
+      return { ok: false, error: 'no-client' };
     }
-    const msg = { id: generateId(), recipientId: receiverId, senderId, content, timestamp: Date.now(), reply: null, isRead: false };
-    state._localMessages.push(msg);
-    saveLocal();
-    return { ok: true };
+    if (!receiverId || !content) {
+      console.error('[messagesAPI.send] invalid args', { receiverId, content });
+      return { ok: false, error: 'invalid-args' };
+    }
+    const payload = { receiver_id: receiverId, content };
+    if (senderId) payload.sender_id = senderId;
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .insert(payload)
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[messagesAPI.send] supabase insert error:', error, 'payload:', payload);
+      return { ok: false, error };
+    }
+    return { ok: true, id: data?.id };
   },
 
   async reply(msgId, replyText) {
-    if (supabaseClient) {
-      try {
-        const { error } = await supabaseClient.from('messages').update({ reply: replyText }).eq('id', msgId);
-        if (error) throw error;
-        return { ok: true };
-      } catch(e) { console.error('reply error', e); }
+    if (!supabaseClient) return { ok: false, error: 'no-client' };
+    const { error } = await supabaseClient
+      .from('messages')
+      .update({ reply: replyText })
+      .eq('id', msgId);
+    if (error) {
+      console.error('[messagesAPI.reply] supabase error:', error);
+      return { ok: false, error };
     }
-    const idx = state._localMessages.findIndex(m => m.id === msgId);
-    if (idx !== -1) { state._localMessages[idx].reply = replyText; saveLocal(); }
     return { ok: true };
   },
 
   async markRead(userId) {
-    if (supabaseClient) {
-      try { await supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', userId).eq('is_read', false); } catch {}
-    }
-    state._localMessages.forEach(m => { if (m.recipientId === userId) m.isRead = true; });
-    saveLocal();
+    if (!supabaseClient || !userId) return;
+    const { error } = await supabaseClient
+      .from('messages')
+      .update({ is_read: true })
+      .eq('receiver_id', userId)
+      .eq('is_read', false);
+    if (error) console.error('[messagesAPI.markRead] supabase error:', error);
   },
 
   async delete(msgId) {
-    if (supabaseClient) {
-      try { await supabaseClient.from('messages').delete().eq('id', msgId); } catch {}
+    if (!supabaseClient) return { ok: false };
+    const { error } = await supabaseClient.from('messages').delete().eq('id', msgId);
+    if (error) {
+      console.error('[messagesAPI.delete] supabase error:', error);
+      return { ok: false, error };
     }
-    state._localMessages = state._localMessages.filter(m => m.id !== msgId);
-    saveLocal();
+    return { ok: true };
   },
 
   async getPublicReplies(userId) {
-    if (supabaseClient) {
-      try {
-        const { data, error } = await supabaseClient.from('messages')
-          .select('id, content, created_at, reply').eq('receiver_id', userId)
-          .not('reply', 'is', null).order('created_at', { ascending: false });
-        if (error) throw error;
-        return (data || []).map(m => ({ id: m.id, content: m.content, timestamp: new Date(m.created_at).getTime(), reply: m.reply }));
-      } catch(e) { console.error('public replies error', e); }
+    if (!supabaseClient || !userId) return [];
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .select('id, content, created_at, reply')
+      .eq('receiver_id', userId)
+      .not('reply', 'is', null)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('[messagesAPI.getPublicReplies] supabase error:', error);
+      return [];
     }
-    return state._localMessages.filter(m => m.recipientId === userId && m.reply)
-      .map(m => ({ id: m.id, content: m.content, timestamp: m.timestamp, reply: m.reply }))
-      .sort((a,b) => b.timestamp - a.timestamp);
-  }
+    return (data || []).map(m => ({
+      id: m.id,
+      content: m.content,
+      timestamp: new Date(m.created_at).getTime(),
+      reply: m.reply,
+    }));
+  },
+
+  async unreadCount(userId) {
+    if (!supabaseClient || !userId) return 0;
+    const { count, error } = await supabaseClient
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('receiver_id', userId)
+      .eq('is_read', false);
+    if (error) {
+      console.error('[messagesAPI.unreadCount] supabase error:', error);
+      return 0;
+    }
+    return count || 0;
+  },
 };
 
 // --- Profiles API ---
@@ -407,7 +444,8 @@ const app = {
     container.style.gap = '8px';
 
     if (state.currentUser) {
-      const unread = state._localMessages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
+      let unread = 0;
+      try { unread = await messagesAPI.unreadCount(state.currentUser.id); } catch {}
       container.innerHTML = `
         <button class="btn btn-ghost nav-btn" onclick="app.navigate('inbox')" aria-label="${t('nav_inbox')}">
           <span class="btn-icon-wrap">${icons.inbox}</span>
@@ -815,10 +853,17 @@ const app = {
       const user = state.currentUser;
       const shareUrl = `${location.origin}${location.pathname}#u/${user.username}`;
       const shareText = 'أرسل لي رسالة مجهولة على Whispr';
-      const messages = await messagesAPI.getInbox(user.id);
+      let messages = [];
+      let fetchError = null;
+      try {
+        messages = await messagesAPI.getInbox(user.id);
+      } catch (e) {
+        fetchError = e?.message || String(e);
+      }
       const unread = messages.filter(m => !m.isRead).length;
       const replied = messages.filter(m => m.reply).length;
-      const blockedIds = await blocksAPI.getBlockedIds(user.id);
+      let blockedIds = [];
+      try { blockedIds = await blocksAPI.getBlockedIds(user.id); } catch {}
       const filtered = messages.filter(m => !m.senderId || !blockedIds.includes(m.senderId));
       let lastDateLabel = null;
       const msgsHtml = filtered.map(msg => {
@@ -909,7 +954,14 @@ const app = {
           </div>
         </div>
         <div class="messages-list">
-          ${filtered.length === 0
+          ${fetchError
+            ? `<div class="empty-state glass-card">
+                <div class="empty-icon danger-icon">${icons.warn}</div>
+                <h3>تعذر تحميل الرسائل</h3>
+                <p>${escHtml(fetchError)}</p>
+                <button class="btn btn-primary mt-24" onclick="app.renderCurrentView()">إعادة المحاولة</button>
+              </div>`
+            : filtered.length === 0
             ? `<div class="empty-state glass-card">
                 <div class="empty-icon">${icons.msg_circle}</div>
                 <h3>صندوق الوارد فارغ</h3>
@@ -1094,14 +1146,16 @@ const app = {
       }
       const btn = form.querySelector('.send-btn');
       setLoading(btn, true);
-      const { ok } = await messagesAPI.send(user.id, content, state.currentUser?.id || null);
-      if (ok) {
+      const result = await messagesAPI.send(user.id, content, state.currentUser?.id || null);
+      if (result.ok) {
         if (ta) { ta.value = ''; ta.style.height = 'auto'; }
         if (counter) counter.textContent = `300 ${t('chars_left')}`;
         showToast(t('msg_sent'), 'success');
         this.celebrateSend(btn);
       } else {
-        showToast('تعذر الإرسال، حاول مجدداً', 'error');
+        const detail = result.error?.message || (typeof result.error === 'string' ? result.error : '');
+        console.error('[send-msg-form] send failed:', result.error);
+        showToast(detail ? `تعذر الإرسال: ${detail}` : 'تعذر الإرسال، حاول مجدداً', 'error');
       }
       setLoading(btn, false);
     });
@@ -1109,7 +1163,41 @@ const app = {
 
   setupInboxEvents() {
     if (!state.currentUser) return;
-    messagesAPI.markRead(state.currentUser.id);
+    (async () => {
+      await messagesAPI.markRead(state.currentUser.id);
+      this.updateNav();
+    })();
+    this.subscribeInboxRealtime(state.currentUser.id);
+  },
+
+  // --- Realtime: live updates of the inbox without manual refresh ---
+  subscribeInboxRealtime(userId) {
+    if (!supabaseClient || !userId) return;
+    // Tear down any previous channel so we don't stack subscriptions.
+    if (this._inboxChannel) {
+      try { supabaseClient.removeChannel(this._inboxChannel); } catch {}
+      this._inboxChannel = null;
+    }
+    const channel = supabaseClient
+      .channel(`inbox-${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${userId}`,
+      }, (payload) => {
+        // Only refresh while the user is still on the inbox view.
+        if (this.currentRoute === 'inbox' && state.currentUser?.id === userId) {
+          this.renderCurrentView();
+        }
+        this.updateNav();
+      })
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('[realtime] inbox channel status:', status);
+        }
+      });
+    this._inboxChannel = channel;
   },
 
   toggleReplyArea(msgId) {
@@ -1126,12 +1214,13 @@ const app = {
     if (!replyText) return;
     const btn = e.target.querySelector('button[type="submit"]');
     setLoading(btn, true);
-    const { ok } = await messagesAPI.reply(msgId, replyText);
-    if (ok) {
+    const result = await messagesAPI.reply(msgId, replyText);
+    if (result.ok) {
       showToast(t('reply_added'), 'success');
       this.renderCurrentView();
     } else {
-      showToast('تعذر إضافة الرد', 'error');
+      const detail = result.error?.message || '';
+      showToast(detail ? `تعذر إضافة الرد: ${detail}` : 'تعذر إضافة الرد', 'error');
       setLoading(btn, false);
     }
   },
