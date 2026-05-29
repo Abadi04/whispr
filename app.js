@@ -784,7 +784,7 @@ const app = {
         </div>`;
       }).join('');
 
-      return `<div class="view active">
+      return `<div class="view active profile-page">
         <div class="profile-header">
           <div class="avatar-wrap">
             ${user.avatar_url
@@ -823,7 +823,7 @@ const app = {
           </form>
         </div>
         ${replies.length > 0 ? `
-          <div class="inbox-container">
+          <div class="profile-replies">
             <div class="section-header"><h3>الردود السابقة</h3></div>
             ${hasMore ? `<div class="load-more-hint">${icons.arrow_down} مرر لأعلى لتحميل المزيد</div>` : ''}
             <div class="messages-list" id="msg-list">${repliesHtml}</div>
