@@ -21,15 +21,17 @@ create table if not exists public.messages (
 
 -- Server-side length / non-empty enforcement (mirrors MAX_MESSAGE_LEN in app.js).
 -- Client maxlength can be bypassed by calling the REST API directly.
+-- content::text cast keeps this working even if an existing table created the
+-- column with a non-text type.
 alter table public.messages drop constraint if exists messages_content_len;
 alter table public.messages
   add constraint messages_content_len
-  check (char_length(content) between 1 and 1000);
+  check (char_length(content::text) between 1 and 1000);
 
 alter table public.messages drop constraint if exists messages_reply_len;
 alter table public.messages
   add constraint messages_reply_len
-  check (reply is null or char_length(reply) between 1 and 1000);
+  check (reply is null or char_length(reply::text) between 1 and 1000);
 
 create index if not exists messages_receiver_created_idx
   on public.messages (receiver_id, created_at desc);
