@@ -468,7 +468,7 @@ const app = {
           if (!supabaseClient) return this.navigate('inbox');
           const { data } = await supabaseClient.auth.getUser();
           if (data?.user?.email !== 'abadihdar@gmail.com') return this.navigate('inbox');
-          html = this.views.analytics(); break;
+          html = await this.views.analytics(); break;
         }
         case 'u':
           if (parts[1]) { html = await this.views.profile(parts[1]); }
@@ -964,7 +964,25 @@ const app = {
       </div>`;
     },
 
-    analytics() {
+    async analytics() {
+      // Global stats come from the owner-gated SECURITY DEFINER RPC so they
+      // work despite the strict messages RLS. Fall back to local counts only
+      // if the RPC is unavailable (e.g. offline / migration not yet applied).
+      let s = null;
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient.rpc('get_admin_stats');
+          if (!error && data) s = data;
+        } catch {}
+      }
+      const stats = s || {
+        total_users: state._localUsers.length,
+        total_messages: state._localMessages.length,
+        messages_last_7d: 0,
+        active_users_7d: 0,
+        replied_messages: 0,
+      };
+      const fmt = (n) => Number(n || 0).toLocaleString('ar-EG');
       return `<div class="view active inbox-container">
         <div class="page-header">
           <button class="btn btn-ghost icon-only" onclick="app.navigate('inbox')">${icons.back}</button>
@@ -973,16 +991,31 @@ const app = {
         <div class="analytics-grid">
           <div class="glass-card stat-card">
             ${icons.users}
-            <h3>${state._localUsers.length}</h3>
+            <h3>${fmt(stats.total_users)}</h3>
             <p>إجمالي المستخدمين</p>
           </div>
           <div class="glass-card stat-card">
             ${icons.inbox}
-            <h3>${state._localMessages.length}</h3>
+            <h3>${fmt(stats.total_messages)}</h3>
             <p>إجمالي الرسائل</p>
           </div>
+          <div class="glass-card stat-card">
+            ${icons.send}
+            <h3>${fmt(stats.messages_last_7d)}</h3>
+            <p>رسائل آخر ٧ أيام</p>
+          </div>
+          <div class="glass-card stat-card">
+            ${icons.user}
+            <h3>${fmt(stats.active_users_7d)}</h3>
+            <p>مستخدمون نشطون (٧ أيام)</p>
+          </div>
+          <div class="glass-card stat-card">
+            ${icons.reply}
+            <h3>${fmt(stats.replied_messages)}</h3>
+            <p>رسائل مُجاب عليها</p>
+          </div>
         </div>
-        <p class="text-muted" style="text-align:center;padding:20px;font-size:0.9rem;">البيانات التفصيلية تتطلب استعلامات مباشرة على Supabase.</p>
+        ${s ? '' : `<p class="text-muted" style="text-align:center;padding:20px;font-size:0.9rem;">تعذّر جلب الإحصائيات من الخادم — يُعرض تقدير محلي. تأكد من تطبيق migration دالة get_admin_stats.</p>`}
       </div>`;
     }
   },
