@@ -1,8 +1,12 @@
 -- Create blocks table
+-- NOTE: previously referenced a non-existent `public.users` table and the
+-- uuid-ossp `uuid_generate_v4()` function. Fixed to reference `public.profiles`
+-- (the real user table, keyed by auth.users.id) and the built-in
+-- gen_random_uuid().
 CREATE TABLE IF NOT EXISTS public.blocks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    blocker_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-    blocked_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    blocker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    blocked_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(blocker_id, blocked_id)
 );
@@ -10,12 +14,15 @@ CREATE TABLE IF NOT EXISTS public.blocks (
 -- Enable RLS
 ALTER TABLE public.blocks ENABLE ROW LEVEL SECURITY;
 
--- Policies
+-- Policies (idempotent)
+DROP POLICY IF EXISTS "Users can view their own blocks" ON public.blocks;
 CREATE POLICY "Users can view their own blocks" ON public.blocks
     FOR SELECT USING (auth.uid() = blocker_id);
 
+DROP POLICY IF EXISTS "Users can insert their own blocks" ON public.blocks;
 CREATE POLICY "Users can insert their own blocks" ON public.blocks
     FOR INSERT WITH CHECK (auth.uid() = blocker_id);
 
+DROP POLICY IF EXISTS "Users can delete their own blocks" ON public.blocks;
 CREATE POLICY "Users can delete their own blocks" ON public.blocks
     FOR DELETE USING (auth.uid() = blocker_id);

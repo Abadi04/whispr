@@ -34,10 +34,12 @@ serve(async (req) => {
     )
 
     // Fetch the profile
+    // Schema note: profiles uses `full_name` as the public username; there is
+    // no `username`/`bio` column. Aliased here to keep the response stable.
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('id, username, bio, avatar_url, created_at')
-      .eq('username', username)
+      .select('id, full_name, avatar_url, created_at')
+      .eq('full_name', username)
       .single()
 
     if (profileError || !profile) {
@@ -51,7 +53,7 @@ serve(async (req) => {
     const { count: msgCount } = await supabaseClient
       .from('messages')
       .select('*', { count: 'exact', head: true })
-      .eq('recipient_id', profile.id)
+      .eq('receiver_id', profile.id)
 
     return new Response(JSON.stringify({
         profile,

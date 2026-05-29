@@ -86,6 +86,12 @@ https://github.com/Abadi04/whispr
 - Mobile-first design - always test on small screens
 - Do not add npm/node/webpack - keep it pure HTML/JS/CSS
 
+## Testing
+- Lightweight, dependency-free tests live in `tests/` (no npm install).
+- Run them with: `node --test` from the repo root.
+- `tests/load-app.js` extracts pure helpers (escHtml, validateUsername, validateMessage) directly from app.js so tests exercise the real shipped code.
+- See `SECURITY_REPORT.md` for the full security review and open recommendations.
+
 ## What to Work on Next
 - Improve analytics charts (better visualization)
 - Push notifications or email notifications for new messages

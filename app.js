@@ -213,6 +213,16 @@ const messagesAPI = {
   },
 
   async send(receiverId, content, senderId = null) {
+    // Defense-in-depth: clamp/validate length here too (server enforces a
+    // CHECK constraint, but this avoids round-trips and oversized payloads).
+    const safeContent = validateMessage(content);
+    if (!safeContent) return { ok: false };
+    // Lightweight client-side anti-spam throttle. Real rate limiting must live
+    // server-side (see SECURITY_REPORT.md) — this only smooths accidental floods.
+    const now = Date.now();
+    if (this._lastSendAt && now - this._lastSendAt < 1500) return { ok: false, throttled: true };
+    this._lastSendAt = now;
+    content = safeContent;
     if (supabaseClient) {
       try {
         const payload = { receiver_id: receiverId, content: content };
@@ -768,7 +778,7 @@ const app = {
         <div class="profile-header">
           <div class="avatar-wrap">
             ${user.avatar_url
-              ? `<img src="${user.avatar_url}" class="avatar-img" alt="صورة ${username}">`
+              ? `<img src="${escHtml(user.avatar_url)}" class="avatar-img" alt="صورة ${escHtml(username)}">`
               : `<div class="avatar-placeholder">${username.charAt(0).toUpperCase()}</div>`}
           </div>
           <h2 class="profile-name" dir="ltr">@${escHtml(username)}</h2>
@@ -814,6 +824,10 @@ const app = {
     async inbox() {
       const user = state.currentUser;
       const shareUrl = `${location.origin}${location.pathname}#u/${user.username}`;
+      // Attribute-safe form: HTML entities decode back to the real URL before
+      // the JS handler runs, so the copied value is unchanged but a malicious
+      // username (set via the API) cannot break out of the onclick string.
+      const shareUrlAttr = escHtml(shareUrl);
       const shareText = 'أرسل لي رسالة مجهولة على Whispr';
       const messages = await messagesAPI.getInbox(user.id);
       const unread = messages.filter(m => !m.isRead).length;
@@ -858,7 +872,7 @@ const app = {
         <div class="inbox-hero glass-card">
           <div class="avatar-wrap-inbox">
             ${user.avatar_url
-              ? `<img src="${user.avatar_url}" class="avatar-img" alt="صورة الحساب">`
+              ? `<img src="${escHtml(user.avatar_url)}" class="avatar-img" alt="صورة الحساب">`
               : `<div class="avatar-placeholder">${user.username.charAt(0).toUpperCase()}</div>`}
             <label class="avatar-upload-btn" title="تغيير الصورة">
               <span>${icons.camera}</span>
@@ -874,15 +888,15 @@ const app = {
           <div class="share-row">
             <div class="share-link-box">
               <span class="share-label">${t('share_link')}</span>
-              <span class="share-url" dir="ltr">${shareUrl}</span>
-              <button class="icon-btn" onclick="app.copyLink('${shareUrl}')" title="${t('btn_copy')}">${icons.copy}</button>
+              <span class="share-url" dir="ltr">${escHtml(shareUrl)}</span>
+              <button class="icon-btn" onclick="app.copyLink('${shareUrlAttr}')" title="${t('btn_copy')}">${icons.copy}</button>
             </div>
           </div>
           <div class="quick-share">
-            <button class="btn btn-outline btn-sm" onclick="app.shareTo('instagram','${shareUrl}','${shareText}')">
+            <button class="btn btn-outline btn-sm" onclick="app.shareTo('instagram','${shareUrlAttr}','${shareText}')">
               ${icons.instagram} إنستغرام
             </button>
-            <button class="btn btn-outline btn-sm" onclick="app.shareTo('x','${shareUrl}','${shareText}')">
+            <button class="btn btn-outline btn-sm" onclick="app.shareTo('x','${shareUrlAttr}','${shareText}')">
               ${icons.twitter} X
             </button>
           </div>
@@ -914,7 +928,7 @@ const app = {
                 <div class="empty-icon">${icons.msg_circle}</div>
                 <h3>صندوق الوارد فارغ</h3>
                 <p>انشر رابطك الخاص ليرسل لك الناس رسائل بسرية تامة.</p>
-                <button class="btn btn-primary mt-24" onclick="app.copyLink('${shareUrl}')">${icons.link} نسخ رابط الحساب</button>
+                <button class="btn btn-primary mt-24" onclick="app.copyLink('${shareUrlAttr}')">${icons.link} نسخ رابط الحساب</button>
               </div>`
             : msgsHtml}
         </div>
@@ -939,7 +953,7 @@ const app = {
             : valid.map(u => `
               <div class="glass-card blocked-item">
                 <div class="blocked-user">
-                  ${u.avatar_url ? `<img src="${u.avatar_url}" class="avatar-sm" alt="">` : `<div class="avatar-sm placeholder-sm">${(u.username||'?').charAt(0).toUpperCase()}</div>`}
+                  ${u.avatar_url ? `<img src="${escHtml(u.avatar_url)}" class="avatar-sm" alt="">` : `<div class="avatar-sm placeholder-sm">${escHtml((u.username||'?').charAt(0).toUpperCase())}</div>`}
                   <span class="blocked-name" dir="ltr">@${escHtml(u.username || u.id)}</span>
                 </div>
                 <button class="btn btn-outline btn-sm btn-danger-outline" onclick="app.unblockFromList('${u.id}')">
@@ -998,7 +1012,7 @@ const app = {
           await this.initAuth();
           if (state.currentUser) {
             this.navigate('inbox');
-            showToast(`أهلاً بك @${state.currentUser.username}`, 'success');
+            showToast(`أهلاً بك @${escHtml(state.currentUser.username)}`, 'success');
           }
         }
       } else {
@@ -1007,7 +1021,7 @@ const app = {
           state.currentUser = { id: u.id, username: u.username, email: u.email };
           saveLocal();
           this.navigate('inbox');
-          showToast(`أهلاً بك @${u.username}`, 'success');
+          showToast(`أهلاً بك @${escHtml(u.username)}`, 'success');
         } else {
           showToast(t('err_invalid_creds'), 'error');
         }
@@ -1025,6 +1039,10 @@ const app = {
       const un = document.getElementById('reg-username').value.trim();
       const em = document.getElementById('reg-email').value.trim();
       const pw = document.getElementById('reg-password').value;
+      if (!validateUsername(un)) {
+        showToast('اسم المستخدم يجب أن يكون حروفاً إنجليزية أو أرقاماً أو شرطة سفلية (حتى 30 حرفاً)', 'error');
+        return;
+      }
       setLoading(btn, true, `${icons.spin} جاري التسجيل...`);
       if (state._localUsers.some(u => u.username === un)) {
         showToast(t('err_user_exists'), 'error');
@@ -1038,7 +1056,10 @@ const app = {
         if (error) {
           showToast(error.message.includes('already') ? 'البريد مسجل مسبقاً' : 'خطأ في التسجيل', 'error');
         } else {
-          const newUser = { id: data.user?.id || generateId(), username: un, email: em, password: pw };
+          // SECURITY: never persist the plaintext password when a real backend
+          // (Supabase) is handling auth — only the offline-only fallback below
+          // keeps a password, and only because there is no server to verify against.
+          const newUser = { id: data.user?.id || generateId(), username: un, email: em };
           state._localUsers.push(newUser);
           state.currentUser = { id: newUser.id, username: un, email: em };
           saveLocal();
@@ -1084,7 +1105,7 @@ const app = {
     if (!form) return;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const content = ta?.value?.trim();
+      const content = validateMessage(ta?.value);
       if (!content) return;
       const errEl = document.getElementById('send-block-error');
       if (errEl) errEl.classList.add('hidden');
@@ -1094,12 +1115,14 @@ const app = {
       }
       const btn = form.querySelector('.send-btn');
       setLoading(btn, true);
-      const { ok } = await messagesAPI.send(user.id, content, state.currentUser?.id || null);
-      if (ok) {
+      const res = await messagesAPI.send(user.id, content, state.currentUser?.id || null);
+      if (res.ok) {
         if (ta) { ta.value = ''; ta.style.height = 'auto'; }
         if (counter) counter.textContent = `300 ${t('chars_left')}`;
         showToast(t('msg_sent'), 'success');
         this.celebrateSend(btn);
+      } else if (res.throttled) {
+        showToast('أنت ترسل بسرعة كبيرة، انتظر لحظة', 'error');
       } else {
         showToast('تعذر الإرسال، حاول مجدداً', 'error');
       }
@@ -1193,9 +1216,36 @@ const app = {
 };
 
 // --- Helpers ---
+// Escapes the five characters that are dangerous in both HTML body and
+// attribute contexts (including single-quoted attributes such as inline
+// onclick="...('${value}')"). The single quote and backtick are escaped so
+// user-controlled values (e.g. a username set via the API, which bypasses the
+// client-side [A-Za-z0-9_] pattern) cannot break out of an attribute string.
 function escHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/`/g, '&#96;');
+}
+
+// --- Validation (shared, server-mirrored) ---
+const MAX_MESSAGE_LEN = 1000; // mirrored by a CHECK constraint in the messages migration
+const USERNAME_RE = /^[A-Za-z0-9_]{1,30}$/;
+
+function validateUsername(u) {
+  return typeof u === 'string' && USERNAME_RE.test(u);
+}
+
+// Returns a trimmed, length-clamped message, or null when invalid/empty.
+function validateMessage(content) {
+  if (typeof content !== 'string') return null;
+  const trimmed = content.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, MAX_MESSAGE_LEN);
 }
 
 function setLoading(btn, isLoading, originalHtml) {
