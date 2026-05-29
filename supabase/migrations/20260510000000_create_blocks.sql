@@ -1,12 +1,14 @@
 -- Create blocks table
 -- NOTE: previously referenced a non-existent `public.users` table and the
--- uuid-ossp `uuid_generate_v4()` function. Fixed to reference `public.profiles`
--- (the real user table, keyed by auth.users.id) and the built-in
--- gen_random_uuid().
+-- uuid-ossp `uuid_generate_v4()` function. Fixed to use the built-in
+-- gen_random_uuid() and to reference `auth.users(id)` directly. Referencing
+-- auth.users (rather than public.profiles) makes this migration independent of
+-- migration ordering — auth.users always exists — and avoids failing when a
+-- user has no profile row yet.
 CREATE TABLE IF NOT EXISTS public.blocks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    blocker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    blocked_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    blocker_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    blocked_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(blocker_id, blocked_id)
 );

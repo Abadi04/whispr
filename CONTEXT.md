@@ -86,10 +86,23 @@ https://github.com/Abadi04/whispr
 - Mobile-first design - always test on small screens
 - Do not add npm/node/webpack - keep it pure HTML/JS/CSS
 
+## Database setup
+- `supabase/setup.sql` is the single, idempotent bootstrap. Run it ONCE in the
+  Supabase SQL Editor (or `psql`) to create everything in the correct order:
+  profiles (+trigger +backfill) -> messages -> blocks -> get_admin_stats().
+- Individual files under `supabase/migrations/` mirror the same SQL for
+  `supabase db push`. FKs reference `auth.users` so order never breaks.
+
 ## Testing
 - Lightweight, dependency-free tests live in `tests/` (no npm install).
-- Run them with: `node --test` from the repo root.
-- `tests/load-app.js` extracts pure helpers (escHtml, validateUsername, validateMessage) directly from app.js so tests exercise the real shipped code.
+- Unit + SQL static checks: `node --test` from the repo root.
+  - `tests/load-app.js` extracts pure helpers (escHtml, validateUsername,
+    validateMessage) from app.js so tests exercise the real shipped code.
+  - `tests/migrations.test.js` lints the migrations for FK ordering, unsafe
+    table refs, and owner-stats gating (no DB needed).
+- DB integration: `tests/db/run.sh` spins up a throwaway Postgres, stubs the
+  Supabase `auth` schema, applies setup.sql, and asserts RLS / sender-spoofing /
+  length limits / owner-only stats. Skips cleanly if `psql` is unavailable.
 - See `SECURITY_REPORT.md` for the full security review and open recommendations.
 
 ## What to Work on Next

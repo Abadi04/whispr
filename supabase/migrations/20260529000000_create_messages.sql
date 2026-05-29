@@ -9,8 +9,10 @@
 
 create table if not exists public.messages (
   id          uuid primary key default gen_random_uuid(),
-  receiver_id uuid not null references public.profiles(id) on delete cascade,
-  sender_id   uuid references public.profiles(id) on delete set null, -- null = anonymous
+  -- FKs reference auth.users (not public.profiles) so this migration is
+  -- independent of ordering and does not require a profile row to exist.
+  receiver_id uuid not null references auth.users(id) on delete cascade,
+  sender_id   uuid references auth.users(id) on delete set null, -- null = anonymous
   content     text not null,
   reply       text,
   is_read     boolean not null default false,
