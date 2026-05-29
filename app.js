@@ -196,7 +196,7 @@ const messagesAPI = {
     }
     try {
       const { data, error } = await supabaseClient
-        .from('messages').select('id, content, created_at, is_read, sender_id')
+        .from('messages').select('id, content, created_at, is_read, sender_id, reply')
         .eq('receiver_id', userId).order('created_at', { ascending: false });
       if (error) throw error;
       const supaIds = new Set((data || []).map(m => m.id));
@@ -417,7 +417,17 @@ const app = {
     container.style.gap = '8px';
 
     if (state.currentUser) {
-      const unread = state._localMessages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
+      let unread = 0;
+      if (supabaseClient) {
+        try {
+          const { count } = await supabaseClient.from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('receiver_id', state.currentUser.id).eq('is_read', false);
+          unread = count || 0;
+        } catch {}
+      } else {
+        unread = state._localMessages.filter(m => m.recipientId === state.currentUser.id && !m.isRead).length;
+      }
       container.innerHTML = `
         <button class="btn btn-ghost nav-btn" onclick="app.navigate('inbox')" aria-label="${t('nav_inbox')}">
           <span class="btn-icon-wrap">${icons.inbox}</span>
@@ -1163,9 +1173,11 @@ const app = {
     });
   },
 
-  setupInboxEvents() {
+  async setupInboxEvents() {
     if (!state.currentUser) return;
-    messagesAPI.markRead(state.currentUser.id);
+    await messagesAPI.markRead(state.currentUser.id);
+    // Refresh the nav so the unread badge clears once messages are marked read.
+    this.updateNav();
   },
 
   toggleReplyArea(msgId) {

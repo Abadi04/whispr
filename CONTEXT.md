@@ -103,6 +103,12 @@ https://github.com/Abadi04/whispr
 - DB integration: `tests/db/run.sh` spins up a throwaway Postgres, stubs the
   Supabase `auth` schema, applies setup.sql, and asserts RLS / sender-spoofing /
   length limits / owner-only stats. Skips cleanly if `psql` is unavailable.
+- Functional (real app flows): `tests/functional/run.js` loads the actual
+  index.html + app.js in jsdom with a mocked Supabase and drives register /
+  anonymous send / inbox / reply / public wall / analytics gating / theme /
+  routing. Needs jsdom (`JSDOM_PATH=<path> node tests/functional/run.js`);
+  skips cleanly if not installed.
+- Run everything at once: `tests/run-all.sh`.
 - See `SECURITY_REPORT.md` for the full security review and open recommendations.
 
 ## What to Work on Next
