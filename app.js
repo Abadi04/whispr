@@ -1227,14 +1227,13 @@ const app = {
   initParticles() {
     const container = document.getElementById('particles');
     if (!container) return;
-    const colors = ['#8a2be2', '#ff007f', '#00f0ff'];
     for (let i = 0; i < 25; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
+      // Color comes from the theme (CSS var) so particles adapt to dark/light.
       Object.assign(p.style, {
         width: `${Math.random() * 4 + 2}px`, height: `${Math.random() * 4 + 2}px`,
         left: `${Math.random() * 100}%`, bottom: '-10px',
-        backgroundColor: colors[Math.floor(Math.random() * colors.length)],
         animationDelay: `${Math.random() * 20}s`,
         animationDuration: `${Math.random() * 10 + 10}s`
       });
